@@ -7,15 +7,13 @@
 .vs/* 
 *.log
 */obj/*
-.vs/*
 node_modules/*
-core/node_modules/*
 core/.vs/*
-core/src/*.js
-core/src/*.js.map
-core/test/*.js
-core/test/*.js.map
-core/coverage/*
-core/.nyc_output/*
+core/*.js
+core/*.js.map
+test/*.js
+test/*.js.map
+coverage/*
+.nyc_output/*
 
 
