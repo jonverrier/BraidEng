@@ -1,7 +1,7 @@
 {
    "name": "chadbot",
    "version": "0.0.0",
-   "description": "An OpenAI assistant that likes to tak about CrossFit, written in typescript, node.js, and the MS technology stack.",
+   "description": "An OpenAI assistant that likes to tak about FS, written in typescript, node.js, and the MS technology stack.",
    "main": "index.js",
    "author": {
       "name": "Jon Verrier"
