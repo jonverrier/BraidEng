@@ -7,9 +7,8 @@
 .vs/* 
 *.log
 */obj/*
-.vs/*
 node_modules/*
-node_modules/*
+core/.vs/*
 core/*.js
 core/*.js.map
 test/*.js
