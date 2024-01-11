@@ -1,10 +1,10 @@
 module.exports = {
    devtool: 'source-map',
-   entry: "./core/AppEntry.tsx",
+   entry: "./ui/AppEntry.tsx",
    mode: "development",
    target: 'web',
    output: {
-      filename: "chadbot.js",
+      filename: "fsbot.js",
       devtoolModuleFilenameTemplate: '[resource-path]',  // removes the webpack:/// prefix
       libraryTarget: 'window'
    },
@@ -32,7 +32,7 @@ module.exports = {
                   configFile: "tsconfig.json"
                }
             }
-         },
+         },         
          {
             test: /\.js$/,
             exclude: /(node_modules|bower_components)/

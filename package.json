@@ -1,13 +1,13 @@
 {
    "name": "fsbot",
    "version": "0.0.0",
-   "description": "An OpenAI assistant that likes to tak about FS, written in typescript, node.js, and the MS technology stack.",
+   "description": "An OpenAI assistant that likes to talk about FS, written in typescript, node.js, and the MS technology stack - Fluid Framework, Fluent UI, Azure.",
    "main": "index.js",
    "author": {
       "name": "Jon Verrier"
    },
    "scripts": {
-      "build-package": "webpack-cli --config webpack-config.js && copy dist\\chadbot.js public\\assets\\js && copy dist\\chadbot.js.map public\\assets\\js",
+      "build-package": "webpack-cli --config webpack-config.js && copy dist\\fsbot.js public\\assets\\js && copy dist\\fsbot.js.map public\\assets\\js",
       "build": "tsc --build",
       "clean": "tsc --build --clean",
       "test": "mocha --debug-brk --require ts-node/register test/*.test.ts",

@@ -11,9 +11,13 @@ node_modules/*
 core/.vs/*
 core/*.js
 core/*.js.map
+ui/.vs/*
+ui/*.js
+ui/*.js.map
 test/*.js
 test/*.js.map
 coverage/*
 .nyc_output/*
+dist/*
 
 
