@@ -1,7 +1,7 @@
 {
    "name": "fsbot",
    "version": "0.0.0",
-   "description": "An OpenAI assistant that likes to tak about FS, written in typescript, node.js, and the MS technology stack.",
+   "description": "An OpenAI assistant that likes to talk about FS, written in typescript, node.js, and the MS technology stack - Fluid Framework, Fluent UI, Azure.",
    "main": "index.js",
    "author": {
       "name": "Jon Verrier"
