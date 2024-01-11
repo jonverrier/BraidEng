@@ -18,7 +18,7 @@
    "include": [
       "./core/**/*.ts",
       "./core/**/*.tsx",
-      "./test/**/*.ts"
+      "./test/**/*.test.ts"
    ],
    "exclude": [
       "./node_modules"

@@ -1,5 +1,5 @@
 {
-   "name": "chadbot",
+   "name": "fsbot",
    "version": "0.0.0",
    "description": "An OpenAI assistant that likes to tak about FS, written in typescript, node.js, and the MS technology stack.",
    "main": "index.js",
@@ -10,9 +10,9 @@
       "build-package": "webpack-cli --config webpack-config.js && copy dist\\chadbot.js public\\assets\\js && copy dist\\chadbot.js.map public\\assets\\js",
       "build": "tsc --build",
       "clean": "tsc --build --clean",
-      "test": "mocha --debug-brk --require ts-node/register",
+      "test": "mocha --debug-brk --require ts-node/register test/*.test.ts",
       "test-mini": "mocha --es-module-specifier-resolution=node --debug-brk --require ts-node/register -g Notification",
-      "cover": "tsc && nyc mocha",
+      "cover": "tsc && nyc mocha --require ts-node/register test/*.test.ts",
       "local-server": "npx @fluidframework/azure-local-service@latest"
    },
    "devDependencies": {
