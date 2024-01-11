@@ -1,10 +1,10 @@
 module.exports = {
    devtool: 'source-map',
    entry: "./core/AppEntry.tsx",
-   mode: "development",
+   mode: "production",
    target: 'web',
    output: {
-      filename: "chadbot.js",
+      filename: "chadbot.min.js",
       devtoolModuleFilenameTemplate: '[resource-path]',  // removes the webpack:/// prefix
       libraryTarget: 'window'
    },
