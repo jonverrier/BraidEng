@@ -6,6 +6,7 @@
    "author": {
       "name": "Jon Verrier"
    },
+   "sideEffects": false,
    "scripts": {
       "build-package": "webpack-cli --config webpack-config.js && copy dist\\fsbot.min.js public\\assets\\js && copy dist\\fsbot.min.js.map public\\assets\\js",
       "build": "tsc --build",
