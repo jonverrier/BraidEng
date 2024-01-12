@@ -74,17 +74,17 @@ describe("Caucus", function () {
 
       let caucus = newConnection.participantCaucus();
 
-      caucus.add(workingPersona.checkedId, workingPersona);
-      expect(caucus.has(workingPersona.checkedId)).toEqual(true);
-      expect(caucus.get(workingPersona.checkedId).equals(workingPersona)).toEqual(true);
+      caucus.add(workingPersona.id, workingPersona);
+      expect(caucus.has(workingPersona.id)).toEqual(true);
+      expect(caucus.get(workingPersona.id).equals(workingPersona)).toEqual(true);
       expect(caucus.current().size).toEqual(1);
 
       workingPersona.name = "Joe";
-      caucus.amend(workingPersona.checkedId, workingPersona);
-      expect(caucus.get(workingPersona.checkedId).equals(workingPersona)).toEqual(true)
+      caucus.amend(workingPersona.id, workingPersona);
+      expect(caucus.get(workingPersona.id).equals(workingPersona)).toEqual(true)
 
-      caucus.remove(workingPersona.checkedId);
-      expect(caucus.has(workingPersona.checkedId)).toEqual(false);
+      caucus.remove(workingPersona.id);
+      expect(caucus.has(workingPersona.id)).toEqual(false);
       expect(caucus.current().size).toEqual(0);
     });
 
@@ -94,7 +94,7 @@ describe("Caucus", function () {
 
       let caucus = newConnection.participantCaucus();
 
-      caucus.add(workingPersona.checkedId, workingPersona);
+      caucus.add(workingPersona.id, workingPersona);
 
       let caught = false;
       try {
@@ -120,16 +120,16 @@ describe("Caucus", function () {
       expect(caucus.current().size === 0).toEqual(true);
 
       // Sync in a new element
-      synchMap.set(workingPersona.checkedId, workingPersona);
+      synchMap.set(workingPersona.id, workingPersona);
       caucus.synchFrom(synchMap);
       expect(caucus.current().size === 1).toEqual(true);
-      expect(caucus.get(workingPersona.checkedId).equals(workingPersona)).toEqual(true);
+      expect(caucus.get(workingPersona.id).equals(workingPersona)).toEqual(true);
 
       // Sync in a changed element
       workingPersona.name = "Joe 2";
       caucus.synchFrom(synchMap);
       expect(caucus.current().size === 1).toEqual(true);
-      expect(caucus.get(workingPersona.checkedId).equals(workingPersona)).toEqual(true);
+      expect(caucus.get(workingPersona.id).equals(workingPersona)).toEqual(true);
    });
 });
 

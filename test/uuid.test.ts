@@ -2,27 +2,28 @@
 // Copyright TXPCo ltd, 2021
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
-
-import { uuid, looksLikeUuid} from '../core/Uuid';
+import { IKeyGenerator } from '../core/KeyGenerator';
+import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 
 const badUuid = "9a0583f5xca56-421b-8545-aa23032d6c93"
 
+var keyGenerator: IKeyGenerator = new UuidKeyGenerator();
 
 describe("Uuid", function () {
 
    it("Needs to create UUID", function () {
 
-      var newUuid: string = uuid();
+      var newUuid: string = keyGenerator.generateKey();
       expect(newUuid.length == 36).toEqual(true);
    });
 
    it("Needs to test valid UUID", function () {
 
-      var newUuid: string = uuid();
-      expect(looksLikeUuid(newUuid)).toEqual(true);
+      var newUuid: string = keyGenerator.generateKey();
+      expect(keyGenerator.couldBeAKey(newUuid)).toEqual(true);
 
-      expect(looksLikeUuid("")).toEqual(false);
-      expect(looksLikeUuid(badUuid)).toEqual(false);
+      expect(keyGenerator.couldBeAKey("")).toEqual(false);
+      expect(keyGenerator.couldBeAKey(badUuid)).toEqual(false);
    });   
 });
 
@@ -40,17 +41,17 @@ describe("Uuid - without Blob", function () {
 
    it("Needs to create UUID without Blob", function () {
 
-      var newUuid: string = uuid();
+      var newUuid: string = keyGenerator.generateKey();
 
       expect(newUuid.length == 36).toEqual(true);
    });
 
    it("Needs to test valid UUID without Blob", function () {
 
-      var newUuid: string = uuid();
-      expect(looksLikeUuid(newUuid)).toEqual(true);
+      var newUuid: string = keyGenerator.generateKey();
+      expect(keyGenerator.couldBeAKey(newUuid)).toEqual(true);
 
-      expect(looksLikeUuid("")).toEqual(false);
-      expect(looksLikeUuid(badUuid)).toEqual(false);
+      expect(keyGenerator.couldBeAKey("")).toEqual(false);
+      expect(keyGenerator.couldBeAKey(badUuid)).toEqual(false);
    });
 });
