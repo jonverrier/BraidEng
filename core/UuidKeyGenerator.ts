@@ -1,6 +1,18 @@
 // Copyright (c) 2023 TXPCo Ltd
 import { EnvironmentError } from './Errors';
+import { IKeyGenerator } from './KeyGenerator';
 
+export class UuidKeyGenerator implements IKeyGenerator {
+
+   generateKey (): string {
+      return uuid();
+   }
+
+   couldBeAKey(key: string): boolean {
+      return looksLikeUuid (key);
+   }
+
+}
 
 function generateUUID() { // Public Domain/MIT
     var d = new Date().getTime();//Timestamp
@@ -18,7 +30,7 @@ function generateUUID() { // Public Domain/MIT
     });
 }
 
-export function uuid(): string {
+function uuid(): string {
 
    var newUuid: string = "";
    

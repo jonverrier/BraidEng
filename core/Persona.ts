@@ -4,6 +4,10 @@ import { InvalidParameterError } from './Errors';
 import { EIcon } from './Icons';
 import { throwIfUndefined } from './Asserts'; 
 import { MDynamicStreamable, DynamicStreamableFactory } from "./StreamingFramework";
+import { IKeyGenerator } from '../core/KeyGenerator';
+import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
+
+var keyGenerator: IKeyGenerator = new UuidKeyGenerator();
 
 const unknowUuid: string = "88a77968-2525-4b83-b396-352ca83d1680";
 
@@ -23,8 +27,8 @@ function callAtob(data_: string, forceShim: boolean): string {
 // Persona - aggregates name, icon type, & timestamp of last time we saw them
 // excludes email and other PII so can be passed to client even when describing an individual.
 export class Persona extends MDynamicStreamable {
-   private _id: string | undefined;
-   private _name: string | undefined;
+   private _id: string;
+   private _name: string;
    private _icon: EIcon;
    private _thumbnailB64: string | undefined;
    private _lastSeenAt: Date;
@@ -56,8 +60,8 @@ export class Persona extends MDynamicStreamable {
       super();
 
       if (arr.length === 0) {
-         this._id = undefined;
-         this._name = undefined;
+         this._id = keyGenerator.generateKey(); // An new Person has a key
+         this._name = "";                       // But not a name 
          this._icon = EIcon.kUnknownPersona;
          this._thumbnailB64 = undefined;
          this._lastSeenAt = new Date();
@@ -134,10 +138,10 @@ export class Persona extends MDynamicStreamable {
    /**
    * set of 'getters' for private variables
    */
-   get id(): string | undefined {
+   get id(): string {
       return this._id;
    }
-   get name(): string | undefined {
+   get name(): string {
       return this._name;
    }
    get icon(): EIcon {
@@ -149,24 +153,14 @@ export class Persona extends MDynamicStreamable {
    get lastSeenAt(): Date {
       return this._lastSeenAt;
    }
-
-  /**
-   * set of 'getters' for private variables, all throw an exception if member is not defined. 
-   */
-   get checkedId(): string {
-      throwIfUndefined (this._id);
-      return this._id;
-   }
-   get checkedName(): string {
-      throwIfUndefined (this._name);      
-      return this._name;
-   }
    get checkedThumbnailB64(): string {
       throwIfUndefined (this._thumbnailB64);        
       return this._thumbnailB64;
    }
 
-
+   /**
+   * set of 'setters' for private variables
+   */
    set id(id_: string) {
       if (!Persona.isValidId(id_)) {
          throw new InvalidParameterError("Id:" + id_ + '.');

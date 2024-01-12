@@ -3,10 +3,13 @@
 import { MDynamicStreamable } from '../core/StreamingFramework';
 import { Persona} from '../core/Persona';
 import { EIcon } from '../core/Icons';
+import { IKeyGenerator } from '../core/KeyGenerator';
+import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
 
+var keyGenerator: IKeyGenerator = new UuidKeyGenerator();
 
 var myId: string = "1234";
 var myName: string = "Jon";
@@ -30,7 +33,8 @@ describe("Persona", function () {
 
       var personaEmpty = new Persona();
 
-      expect(personaEmpty.id).toEqual(undefined);
+      expect(personaEmpty.name).toEqual("");
+      expect(keyGenerator.couldBeAKey (personaEmpty.id)).toEqual(true);      
    });
 
    it("Needs to allow undefined ID", function () {
