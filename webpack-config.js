@@ -1,8 +1,12 @@
+
+//var nodeExternals = require('webpack-node-externals');
+
 module.exports = {
    devtool: 'source-map',
    entry: "./ui/AppEntry.tsx",
    mode: "development",
-   target: 'web',
+   target: 'web', 
+   externals: ['react', 'react-dom'],
    output: {
       filename: "fsbot.js",
       devtoolModuleFilenameTemplate: '[resource-path]',  // removes the webpack:/// prefix
