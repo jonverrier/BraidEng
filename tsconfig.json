@@ -7,6 +7,7 @@
       "skipLibCheck": true,
       "forceConsistentCasingInFileNames": true,
       "noImplicitAny": true,
+      "strictNullChecks" : true,
       "module": "CommonJS",        
       "noEmitOnError": true,
       "removeComments": false,

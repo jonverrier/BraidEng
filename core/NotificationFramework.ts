@@ -2,8 +2,6 @@
 // Copyright (c) 2023 TXPCo Ltd
 /////////////////////////////////////////
 
-// 3rd party imports
-import { log, tag } from 'missionlog';
 
 /// <summary>
 /// Interest -  encapsulates what is being observed - a specific notificationId.
@@ -11,6 +9,7 @@ import { log, tag } from 'missionlog';
 export class Interest { 
 
    private _notificationId: string;
+   private static noInterest : string  = "nullInterest";
 
    /**
     * Create a Interest object
@@ -31,7 +30,7 @@ export class Interest {
 
    constructor(...arr: any[]) { 
       if (arr.length === 0) { // Empty Constructor
-         this._notificationId = null;
+         this._notificationId = Interest.noInterest;
          return;
       }
       else {
@@ -51,7 +50,7 @@ export class Interest {
    /**
    * set of 'getters' for private variables
    */
-   get notificationId(): string {
+   get notificationId(): string  {
       return this._notificationId;
    }
 
@@ -62,7 +61,9 @@ export class Interest {
     */
    equals(rhs: Interest): boolean {
       
-      return (this._notificationId === rhs._notificationId);
+      if (rhs)
+         return (this._notificationId === rhs._notificationId);
+      return false;
    }
 
    /**
@@ -75,6 +76,10 @@ export class Interest {
       return this;
    }
 
+   public static createNullInterest () : Interest {
+      return new Interest (Interest.noInterest);
+
+   }
 }
 
 /// <summary>
@@ -104,15 +109,15 @@ export class Notification {
 
    constructor(...arr: any[]) {
       if (arr.length === 0) { // Empty Contrutructor
-         this._interest = null;
+         this._interest = Interest.createNullInterest();
          return;
       }
       else {
          if (this.isMyType(arr[0])) { // Copy Contrutructor
-            this._interest = arr[0]._interest;
+            this._interest = new Interest (arr[0]._interest);
          }
          else { // Individual arguments
-            this._interest = arr[0];
+            this._interest = new Interest (arr[0]);
          }
       }
    }
@@ -136,7 +141,7 @@ export class Notification {
    equals(rhs: Notification): boolean {
 
       return (this.interest === rhs.interest) ||
-         ((this._interest !== null) && (rhs.interest !== null) && (this._interest.equals(rhs._interest)));
+         (this._interest.equals(rhs._interest));
    }
 
    /**
@@ -158,7 +163,7 @@ export class Notification {
 /// </summary>
 export class NotificationFor<EventData> extends Notification
 {
-   private _eventData: EventData;
+   private _eventData: EventData | undefined;
 
 
    /**
@@ -182,7 +187,7 @@ export class NotificationFor<EventData> extends Notification
    constructor(...arr: any[]) {
       if (arr.length === 0) { // Construct empty
          super();
-         this._eventData = null;
+         this._eventData = undefined;
          return;
       }
       else 
@@ -199,7 +204,7 @@ export class NotificationFor<EventData> extends Notification
    /**
    * set of 'getters' for private variables
    */
-   get eventData(): EventData {
+   get eventData(): EventData | undefined {
       return this._eventData;
    }
 
@@ -231,7 +236,7 @@ export class NotificationFor<EventData> extends Notification
 /// </summary>
 export class ObserverInterest {
 
-   private _observer: IObserver;
+   private _observer: IObserver | undefined;
    private _interest: Interest;
 
    /**
@@ -254,24 +259,24 @@ export class ObserverInterest {
 
    constructor(...arr: any[]) {
       if (arr.length === 0) { // Empty constructor
-         this._observer = null;
-         this._interest = null;
+         this._observer = undefined;
+         this._interest = Interest.createNullInterest();
          return;
       }
       if (arr.length === 1) { // Copy constructor
          this._observer = arr[0]._observer;
-         this._interest = arr[0]._interest;
+         this._interest = new Interest (arr[0]._interest);
       }
       else { // Indivual arguments
          this._observer = arr[0];
-         this._interest = arr[1];
+         this._interest = new Interest (arr[1]);
       }
    }
 
    /**
    * set of 'getters' for private variables
    */
-   get observer(): IObserver {
+   get observer(): IObserver | undefined {
       return this._observer;
    }
    get interest(): Interest {
@@ -287,7 +292,7 @@ export class ObserverInterest {
 
       return ((this._observer === rhs._observer) && 
          ( (this.interest === rhs.interest) ||
-           ((this._interest !== null) && (rhs.interest !== null) && (this._interest.equals(rhs._interest)))));
+           (rhs.interest !== undefined) && (this._interest.equals(rhs._interest))));
    }
 
    /**
@@ -296,7 +301,7 @@ export class ObserverInterest {
     */
    assign(rhs: ObserverInterest): ObserverInterest {
       this._observer = rhs._observer;
-      this._interest = rhs._interest;
+      this._interest = new Interest(rhs._interest);
 
       return this;
    }
@@ -310,7 +315,7 @@ export class ObserverInterest {
 type FunctionForNotification = (interest: Interest, data: Notification) => void;
 
 export class NotificationRouter implements IObserver {
-   private _function: FunctionForNotification;
+   private _function: FunctionForNotification | undefined;
 
    /**
     * Create empty NotificationRouterFor object
@@ -331,7 +336,7 @@ export class NotificationRouter implements IObserver {
 
    constructor(...arr: any[]) {
       if (arr.length === 0) { // Construct empty
-         this._function = null;
+         this._function = undefined;
          return;
       }
       else {
@@ -351,7 +356,7 @@ export class NotificationRouter implements IObserver {
    /**
    * set of 'getters' for private variables
    */
-   get function(): FunctionForNotification {
+   get function(): FunctionForNotification | undefined {
       return this._function;
    }
 
@@ -378,7 +383,8 @@ export class NotificationRouter implements IObserver {
    notify(interest_: Interest, notification_: Notification): void {
 
       // pass on to the required method
-      this._function(interest_, notification_);
+      if (this._function)
+         this._function(interest_, notification_);
    }
 }
 
@@ -391,7 +397,7 @@ type FunctionFor<NotificationData> = (interest: Interest, data: NotificationFor<
 
 export class NotificationRouterFor<NotificationData> implements IObserver
 {
-   private _function: FunctionFor<NotificationData>;
+   private _function: FunctionFor<NotificationData> | undefined;
 
    /**
     * Create empty NotificationRouterFor object
@@ -412,7 +418,7 @@ export class NotificationRouterFor<NotificationData> implements IObserver
 
    constructor(...arr: any[]) {
       if (arr.length === 0) { // Construct empty
-         this._function = null;
+         this._function = undefined;
          return;
       }
       else {
@@ -432,7 +438,7 @@ export class NotificationRouterFor<NotificationData> implements IObserver
    /**
    * set of 'getters' for private variables
    */
-   get function(): FunctionFor<NotificationData> {
+   get function(): FunctionFor<NotificationData> | undefined {
       return this._function;
    }
 
@@ -459,7 +465,8 @@ export class NotificationRouterFor<NotificationData> implements IObserver
    notify(interest_: Interest, notification_: NotificationFor<NotificationData>): void {
 
       // pass on to the required method
-      this._function(interest_, notification_);
+      if (this._function)
+         this._function(interest_, notification_);
    }
 }
 
@@ -494,9 +501,14 @@ export class Notifier implements INotifier {
 
       for (var i = 0; i < this._observerInterests.length; i++) {
 
-         if (this._observerInterests[i].interest.equals (interest_)) {
+         let interest = this._observerInterests[i].interest;
+         let observer = this._observerInterests[i].observer;
 
-            this._observerInterests[i].observer.notify(this._observerInterests[i].interest, notificationData_);
+         if (interest) {
+            if (interest.equals (interest_)) {
+               if (observer)
+                  observer.notify(interest, notificationData_);
+            }
          }
        }
     }

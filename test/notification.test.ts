@@ -14,13 +14,14 @@ import {
    NotificationRouter,
    NotificationRouterFor
 } from '../core/NotificationFramework';
+import { throwIfUndefined } from '../core/Asserts';
 
 class MockObserver implements IObserver {
 
-   public _lastNotification: Notification = null;
+   public _lastNotification: Notification | undefined = undefined;
 
    constructor() {
-      this._lastNotification = null;
+      this._lastNotification = undefined;
    }
 
    notify(interest_: Interest, notification_: Notification): void {
@@ -177,8 +178,8 @@ describe("NotificationFramework", function () {
       expect(observationRouter1.equals(observationRouter1)).toEqual(true);
       expect(observationRouter1.equals(observationRouter2)).toEqual(false);
       expect(observationRouter1.equals(observationRouter3)).toEqual(true);
-      expect(observationRouter1.function !== null).toEqual(true);
-      expect(observationRouter4.function === null).toEqual(true);
+      expect(observationRouter1.function !== undefined).toEqual(true);
+      expect(observationRouter4.function === undefined).toEqual(true);
 
       observationRouter2.assign(observationRouter1);
       expect(observationRouter1.equals(observationRouter2)).toEqual(true);
@@ -206,15 +207,21 @@ describe("NotificationFramework", function () {
       var notification: Notification = new Notification(interest1);
 
       notifier.notifyObservers(interest1, notification);
+
+      throwIfUndefined (observerYes._lastNotification);
+
       expect(observerYes._lastNotification.equals(notification) === true).toEqual(true);
-      expect((observerNo._lastNotification === null) === true).toEqual(true);
+      expect((observerNo._lastNotification === undefined) === true).toEqual(true);
 
       // Call sequence 2 - notification with Notification payload
       var notificationForInt: NotificationFor<number> = new NotificationFor<number>(interest1, 1);
 
       notifier.notifyObservers(interest1, notificationForInt);
+
+      throwIfUndefined (observerYes._lastNotification);
+
       expect(observerYes._lastNotification.equals(notificationForInt) === true).toEqual(true);
-      expect((observerNo._lastNotification === null) === true).toEqual(true);
+      expect((observerNo._lastNotification === undefined) === true).toEqual(true);
 
       // Tidy
       expect(notifier.removeObserver(observerInterest2) === true).toEqual(true);
@@ -229,8 +236,11 @@ describe("NotificationFramework", function () {
 
       var notification3: Notification = new Notification(interest1);
       notifier.notifyObservers(interest1, notification3);
+      
+      throwIfUndefined (observerYes._lastNotification);
+
       expect(observerYes._lastNotification.equals(notification3) === true).toEqual(true);
-      expect((observerNo._lastNotification === null) === true).toEqual(true);
+      expect((observerNo._lastNotification === undefined) === true).toEqual(true);
 
       expect(notifier.removeObserver(observerInterest3) === true).toEqual(true);
       notifier.removeAllObservers();
@@ -243,8 +253,11 @@ describe("NotificationFramework", function () {
 
       var notification4: NotificationFor<number> = new NotificationFor<number>(interest1, 2);
       notifier.notifyObservers(interest1, notification4);
+      
+      throwIfUndefined (observerYes._lastNotification);
+
       expect(observerYes._lastNotification.equals(notification4) === true).toEqual(true);
-      expect((observerNo._lastNotification === null) === true).toEqual(true);
+      expect((observerNo._lastNotification === undefined) === true).toEqual(true);
       notifier.removeAllObservers();
    });
 });

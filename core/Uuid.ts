@@ -1,6 +1,7 @@
 // Copyright (c) 2023 TXPCo Ltd
 import { EnvironmentError } from './Errors';
 
+
 function generateUUID() { // Public Domain/MIT
     var d = new Date().getTime();//Timestamp
     var d2 = ((typeof performance !== 'undefined') && performance.now && (performance.now()*1000)) || 0;//Time in microseconds since page-load or 0 if unsupported
@@ -19,7 +20,7 @@ function generateUUID() { // Public Domain/MIT
 
 export function uuid(): string {
 
-   var newUuid: string = null;
+   var newUuid: string = "";
    
    // Check if Blob is supported in Browser as it is not supported in some Safari versions
    if (typeof Blob !== "undefined") {
@@ -47,7 +48,8 @@ export function uuid(): string {
 
       newUuid = generateUUID();
    }
-   if (!newUuid)
+   
+   if (newUuid.length == 0)
       throw new EnvironmentError("Error creating UUID.");
 
    return newUuid;
