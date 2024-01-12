@@ -32,13 +32,14 @@ export abstract class MDynamicStreamable extends MStreamable {
       return JSON.stringify({ className: this.className(), data: this.streamOut() });
    }
 
-   static resurrect(stream: string): MDynamicStreamable {
+   static resurrect(stream: string): MDynamicStreamable | undefined {
 
       const parsed = JSON.parse(stream);
 
       let obj = DynamicStreamableFactory.create(parsed.className);
 
-      obj.streamIn(parsed.data);
+      if (obj)
+         obj.streamIn(parsed.data);
 
       return obj;
    }
@@ -47,20 +48,20 @@ export abstract class MDynamicStreamable extends MStreamable {
 // Signature for the factory function 
 type FactoryFunctionFor<MDynamicStreamable> = () => MDynamicStreamable;
 
-var firstDynamicStreamableFactory: DynamicStreamableFactory = null;
+var firstDynamicStreamableFactory: DynamicStreamableFactory | undefined = undefined;
 
 export class DynamicStreamableFactory {
 
    _className: string;
    _factoryMethod: FactoryFunctionFor<MDynamicStreamable>;
-   _nextFactory: DynamicStreamableFactory;
+   _nextFactory: DynamicStreamableFactory | undefined;
 
    constructor(className_: string, factoryMethod_: FactoryFunctionFor<MDynamicStreamable>) {
       this._className = className_;
       this._factoryMethod = factoryMethod_;
-      this._nextFactory = null;
+      this._nextFactory = undefined;
 
-      if (firstDynamicStreamableFactory === null) {
+      if (firstDynamicStreamableFactory === undefined) {
          firstDynamicStreamableFactory = this;
       } else {
          var nextFactory: DynamicStreamableFactory = firstDynamicStreamableFactory;
@@ -72,8 +73,8 @@ export class DynamicStreamableFactory {
       }
    }
 
-   static create(className: string): MDynamicStreamable {
-      var nextFactory: DynamicStreamableFactory = firstDynamicStreamableFactory;
+   static create(className: string): MDynamicStreamable | undefined {
+      var nextFactory: DynamicStreamableFactory | undefined = firstDynamicStreamableFactory;
 
       while (nextFactory) {
          if (nextFactory._className === className) {
@@ -81,6 +82,6 @@ export class DynamicStreamableFactory {
          }
          nextFactory = nextFactory._nextFactory;
       }
-      return null;
+      return undefined;
    }
 }

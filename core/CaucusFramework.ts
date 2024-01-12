@@ -4,6 +4,7 @@ import { SharedMap, IValueChanged } from "fluid-framework";
 import { debounce } from './Debounce';
 import { MDynamicStreamable } from './StreamingFramework';
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
+import { throwIfUndefined } from "./Asserts";
 
 export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
 
@@ -38,7 +39,7 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
       // This functions a a kickstarter for initail load - changes made by other parties before we were connected are not classed as 'remote'
       // so we have to kick the UI
       function kickStart() {
-         this.doNotification(false, false, null);
+         this.doNotification(false, false, undefined);
       }
       const kickStarted = debounce(kickStart.bind(this), 250);
       kickStarted();
@@ -89,14 +90,12 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
    get (key: string) : AType {
 
       let element = this._shared.get(key);
-      if (element) {
+      
+      throwIfUndefined (element);
 
-         let object = MDynamicStreamable.resurrect(element) as AType;
+      let object = MDynamicStreamable.resurrect(element) as AType;
 
-         return object;
-      }
-
-      return null;
+      return object;
    }
 
    current(): Map<string, AType> {
@@ -131,7 +130,8 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
 
       // Now update items in the shared map that are different in the input map 
       map.forEach((value: any, key: string) => {
-         let elementShared: string = this._shared.get(key);
+
+         let elementShared: string | undefined = this._shared.get(key);
 
          let elementNew: string = value.flatten();
 

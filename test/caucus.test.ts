@@ -5,6 +5,7 @@ import { describe, it } from 'mocha';
 import { Persona } from '../core/Persona';
 import { Interest, NotificationFor } from '../core/NotificationFramework';
 import { FluidConnection } from '../core/FluidConnection';
+import { EIcon } from '../core/Icons';
 
 var myId: string = "1234";
 var myName: string = "Jon";
@@ -53,7 +54,7 @@ describe("Caucus", function () {
       this.timeout(10000);
       newConnection = new FluidConnection({});
 
-      persona = new Persona(myId, myName, myThumbnail, myLastSeenAt);
+      persona = new Persona(myId, myName, EIcon.kPersonPersona, myThumbnail, myLastSeenAt);
       id = await newConnection.createNew(persona);
 
       await wait();
@@ -73,20 +74,37 @@ describe("Caucus", function () {
 
       let caucus = newConnection.participantCaucus();
 
-      caucus.add(workingPersona.id, workingPersona);
-      expect(caucus.has(workingPersona.id)).toEqual(true);
-      expect(caucus.get(workingPersona.id).equals(workingPersona)).toEqual(true);
+      caucus.add(workingPersona.checkedId, workingPersona);
+      expect(caucus.has(workingPersona.checkedId)).toEqual(true);
+      expect(caucus.get(workingPersona.checkedId).equals(workingPersona)).toEqual(true);
       expect(caucus.current().size).toEqual(1);
 
       workingPersona.name = "Joe";
-      caucus.amend(workingPersona.id, workingPersona);
-      expect(caucus.get(workingPersona.id).equals(workingPersona)).toEqual(true);
+      caucus.amend(workingPersona.checkedId, workingPersona);
+      expect(caucus.get(workingPersona.checkedId).equals(workingPersona)).toEqual(true)
 
-      expect(caucus.get("banana")).toEqual(null);
-
-      caucus.remove(workingPersona.id);
-      expect(caucus.has(workingPersona.id)).toEqual(false);
+      caucus.remove(workingPersona.checkedId);
+      expect(caucus.has(workingPersona.checkedId)).toEqual(false);
       expect(caucus.current().size).toEqual(0);
+    });
+
+    it("Can detect invalid operations", async function () {
+
+      var workingPersona: Persona = new Persona(persona);
+
+      let caucus = newConnection.participantCaucus();
+
+      caucus.add(workingPersona.checkedId, workingPersona);
+
+      let caught = false;
+      try {
+         caucus.get("banana");
+      }
+      catch {
+         caught = true;            
+      }
+
+      expect(caught).toEqual(true);
     });
 
    it("Can synchronise", async function () {
@@ -102,16 +120,16 @@ describe("Caucus", function () {
       expect(caucus.current().size === 0).toEqual(true);
 
       // Sync in a new element
-      synchMap.set(workingPersona.id, workingPersona);
+      synchMap.set(workingPersona.checkedId, workingPersona);
       caucus.synchFrom(synchMap);
       expect(caucus.current().size === 1).toEqual(true);
-      expect(caucus.get(workingPersona.id).equals(workingPersona)).toEqual(true);
+      expect(caucus.get(workingPersona.checkedId).equals(workingPersona)).toEqual(true);
 
       // Sync in a changed element
       workingPersona.name = "Joe 2";
       caucus.synchFrom(synchMap);
       expect(caucus.current().size === 1).toEqual(true);
-      expect(caucus.get(workingPersona.id).equals(workingPersona)).toEqual(true);
+      expect(caucus.get(workingPersona.checkedId).equals(workingPersona)).toEqual(true);
    });
 });
 

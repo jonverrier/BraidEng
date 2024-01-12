@@ -2,9 +2,10 @@
 import { IFluidContainer, ConnectionState, SharedMap, IValueChanged } from "fluid-framework";
 import { AzureClient } from "@fluidframework/azure-client";
 
+import { throwIfUndefined } from './Asserts'; 
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { Persona } from './Persona';
-import { ConnectionError, InvalidOperationError } from './Errors';
+import { ConnectionError, InvalidOperationError, InvalidStateError} from './Errors';
 import { ClientProps } from './FluidConnectionProps';
 import { CaucusOf } from './CaucusFramework';
 
@@ -24,21 +25,20 @@ export class FluidConnection extends Notifier {
    public static connectedInterest = new Interest(FluidConnection.connectedNotificationId);
 
    _props: IConnectionProps;
-   _localUser: Persona;
-   _client: AzureClient;
-   _container: IFluidContainer;
-   _participantCaucus: CaucusOf<Persona>;
+   _localUser: Persona | undefined;
+   _client: AzureClient | undefined;
+   _container: IFluidContainer | undefined;
+   _participantCaucus: CaucusOf<Persona> | undefined;
 
    constructor(props: IConnectionProps) {
 
       super();
 
-      this._client = null;
+      this._client = undefined;
       this._props = props;
-      this._container = null;
-      this._localUser = null;
-      this._participantCaucus = null;
-
+      this._container = undefined;
+      this._localUser = undefined;
+      this._participantCaucus = undefined;
    }
 
    async createNew(localUser: Persona): Promise<string> {
@@ -62,7 +62,12 @@ export class FluidConnection extends Notifier {
             const containerIdPromise = container.attach();
 
             containerIdPromise.then((containerId) => {
-               self.setupAfterConnection(containerId, true);
+               if (this._container && this._localUser) {
+                  self.setupAfterConnection(containerId, true, this._container, this._localUser);
+               }
+               else {
+                  throw new InvalidStateError("FluidConnection has reached inconsistent internal state.");
+               }
 
                resolve (containerId);
             }).catch(() => {
@@ -89,7 +94,7 @@ export class FluidConnection extends Notifier {
          const { container, services } = await this._client.getContainer(containerId, containerSchema);
          this._container = container;
 
-         this.setupAfterConnection(containerId, false);
+         this.setupAfterConnection(containerId, false, this._container, this._localUser);
 
          return containerId;
       }
@@ -99,18 +104,23 @@ export class FluidConnection extends Notifier {
    }
 
    // local function to cut down duplication between createNew() and AttachToExisting())
-   private setupAfterConnection(id: string, creating: boolean): void {
+   private setupAfterConnection(id: string, creating: boolean, container: IFluidContainer, localUser: Persona): void {
 
       // Create caucuses so they exist when observers are notified of connection
-      this._participantCaucus = new CaucusOf<Persona>(this._container.initialObjects.participantMap as SharedMap);
+      this._participantCaucus = new CaucusOf<Persona>(container.initialObjects.participantMap as SharedMap);
 
       // Notify observers we are connected
       // They can then hook up their own observers to the caucus,
       this.notifyObservers(FluidConnection.connectedInterest, new NotificationFor<string>(FluidConnection.connectedInterest, id));
 
       // Connect our own user ID to the caucus
-      var storedVal: string = this._localUser.flatten();
-      (this._container.initialObjects.participantMap as SharedMap).set(this._localUser.id, storedVal);
+      var storedVal: string = localUser.flatten();
+      if (localUser.id) {
+         (container.initialObjects.participantMap as SharedMap).set(localUser.id, storedVal);
+      }
+      else {
+         throw new InvalidStateError("FluidConnection has reached inconsistent internal state.");
+      }
    }
 
 
@@ -126,12 +136,18 @@ export class FluidConnection extends Notifier {
       return true;
    }
 
+   isConnected (): boolean {
+
+      return this.canDisconnect();
+   }
+
    async disconnect(): Promise<boolean> {
 
       if (this.canDisconnect()) {
-         await this._container.disconnect();
-
-         this._participantCaucus = null;
+         if (this._container) {
+            await this._container.disconnect();
+         }
+         this._participantCaucus = undefined;
 
          return true;
       }
@@ -141,6 +157,7 @@ export class FluidConnection extends Notifier {
    }
 
    participantCaucus(): CaucusOf<Persona> {
+      throwIfUndefined (this._participantCaucus);
       return this._participantCaucus;
    }
 
