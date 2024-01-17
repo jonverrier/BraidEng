@@ -6,9 +6,13 @@ module.exports = {
    entry: "./ui/AppEntry.tsx",
    mode: "production",
    target: 'web', 
-   externals: ['react', 'react-dom'],
+   externals: [],
    output: {
+<<<<<<< HEAD
       filename: "fsbot.min.js",
+=======
+      filename: "fsbot.pack.js",
+>>>>>>> develop
       devtoolModuleFilenameTemplate: '[resource-path]',  // removes the webpack:/// prefix
       libraryTarget: 'window'
    },

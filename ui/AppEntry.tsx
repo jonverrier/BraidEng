@@ -8,11 +8,7 @@ import { createRoot } from "react-dom/client";
 import { log, LogLevel, tag } from 'missionlog';
 
 // Local
-import { uuid, looksLikeUuid } from '../core/Uuid';
-import { Interest, ObserverInterest, NotificationRouterFor, NotificationFor } from '../core/NotificationFramework';
-import { CaucusOf } from '../core/CaucusFramework';
-import { Persona } from '../core//Persona';
-import { FluidConnection } from '../core/FluidConnection';
+import { JoinPage } from './JoinPage';
 
 
 // Logging handler
@@ -24,36 +20,16 @@ const logger = {
    [LogLevel.DEBUG]: (tag, msg, params) => console.log(msg, ...params),
 } as Record<LogLevel, (tag: string, msg: unknown, params: unknown[]) => void>;
 
-
 export interface IAppProps {
 
 }
 
 class AppState {
 
-   localUser: Persona | null;
-   containerId: string | null;
-   fluidConnection: FluidConnection;
-   participantCaucus: CaucusOf<Persona> | null;
-}
-
-
-function containerConnectionString(id: string): string {
-
-   return location.protocol + location.hostname + location.pathname + '#' + id;
-}
-
-function copyContainerConnectionString(id: string): void {
-
-   navigator.clipboard.writeText(containerConnectionString (id));
 }
 
 export class App extends React.Component<IAppProps, AppState> {
-
-   private _initialUser: Persona | null;
-   private _router: NotificationRouterFor<string>;
-   private _connectedInterest: ObserverInterest;
-
+   
    constructor(props: IAppProps) {
 
       super(props);
@@ -62,45 +38,11 @@ export class App extends React.Component<IAppProps, AppState> {
       log.init({ application: 'DEBUG', notification: 'DEBUG' }, (level, tag, msg, params) => {
          logger[level as keyof typeof logger](tag, msg, params);
       });
-
-      this._initialUser = null;
-
-      var fluidConnection: FluidConnection = new FluidConnection({});
-      this._router = new NotificationRouterFor<string>(this.onConnection.bind(this));
-      this._connectedInterest = new ObserverInterest(this._router, FluidConnection.connectedInterest);
-      fluidConnection.addObserver(this._connectedInterest);
-
-      var hashValue: string = "";
-
-      if (window.location.hash)
-         hashValue = window.location.hash.substring(1);
-      var looksOk = looksLikeUuid(hashValue);
-
-      this.state = {
-         localUser: this._initialUser,
-         fluidConnection: fluidConnection,
-         participantCaucus: null,
-         containerId: looksOk ? hashValue : null
-      };
-
-      // Navigate at the end as it uses state
-   }
-
-   onConnection(interest: Interest, data: NotificationFor<string>) : void {
-
-      this.setState({
-         localUser: this.state.localUser,
-         containerId: data.eventData,
-         fluidConnection: this.state.fluidConnection,
-         participantCaucus: this.state.fluidConnection.participantCaucus()
-      });
    }
 
    render() {
       return (
-         <p>
-            Hello
-         </p> 
+         <JoinPage></JoinPage>
       );
    }
 }

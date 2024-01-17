@@ -18,7 +18,7 @@
    },
    "include": [
       "./core/**/*.ts",
-      "./core/**/*.tsx",
+      "./ui/**/*.tsx",
       "./test/**/*.test.ts"
    ],
    "exclude": [

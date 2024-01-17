@@ -1,6 +1,6 @@
-// Copyright (c) 2023 TXPCo Ltd
+// Copyright (c) 2024 Braid Technologies Ltd
 
-export function debounce(fn : Function, ms: number) {
+export function debounce(fn_ : Function, ms_: number) {
 
    var timer: NodeJS.Timeout | null = null;
 
@@ -12,7 +12,7 @@ export function debounce(fn : Function, ms: number) {
 
       timer = setTimeout(() => {
          timer = null;
-         fn.apply(this, arguments)
-      }, ms);
+         fn_.apply(this, arguments)
+      }, ms_);
    };
 }

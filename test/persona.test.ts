@@ -132,7 +132,7 @@ describe("Persona", function () {
 
       var caught: boolean = false;
       try {
-         persona1.name = "";
+         persona1.name = undefined as unknown as string;
       } catch (e) {
          caught = true;
       }

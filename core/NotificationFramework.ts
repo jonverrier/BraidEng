@@ -1,5 +1,5 @@
 // NotificationFramework
-// Copyright (c) 2023 TXPCo Ltd
+// Copyright (c) 2024 Braid Technologies Ltd
 /////////////////////////////////////////
 
 
@@ -43,8 +43,8 @@ export class Interest {
       }
    }
 
-   private isMyType(rhs: Interest): boolean {
-      return rhs.hasOwnProperty('_notificationId');
+   private isMyType(rhs_: Interest): boolean {
+      return rhs_.hasOwnProperty('_notificationId');
    }
 
    /**
@@ -57,21 +57,21 @@ export class Interest {
    /**
     * test for equality - checks all fields are the same. 
     * NB must use field values, not identity bcs if objects are streamed to/from JSON, identities will be different. 
-    * @param rhs - the object to compare this one to.  
+    * @param rhs_ - the object to compare this one to.  
     */
-   equals(rhs: Interest): boolean {
+   equals(rhs_: Interest): boolean {
       
-      if (rhs)
-         return (this._notificationId === rhs._notificationId);
+      if (rhs_)
+         return (this._notificationId === rhs_._notificationId);
       return false;
    }
 
    /**
     * assignment operator 
-    * @param rhs - the object to assign this one from.  
+    * @param rhs_ - the object to assign this one from.  
     */
-   assign(rhs: Interest): Interest {
-      this._notificationId = rhs._notificationId;
+   assign(rhs_: Interest): Interest {
+      this._notificationId = rhs_._notificationId;
 
       return this;
    }
@@ -122,8 +122,8 @@ export class Notification {
       }
    }
 
-   private isMyType(rhs: Notification): boolean {
-      return rhs.hasOwnProperty('_interest');
+   private isMyType(rhs_: Notification): boolean {
+      return rhs_.hasOwnProperty('_interest');
    }
 
    /**
@@ -136,20 +136,20 @@ export class Notification {
    /**
     * test for equality - checks all fields are the same. 
     * Shallow check.
-    * @param rhs - the object to compare this one to.  
+    * @param rhs_ - the object to compare this one to.  
     */
-   equals(rhs: Notification): boolean {
+   equals(rhs_: Notification): boolean {
 
-      return (this.interest === rhs.interest) ||
-         (this._interest.equals(rhs._interest));
+      return (this.interest === rhs_.interest) ||
+         (this._interest.equals(rhs_._interest));
    }
 
    /**
     * assignment operator 
-    * @param rhs - the object to assign this one from.  
+    * @param rhs_ - the object to assign this one from.  
     */
-   assign(rhs: Notification): Notification {
-      this._interest = rhs._interest;
+   assign(rhs_: Notification): Notification {
+      this._interest = rhs_._interest;
 
       return this;
    }
@@ -211,21 +211,21 @@ export class NotificationFor<EventData> extends Notification
    /**
     * test for equality - checks all fields are the same. 
     * Is a shallow compare if the payload is an object
-    * @param rhs - the object to compare this one to.  
+    * @param rhs_ - the object to compare this one to.  
     */
-   equals(rhs: NotificationFor<EventData>): boolean {
+   equals(rhs_: NotificationFor<EventData>): boolean {
 
-      return (super.equals(rhs) &&
-         (this._eventData === rhs._eventData));
+      return (super.equals(rhs_) &&
+         (this._eventData === rhs_._eventData));
    }
 
    /**
     * assignment operator 
-    * @param rhs - the object to assign this one from.  
+    * @param rhs_ - the object to assign this one from.  
     */
-   assign(rhs: NotificationFor<EventData>): NotificationFor<EventData> {
-      super.assign(rhs);
-      this._eventData = rhs._eventData;
+   assign(rhs_: NotificationFor<EventData>): NotificationFor<EventData> {
+      super.assign(rhs_);
+      this._eventData = rhs_._eventData;
 
       return this;
    }
@@ -244,13 +244,13 @@ export class ObserverInterest {
     * @param observer_ - reference to the observer 
     * @param interest_ - the thing it is interested in 
     */
-   constructor(_observer: IObserver, _interest: Interest);
+   constructor(observer_: IObserver, interest_: Interest);
 
    /**
     * Create a ObserverInterest object
-    * @param observerInterest - object to copy from - should work for JSON format and for real constructed objects
+    * @param observerInterest_ - object to copy from - should work for JSON format and for real constructed objects
     */
-   public constructor(observerInterest: ObserverInterest);
+   public constructor(observerInterest_ : ObserverInterest);
 
    /**
     * Create an empty Interest object - required for particiation in serialisation framework
@@ -286,22 +286,22 @@ export class ObserverInterest {
    /**
     * test for equality - checks all fields are the same. 
     * Shallow compare
-    * @param rhs - the object to compare this one to.  
+    * @param rhs_ - the object to compare this one to.  
     */
-   equals(rhs: ObserverInterest): boolean {
+   equals(rhs_: ObserverInterest): boolean {
 
-      return ((this._observer === rhs._observer) && 
-         ( (this.interest === rhs.interest) ||
-           (rhs.interest !== undefined) && (this._interest.equals(rhs._interest))));
+      return ((this._observer === rhs_._observer) && 
+         ( (this.interest === rhs_.interest) ||
+           (rhs_.interest !== undefined) && (this._interest.equals(rhs_._interest))));
    }
 
    /**
     * assignment operator 
-    * @param rhs - the object to assign this one from.  
+    * @param rhs_ - the object to assign this one from.  
     */
-   assign(rhs: ObserverInterest): ObserverInterest {
-      this._observer = rhs._observer;
-      this._interest = new Interest(rhs._interest);
+   assign(rhs_: ObserverInterest): ObserverInterest {
+      this._observer = rhs_._observer;
+      this._interest = new Interest(rhs_._interest);
 
       return this;
    }
@@ -323,16 +323,16 @@ export class NotificationRouter implements IObserver {
    constructor();
 
    /**
-    * Create a NotificationRouterFor object
-    * @param interest_ - the thing it is interested in 
+    * Create a NotificationRouter object
+    * @param function_ - function to call on notification 
     */
-   constructor(_function: FunctionForNotification);
+   constructor(function_: FunctionForNotification);
 
    /**
     * Create a NotificationRouter  object
-    * @param observerRouter - object to copy from - should work for JSON format and for real constructed objects
+    * @param notificationRouter_ - object to copy from - should work for JSON format and for real constructed objects
     */
-   public constructor(observerRouter: NotificationRouter);
+   public constructor(notificationRouter_: NotificationRouter);
 
    constructor(...arr: any[]) {
       if (arr.length === 0) { // Construct empty
@@ -349,8 +349,8 @@ export class NotificationRouter implements IObserver {
       }
    }
 
-   private isMyType(rhs: FunctionForNotification): boolean {
-      return rhs.hasOwnProperty('_function');
+   private isMyType(rhs_: FunctionForNotification): boolean {
+      return rhs_.hasOwnProperty('_function');
    }
 
    /**
@@ -363,19 +363,19 @@ export class NotificationRouter implements IObserver {
    /**
     * test for equality - checks all fields are the same. 
     * Shallow compare
-    * @param rhs - the object to compare this one to.  
+    * @param rhs_ - the object to compare this one to.  
     */
-   equals(rhs: NotificationRouter): boolean {
+   equals(rhs_: NotificationRouter): boolean {
 
-      return (this._function === rhs._function);
+      return (this._function === rhs_._function);
    }
 
    /**
     * assignment operator 
-    * @param rhs - the object to assign this one from.  
+    * @param rhs_ - the object to assign this one from.  
     */
-   assign(rhs: NotificationRouter): NotificationRouter {
-      this._function = rhs._function;
+   assign(rhs_: NotificationRouter): NotificationRouter {
+      this._function = rhs_._function;
 
       return this;
    }
@@ -406,9 +406,9 @@ export class NotificationRouterFor<NotificationData> implements IObserver
 
    /**
     * Create a NotificationRouterFor object
-    * @param interest_ - the thing it is interested in 
+    * @param function_ - function to call on notification 
     */
-   constructor(_function: FunctionFor<NotificationData>);
+   constructor(function_: FunctionFor<NotificationData>);
 
    /**
     * Create a NotificationRouterFor<NotificationData>  object
@@ -431,8 +431,8 @@ export class NotificationRouterFor<NotificationData> implements IObserver
       }
    }
 
-   private isMyType(rhs: FunctionFor<NotificationData>): boolean {
-      return rhs.hasOwnProperty('_function');
+   private isMyType(rhs_: FunctionFor<NotificationData>): boolean {
+      return rhs_.hasOwnProperty('_function');
    }
 
    /**
@@ -445,19 +445,19 @@ export class NotificationRouterFor<NotificationData> implements IObserver
    /**
     * test for equality - checks all fields are the same. 
     * Shallow compare
-    * @param rhs - the object to compare this one to.  
+    * @param rhs_ - the object to compare this one to.  
     */
-   equals(rhs: NotificationRouterFor<NotificationData>): boolean {
+   equals(rhs_: NotificationRouterFor<NotificationData>): boolean {
 
-      return (this._function === rhs._function);
+      return (this._function === rhs_._function);
    }
 
    /**
     * assignment operator 
-    * @param rhs - the object to assign this one from.  
+    * @param rhs_ - the object to assign this one from.  
     */
-   assign(rhs: NotificationRouterFor<NotificationData>): NotificationRouterFor<NotificationData> {
-      this._function = rhs._function;
+   assign(rhs_: NotificationRouterFor<NotificationData>): NotificationRouterFor<NotificationData> {
+      this._function = rhs_._function;
 
       return this;
    }

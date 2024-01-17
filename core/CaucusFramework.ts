@@ -1,4 +1,4 @@
-// Copyright (c) 2023 TXPCo Ltd
+// Copyright (c) 2024 Braid Technologies Ltd
 import { SharedMap, IValueChanged } from "fluid-framework";
 
 import { debounce } from './Debounce';
@@ -45,39 +45,39 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
       kickStarted();
    }
 
-   private doNotification(hadPrevious: boolean, hasTarget: boolean, key: string): void {
+   private doNotification(hadPrevious_: boolean, hasTarget_: boolean, key_: string): void {
 
-      if (hadPrevious) {
+      if (hadPrevious_) {
 
-         if (hasTarget) {
+         if (hasTarget_) {
 
-            this.notifyObservers(CaucusOf.caucusMemberChangedInterest, new NotificationFor<string>(CaucusOf.caucusMemberChangedInterest, key));
+            this.notifyObservers(CaucusOf.caucusMemberChangedInterest, new NotificationFor<string>(CaucusOf.caucusMemberChangedInterest, key_));
          }
          else {
 
-            this.notifyObservers(CaucusOf.caucusMemberRemovedInterest, new NotificationFor<string>(CaucusOf.caucusMemberRemovedInterest, key));
+            this.notifyObservers(CaucusOf.caucusMemberRemovedInterest, new NotificationFor<string>(CaucusOf.caucusMemberRemovedInterest, key_));
          }
       } else {
 
-         this.notifyObservers(CaucusOf.caucusMemberAddedInterest, new NotificationFor<string>(CaucusOf.caucusMemberAddedInterest, key));
+         this.notifyObservers(CaucusOf.caucusMemberAddedInterest, new NotificationFor<string>(CaucusOf.caucusMemberAddedInterest, key_));
       }
    }
 
-   has(key: string): boolean {
+   has(key_: string): boolean {
 
-      return this._shared.has(key);
+      return this._shared.has(key_);
    }
 
-   add(key: string, element: AType): void {
+   add(key_: string, element_: AType): void {
 
-      let stream = element.flatten ();
+      let stream = element_.flatten ();
 
-      this._shared.set(key, stream);
+      this._shared.set(key_, stream);
    }
 
-   remove (key: string): boolean {
+   remove (key_: string): boolean {
 
-      return this._shared.delete(key);
+      return this._shared.delete(key_);
    }
 
    amend(key: string, element: AType) {
@@ -87,9 +87,9 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
       this._shared.set(key, stream);
    }
 
-   get (key: string) : AType {
+   get (key_: string) : AType {
 
-      let element = this._shared.get(key);
+      let element = this._shared.get(key_);
       
       throwIfUndefined (element);
 
@@ -112,13 +112,13 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
       return this._localCopy;
    }
 
-   synchFrom ( map: Map<string, AType>) : void {
+   synchFrom ( map_: Map<string, AType>) : void {
 
       var deleteSet: Array<string> = new Array<string>();
 
       // accumulate a list of things to delete, dont delete as we go bcs it messes up iteration
       this._shared.forEach((value: any, key: string) => {
-         if (!map.get (key)) {
+         if (!map_.get (key)) {
             deleteSet.push(key);
          }
       });
@@ -129,7 +129,7 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
       });
 
       // Now update items in the shared map that are different in the input map 
-      map.forEach((value: any, key: string) => {
+      map_.forEach((value: any, key: string) => {
 
          let elementShared: string | undefined = this._shared.get(key);
 
