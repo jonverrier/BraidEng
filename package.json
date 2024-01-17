@@ -8,11 +8,7 @@
    },
    "sideEffects": false,
    "scripts": {
-<<<<<<< HEAD
-      "build-package": "webpack-cli --config webpack-config.js && copy dist\\fsbot.min.js public\\assets\\js && copy dist\\fsbot.min.js.map public\\assets\\js",
-=======
-      "build-package": "webpack-cli --config webpack-config.js && copy dist\\fsbot.js ..\\fsbotweb\\public\\assets\\js",
->>>>>>> develop
+      "build-package": "webpack-cli --config webpack-config.js && copy dist\\fsbot.min.js ..\\FSBotWeb\\public\\assets\\js",
       "build": "tsc --build",
       "clean": "tsc --build --clean",
       "test": "mocha --debug-brk --require ts-node/register test/*.test.ts",

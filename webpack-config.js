@@ -8,11 +8,7 @@ module.exports = {
    target: 'web', 
    externals: [],
    output: {
-<<<<<<< HEAD
       filename: "fsbot.min.js",
-=======
-      filename: "fsbot.pack.js",
->>>>>>> develop
       devtoolModuleFilenameTemplate: '[resource-path]',  // removes the webpack:/// prefix
       libraryTarget: 'window'
    },
