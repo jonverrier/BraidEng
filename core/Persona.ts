@@ -1,18 +1,17 @@
-// Copyright (c) 2023 TXPCo Ltd
+// Copyright (c) 2024 Braid Technologies Ltd
 
 import { InvalidParameterError } from './Errors';
 import { EIcon } from './Icons';
 import { throwIfUndefined } from './Asserts'; 
-import { MDynamicStreamable, DynamicStreamableFactory } from "./StreamingFramework";
 import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
+import { MDynamicStreamable, DynamicStreamableFactory } from "./StreamingFramework";
 
 var keyGenerator: IKeyGenerator = new UuidKeyGenerator();
 
-const unknowUuid: string = "88a77968-2525-4b83-b396-352ca83d1680";
+const unknownUuid: string = "88a77968-2525-4b83-b396-352ca83d1680";
 
 const className = "Persona";
-
 
 // atob works in a browser, implement a fallback if we are in node. 
 function callAtob(data_: string, forceShim: boolean): string {
@@ -258,10 +257,11 @@ export class Persona extends MDynamicStreamable {
     * @param name - the string to test
     */
    static isValidName(name_: string): boolean {
-      if (name_ && name_.length > 0)
-         return true;
 
-      return (false);
+      if (name_ == undefined)
+         return false;
+
+      return true; // Currently allow anything for a name, even empty string. 
    }
 
    /**
@@ -277,15 +277,13 @@ export class Persona extends MDynamicStreamable {
       // else must be a valid encoded string
       if (thumbNailB64_.length > 0) { 
 
-         var decoded = undefined;
+         var decoded : string;
 
          try {
             decoded = callAtob(thumbNailB64_, forceShim_);
          } catch (e) {
-            // OK to fall through after supressing exception as decoded will be undefined.             
+            return false;   
          }
-         if (!decoded)
-            return false;
 
          return true;
       }
@@ -293,7 +291,7 @@ export class Persona extends MDynamicStreamable {
       return (false);
    }
 
-   private static _unknown: Persona = new Persona(unknowUuid, "Guest", EIcon.kUnknownPersona, undefined, new Date(0));
+   private static _unknown: Persona = new Persona(unknownUuid, "Guest", EIcon.kUnknownPersona, undefined, new Date(0));
 
    /**
     * return persona details for 'unknown'

@@ -1,4 +1,4 @@
-// Copyright (c) 2023 TXPCo Ltd
+// Copyright (c) 2024 Braid Technologies Ltd
 
 /// <summary>
 /// IKeyGenerator - interface for a class to generate unique keys

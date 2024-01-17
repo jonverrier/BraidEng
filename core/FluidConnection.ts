@@ -1,4 +1,4 @@
-// Copyright (c) 2023 TXPCo Ltd
+// Copyright (c) 2024 Braid Technologies Ltd
 import { IFluidContainer, ConnectionState, SharedMap, IValueChanged } from "fluid-framework";
 import { AzureClient } from "@fluidframework/azure-client";
 
