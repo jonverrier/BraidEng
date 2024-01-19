@@ -1,6 +1,10 @@
 // Copyright (c) 2024 Braid Technologies Ltd
+import axios from "axios";
+
 import { IKeyGenerator } from './KeyGenerator';
 import { UuidKeyGenerator } from './UuidKeyGenerator';
+import { ConnectionError } from "./Errors";
+
 
 export class JoinPageValidator {
 
@@ -23,4 +27,19 @@ export class JoinPageValidator {
 
       return true;
    }
+
+   // makes Axios call to request the ID of a Fluid Container to use for the conversation
+   async requestConversationKey  (apiUrl_: string, key_: string) : Promise<string> {
+
+      const response = await axios.get(apiUrl_, {
+         params: {
+            key_
+         },
+      });
+
+      if (!response.data)
+         throw new ConnectionError("Error connecting to remote data services for conversation key.");
+
+      return response.data as string;
+   }    
 }

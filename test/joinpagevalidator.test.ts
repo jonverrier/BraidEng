@@ -6,6 +6,8 @@ import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 import { JoinPageValidator } from '../core/JoinPageValidator';
 
+import axios from "axios";
+
 const badUuid = "9a0583f5xca56-421b-8545-aa23032d6c93"
 
 var keyGenerator: IKeyGenerator = new UuidKeyGenerator();
@@ -31,6 +33,49 @@ describe("JoinPageValidator", function () {
       let validator = new JoinPageValidator();
 
       expect(validator.isJoinAttemptReady ("Jon", keyGenerator.generateKey())== true).toEqual(true);
-   });    
-});
+   }); 
+   
+   it("Needs to throw exception on communication error", async function () {
 
+      let validator = new JoinPageValidator();
+
+      let caught = false;
+
+      try {
+         var url = 'https://madeuphost.com/api/key';
+
+         let conversation = await validator.requestConversationKey(url, keyGenerator.generateKey());
+      }
+      catch (err) {
+         caught = true;
+      }
+
+      expect(caught).toEqual(true);   
+         
+   }).timeout (5000);;   
+
+   it("Needs to return a string on successful communication", async function () {
+
+      let validator = new JoinPageValidator();
+
+      let caught = false;
+      
+      let old = axios.get;
+
+        axios.get = (function async (key: string, params: any) {  return Promise.resolve({data: 'a string'}) }) as any;
+
+      try {
+         var url = 'https://madeuphost.com/api/key';
+
+         let conversation = await validator.requestConversationKey(url, keyGenerator.generateKey());
+      }
+      catch (err) {
+         console.log (err);
+         caught = true;
+      }
+
+      axios.get = old;
+
+      expect(caught).toEqual(false);      
+   }).timeout (5000); 
+});
