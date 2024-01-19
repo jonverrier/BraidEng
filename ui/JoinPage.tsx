@@ -5,7 +5,7 @@ import React, { ChangeEvent, useState } from 'react';
 
 // Fluent
 import {
-   makeStyles, Button, Tooltip,
+   makeStyles, Button, ButtonProps, Tooltip,
    Text, Input, 
    InputOnChangeData
 } from '@fluentui/react-components';
@@ -61,8 +61,48 @@ const centerColumnStyles = makeStyles({
       display: 'flex',
       flexDirection: 'column',
       marginLeft: '0px',
-      marginRight: '0px',
-      textAlign: 'center'
+      marginRight: '0px'
+   },
+});
+
+const headerStyles = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'column',      
+      textAlign: 'center',
+      alignItems: 'center'
+   },
+});
+
+const formStyles = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'column',      
+      textAlign: 'left',
+      alignItems: 'left'
+   },
+});
+
+const nameInputStyles = makeStyles({
+   root: {    
+      minWidth: '200px',
+      maxWidth: '400px',
+      alignSelf: 'left'
+   },
+});
+
+const keyInputStyles = makeStyles({
+   root: {    
+      minWidth: '400px',
+      maxWidth: '600px',
+      alignSelf: 'left'
+   },
+});
+
+const joinButtonStyles = makeStyles({
+   root: {    
+      maxWidth: '200px',
+      alignSelf: 'left'
    },
 });
 
@@ -72,7 +112,11 @@ export const JoinPage = (props: IJoinPageProps) => {
    const leftColumnClasses = leftColumnStyles();
    const centerColumnClasses = centerColumnStyles();
    const rightColumnClasses = rightColumnStyles();
-
+   const headerClasses = headerStyles();    
+   const formClasses = formStyles();   
+   const nameInputClasses = nameInputStyles();
+   const keyInputClasses = keyInputStyles();
+   const joinButtonClasses = joinButtonStyles();
 
    const nameInputId = "nameInputId";
    
@@ -95,10 +139,16 @@ export const JoinPage = (props: IJoinPageProps) => {
       <div className={viewOuterClasses.root} >     
          <div className={leftColumnClasses.root}></div>         
          <div className={centerColumnClasses.root}>
-            <Text align="justify">{EStrings.kJoinPagePreamble}</Text>
-            &nbsp;               
+            <div className={headerClasses.root}>
+               &nbsp;
+               <Text align="justify">{EStrings.kJoinPagePreamble}</Text>
+               &nbsp;    
+            </div> 
+            <div className={formClasses.root}>   
+            &nbsp;       
             <Tooltip withArrow content={EStrings.kJoinConversationAsPrompt} relationship="label">
-                  <Input id={nameInputId} aria-label={EStrings.kJoinConversationAsPrompt}
+                  <Input id={nameInputId} aria-label={EStrings.kJoinConversationAsPrompt} 
+                     className={nameInputClasses.root}
                      required={true}
                      value={name}
                      maxLength={20}
@@ -111,6 +161,7 @@ export const JoinPage = (props: IJoinPageProps) => {
             &nbsp;   
             <Tooltip withArrow content={EStrings.kJoinConversationKeyPrompt} relationship="label">
                   <Input id={nameInputId} aria-label={EStrings.kJoinConversationKeyPrompt}
+                     className={keyInputClasses.root}                  
                      required={true}                  
                      value={name}
                      maxLength={40}
@@ -120,7 +171,9 @@ export const JoinPage = (props: IJoinPageProps) => {
                      disabled={false}
                   />
             </Tooltip>             
-            &nbsp;                  
+            &nbsp;     
+            <Button {...props} className={joinButtonClasses.root}>Join</Button>  
+            </div>           
          </div>
          <div className={rightColumnClasses.root}></div>           
       </div>
