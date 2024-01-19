@@ -78,4 +78,22 @@ describe("JoinPageValidator", function () {
 
       expect(caught).toEqual(false);      
    }).timeout (5000); 
+
+   it("Needs to return a string on successful communication with real back end", async function () {
+
+      let validator = new JoinPageValidator();
+
+      let caught = false;
+
+      try {
+         var url = 'https://ambitious-ground-0a343ae03.4.azurestaticapps.net/api/key';
+
+         let conversation = await validator.requestConversationKey(url, "49b65194-26e1-4041-ab11-4078229f478a");
+      }
+      catch (err) {
+         caught = true;
+      }
+
+      expect(caught).toEqual(false);      
+   }).timeout (5000); 
 });

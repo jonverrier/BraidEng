@@ -33,12 +33,12 @@ export class JoinPageValidator {
 
       const response = await axios.get(apiUrl_, {
          params: {
-            key_
+            JoinKey: key_
          },
       });
 
       if (!response.data)
-         throw new ConnectionError("Error connecting to remote data services for conversation key.");
+         throw new ConnectionError("Error connecting to remote data services for conversation key: " + (response.data).toString() + ".");
 
       return response.data as string;
    }    
