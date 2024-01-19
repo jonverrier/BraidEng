@@ -4,6 +4,11 @@
 import React from 'react';
 import { createRoot } from "react-dom/client";
 
+// Fluent
+import {
+   FluentProvider, teamsDarkTheme
+} from '@fluentui/react-components';
+
 // Other 3rd party imports
 import { log, LogLevel, tag } from 'missionlog';
 
@@ -42,7 +47,9 @@ export class App extends React.Component<IAppProps, AppState> {
 
    render() {
       return (
-         <JoinPage></JoinPage>
+         <FluentProvider theme={teamsDarkTheme} >
+            <JoinPage></JoinPage>
+         </FluentProvider>         
       );
    }
 }
