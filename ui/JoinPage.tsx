@@ -15,9 +15,10 @@ import {
    Key24Regular
 } from '@fluentui/react-icons';
 
+import { JoinPageValidator } from '../core/JoinPageValidator';
 import { EStrings } from './UIStrings';
-export interface IJoinPageProps {
 
+export interface IJoinPageProps {
 }
 
 const viewOuterStyles = makeStyles({
@@ -117,22 +118,23 @@ export const JoinPage = (props: IJoinPageProps) => {
    const nameInputClasses = nameInputStyles();
    const keyInputClasses = keyInputStyles();
    const joinButtonClasses = joinButtonStyles();
+  
+   const validator = new JoinPageValidator();
 
-   const nameInputId = "nameInputId";
-   
    const [name, setName] = useState<string>("");
    const [key, setKey] = useState<string>("");
+   const [canJoin, setCanJoin] = useState<boolean>(false);
 
    function onJoinAsChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
 
       setName(data.value);
-      // joinPrompt = joinPromptFromName(name, joinPromptEnabled, joinPromptDisabled);
+      setCanJoin (validator.isJoinAttemptReady (data.value, key));
    }
 
    function onKeyChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
 
       setKey(data.value);
-      // joinPrompt = joinPromptFromName(name, joinPromptEnabled, joinPromptDisabled);
+      setCanJoin (validator.isJoinAttemptReady (name, data.value));
    }   
 
    return (
@@ -147,7 +149,7 @@ export const JoinPage = (props: IJoinPageProps) => {
             <div className={formClasses.root}>   
             &nbsp;       
             <Tooltip withArrow content={EStrings.kJoinConversationAsPrompt} relationship="label">
-                  <Input id={nameInputId} aria-label={EStrings.kJoinConversationAsPrompt} 
+                  <Input aria-label={EStrings.kJoinConversationAsPrompt} 
                      className={nameInputClasses.root}
                      required={true}
                      value={name}
@@ -160,10 +162,10 @@ export const JoinPage = (props: IJoinPageProps) => {
             </Tooltip>      
             &nbsp;   
             <Tooltip withArrow content={EStrings.kJoinConversationKeyPrompt} relationship="label">
-                  <Input id={nameInputId} aria-label={EStrings.kJoinConversationKeyPrompt}
+                  <Input aria-label={EStrings.kJoinConversationKeyPrompt}
                      className={keyInputClasses.root}                  
                      required={true}                  
-                     value={name}
+                     value={key}
                      maxLength={40}
                      contentBefore={<Key24Regular />}
                      placeholder={EStrings.kJoinConversationKeyPlaceholder}
@@ -172,7 +174,7 @@ export const JoinPage = (props: IJoinPageProps) => {
                   />
             </Tooltip>             
             &nbsp;     
-            <Button {...props} className={joinButtonClasses.root}>Join</Button>  
+            <Button disabled={!canJoin} className={joinButtonClasses.root}>Join</Button>  
             </div>           
          </div>
          <div className={rightColumnClasses.root}></div>           

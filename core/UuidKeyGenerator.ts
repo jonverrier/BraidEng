@@ -70,7 +70,9 @@ function uuid(): string {
 
 export function looksLikeUuid(uuid: string): boolean {
 
-   if ((uuid.length === 36) && uuid.split('-').length === 5) {
+   let split = uuid.split('-');
+
+   if ((uuid.length == 36) && (split.length == 5)) {
       return true;
    }
 
