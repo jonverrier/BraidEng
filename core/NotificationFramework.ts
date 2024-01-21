@@ -61,9 +61,7 @@ export class Interest {
     */
    equals(rhs_: Interest): boolean {
       
-      if (rhs_)
-         return (this._notificationId === rhs_._notificationId);
-      return false;
+      return (this._notificationId === rhs_._notificationId);
    }
 
    /**

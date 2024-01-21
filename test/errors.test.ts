@@ -3,7 +3,7 @@
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
 
-import { InvalidParameterError, InvalidOperationError, ConnectionError, EnvironmentError } from '../core/Errors';
+import { InvalidParameterError, InvalidOperationError, ConnectionError, EnvironmentError, InvalidStateError } from '../core/Errors';
 
 var message = "What";
 
@@ -32,5 +32,11 @@ describe("Errors", function () {
       var error: EnvironmentError = new EnvironmentError(message);
       expect(error.message === message).toEqual(true);
    });
+
+   it("Needs to create InvalidStateerror", function () {
+
+      var error: InvalidStateError = new InvalidStateError(message);
+      expect(error.message === message).toEqual(true);
+   });   
 });
 

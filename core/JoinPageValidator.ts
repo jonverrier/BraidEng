@@ -38,7 +38,7 @@ export class JoinPageValidator {
       });
 
       if (!response.data)
-         throw new ConnectionError("Error connecting to remote data services for conversation key: " + (response.data).toString() + ".");
+         throw new ConnectionError("Error connecting to remote data services for conversation key: " + key_ + ".");
 
       return response.data as string;
    }    

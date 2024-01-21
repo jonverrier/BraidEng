@@ -164,8 +164,29 @@ describe("NotificationFramework", function () {
       observerInterest4.assign(observerInterest1);
       expect(observerInterest1.equals(observerInterest4)).toEqual(true);
    });
+   
+   it("Need to create, test & assign NotificationRouter", function () {
 
-   it("Need to create, test & assign ObservationRouterFor", function () {
+      var observer = new MockObserver();
+      var observer2 = new MockObserver();
+
+      var observationRouter1: NotificationRouter = new NotificationRouter(observer.notifyInt.bind(observer));
+      var observationRouter2: NotificationRouter = new NotificationRouter(observer.notifyInt.bind(observer2));
+      var observationRouter3: NotificationRouter = new NotificationRouter(observationRouter1);
+      var observationRouter4: NotificationRouter = new NotificationRouter();
+
+      expect(observationRouter1.equals(observationRouter1)).toEqual(true);
+      expect(observationRouter1.equals(observationRouter2)).toEqual(false);
+      expect(observationRouter1.equals(observationRouter3)).toEqual(true);
+      expect(observationRouter1.function !== undefined).toEqual(true);
+      expect(observationRouter4.function === undefined).toEqual(true);
+
+      observationRouter2.assign(observationRouter1);
+      expect(observationRouter1.equals(observationRouter2)).toEqual(true);
+   });
+
+
+   it("Need to create, test & assign NotificationRouterFor", function () {
 
       var observer = new MockObserver();
       var observer2 = new MockObserver();

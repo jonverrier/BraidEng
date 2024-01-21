@@ -54,6 +54,31 @@ describe("JoinPageValidator", function () {
          
    }).timeout (5000);;   
 
+   it("Needs to throw error on a mocked communication error", async function () {
+
+      let validator = new JoinPageValidator();
+
+      let caught = false;
+      
+      let old = axios.get;
+
+        axios.get = (function async (key: string, params: any) {  return Promise.resolve({data: null}) }) as any;
+
+      try {
+         var url = 'https://madeuphost.com/api/key';
+
+         let conversation = await validator.requestConversationKey(url, keyGenerator.generateKey());
+      }
+      catch (err) {
+         console.log (err);
+         caught = true;
+      }
+
+      axios.get = old;
+
+      expect(caught).toEqual(true);      
+   }).timeout (5000); 
+
    it("Needs to return a string on successful communication", async function () {
 
       let validator = new JoinPageValidator();
