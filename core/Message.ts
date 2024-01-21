@@ -129,7 +129,7 @@ export class Message extends MDynamicStreamable {
    get sentAt(): Date {
       return this._sentAt;
    }
-   get checkedThumbnailB64(): string {
+   get checkedResponseToId(): string {
       throwIfUndefined (this._responseToId);        
       return this._responseToId;
    }

@@ -71,6 +71,28 @@ describe("Message", function () {
       expect(message1.equals(message2)).toEqual(false);
    });
    
+   
+   it("Needs to detect inequality on date", function () {
+
+      var messageNew: Message = new Message(message1.id, message1.authorId, message1.responseToId, message1.text, new Date());
+
+      expect(message1.equals(messageNew)).toEqual(false);
+   });
+
+   it("Needs to throw error if checkedResponseToId is not satisfied", function () {
+
+      var messageEmpty = new Message();
+
+      var caught: boolean = false;
+      try {
+         let thumb = messageEmpty.checkedResponseToId;
+
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).toEqual(true);
+   });
+
    it("Needs to correctly store attributes", function () {
          
       expect(message1.authorId === myAuthorId).toEqual(true);
