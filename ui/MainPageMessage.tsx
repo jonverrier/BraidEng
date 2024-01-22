@@ -35,6 +35,7 @@ export enum EMainPageMessageTypes { // Must mirror MessageBarIntent, with additi
 interface IMainPageMessageProps {
    intent: EMainPageMessageTypes;
    text: string;
+   onDismiss () : void;   
 }
 
 export const MainPageMessage = (props: IMainPageMessageProps) => {
@@ -46,7 +47,7 @@ export const MainPageMessage = (props: IMainPageMessageProps) => {
   let displayMessage = {intent: props.intent, text: props.text };
 
   const dismissMessage = () =>
-    { displayMessage = nullMessage; };
+    { props.onDismiss() };
 
   if (displayMessage.intent === EMainPageMessageTypes.kNothing)
      return (<div />);

@@ -20,8 +20,9 @@ import { EUIStrings } from './UIStrings';
 import { EConfigStrings } from './ConfigStrings';
 
 export interface IJoinPageProps {
-    onConnect (key_: string) : void;
-    onConnectError (hint_: string) : void;    
+   conversationKey: string;  
+   onConnect (key_: string) : void;
+   onConnectError (hint_: string) : void;    
 }
 
 const viewOuterStyles = makeStyles({
@@ -156,14 +157,17 @@ export const JoinPage = (props: IJoinPageProps) => {
       );
    }
 
+   if (props.conversationKey.length !== 0) {
+      return (<div></div>);
+   }
+   else {
    return (
       <div className={viewOuterClasses.root} >     
          <div className={leftColumnClasses.root}></div>         
          <div className={centerColumnClasses.root}>
+            &nbsp;            
             <div className={headerClasses.root}>
-               &nbsp;
-               <Text align="justify">{EUIStrings.kJoinPagePreamble}</Text>
-               &nbsp;    
+               <Text align="justify">{EUIStrings.kJoinPagePreamble}</Text>   
             </div> 
             <div className={formClasses.root}>   
             &nbsp;       
@@ -193,11 +197,12 @@ export const JoinPage = (props: IJoinPageProps) => {
                   />
             </Tooltip>             
             &nbsp;     
-            <Button disabled={!canJoin} className={joinButtonClasses.root}
+            <Button disabled={(!canJoin) || validator.isBusy()} className={joinButtonClasses.root}
             onClick={onTryJoin}>Join</Button>  
             </div>           
          </div>
          <div className={rightColumnClasses.root}></div>           
       </div>
       );
+   };
 }

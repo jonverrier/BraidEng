@@ -14,9 +14,11 @@ import { log, LogLevel, tag } from 'missionlog';
 
 // Local
 import { EConfigStrings } from './ConfigStrings';
+import { EUIStrings } from './UIStrings';
 import { EMainPageMessageTypes, MainPageMessage } from './MainPageMessage';
 import { JoinPage } from './JoinPage';
-import { EUIStrings } from './UIStrings';
+import { ConversationPage } from './ConversationPage';
+
 
 
 // Logging handler
@@ -49,7 +51,7 @@ export const App = (props: IAppProps) => {
    
    const [lastMessage, setLastMessage] = useState<string>("");
    const [lastMessageType, setLastMessageType] = useState<EMainPageMessageTypes> (EMainPageMessageTypes.kNothing);
-   const [key, setKey] = useState<string>("");
+   const [conversationKey, setConversationKey] = useState<string>("");
 
    const pageOuterClasses = pageOuterStyles();
 
@@ -59,7 +61,8 @@ export const App = (props: IAppProps) => {
    });
 
    function onConnect (key_: string) : void  {
-      setKey (key_);
+
+      setConversationKey (key_);
    }
 
    function onConnectError (hint_: string) : void  {
@@ -74,6 +77,13 @@ export const App = (props: IAppProps) => {
       setLastMessageType (EMainPageMessageTypes.kError);
    }
 
+   
+   function onDismissMessage () : void {
+
+      setLastMessage ("");
+      setLastMessageType (EMainPageMessageTypes.kNothing);
+   }
+
    return (
          <FluentProvider theme={teamsDarkTheme} >
             
@@ -81,9 +91,12 @@ export const App = (props: IAppProps) => {
 
                <MainPageMessage 
                   intent={lastMessageType} 
-                  text={lastMessage} />
+                  text={lastMessage} 
+                  onDismiss={onDismissMessage}/>
 
-               <JoinPage onConnect={onConnect} onConnectError={onConnectError}></JoinPage>
+               <JoinPage conversationKey={conversationKey} onConnect={onConnect} onConnectError={onConnectError}></JoinPage>
+
+               <ConversationPage conversationKey={conversationKey}></ConversationPage>
 
             </div>
          </FluentProvider>         
