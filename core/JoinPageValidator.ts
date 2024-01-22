@@ -34,8 +34,6 @@ export class JoinPageValidator {
    // makes Axios call to request the ID of a Fluid Container to use for the conversation
    async requestConversationKey  (apiUrl_: string, key_: string) : Promise<string> {
 
-      return "abcd";
-      
       this.activeCallCount++;
 
       const response = await axios.get(apiUrl_, {
