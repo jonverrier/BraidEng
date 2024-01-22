@@ -1,11 +1,11 @@
-/*! Copyright TXPCo 2022 */
+/*! Copyright Braid Technologies 2022 */
 
 // React
 import React, { ChangeEvent, useState } from 'react';
 
 // Fluent
 import {
-   makeStyles, Button, ButtonProps, Tooltip,
+   makeStyles, Button, Tooltip,
    Text, Input, 
    InputOnChangeData
 } from '@fluentui/react-components';
@@ -15,9 +15,14 @@ import {
    Key24Regular
 } from '@fluentui/react-icons';
 
-import { EStrings } from './UIStrings';
-export interface IJoinPageProps {
+import { JoinPageValidator } from '../core/JoinPageValidator';
+import { EUIStrings } from './UIStrings';
+import { EConfigStrings } from './ConfigStrings';
 
+export interface IJoinPageProps {
+   conversationKey: string;  
+   onConnect (key_: string) : void;
+   onConnectError (hint_: string) : void;    
 }
 
 const viewOuterStyles = makeStyles({
@@ -117,65 +122,87 @@ export const JoinPage = (props: IJoinPageProps) => {
    const nameInputClasses = nameInputStyles();
    const keyInputClasses = keyInputStyles();
    const joinButtonClasses = joinButtonStyles();
+  
+   const validator = new JoinPageValidator();
 
-   const nameInputId = "nameInputId";
-   
    const [name, setName] = useState<string>("");
    const [key, setKey] = useState<string>("");
+   const [canJoin, setCanJoin] = useState<boolean>(false);
 
    function onJoinAsChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
 
       setName(data.value);
-      // joinPrompt = joinPromptFromName(name, joinPromptEnabled, joinPromptDisabled);
+      setCanJoin (validator.isJoinAttemptReady (data.value, key));
    }
 
    function onKeyChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
 
       setKey(data.value);
-      // joinPrompt = joinPromptFromName(name, joinPromptEnabled, joinPromptDisabled);
+      setCanJoin (validator.isJoinAttemptReady (name, data.value));
    }   
 
+   function onTryJoin(ev: React.MouseEvent<HTMLButtonElement>) : void {
+
+      let onConnect = props.onConnect;
+      let onConnectError = props.onConnectError;
+
+      validator.requestConversationKey (EConfigStrings.kRequestKeyUrl, key)
+      .then (
+         (conversationKey) => {
+            onConnect(conversationKey);
+          },
+          (e) => {
+            onConnectError(e.toString());
+          }
+      );
+   }
+
+   if (props.conversationKey.length !== 0) {
+      return (<div></div>);
+   }
+   else {
    return (
       <div className={viewOuterClasses.root} >     
          <div className={leftColumnClasses.root}></div>         
          <div className={centerColumnClasses.root}>
+            &nbsp;            
             <div className={headerClasses.root}>
-               &nbsp;
-               <Text align="justify">{EStrings.kJoinPagePreamble}</Text>
-               &nbsp;    
+               <Text align="justify">{EUIStrings.kJoinPagePreamble}</Text>   
             </div> 
             <div className={formClasses.root}>   
             &nbsp;       
-            <Tooltip withArrow content={EStrings.kJoinConversationAsPrompt} relationship="label">
-                  <Input id={nameInputId} aria-label={EStrings.kJoinConversationAsPrompt} 
+            <Tooltip withArrow content={EUIStrings.kJoinConversationAsPrompt} relationship="label">
+                  <Input aria-label={EUIStrings.kJoinConversationAsPrompt} 
                      className={nameInputClasses.root}
                      required={true}
                      value={name}
                      maxLength={20}
                      contentBefore={<Person24Regular />}
-                     placeholder={EStrings.kJoinConversationAsPlaceholder}
+                     placeholder={EUIStrings.kJoinConversationAsPlaceholder}
                      onChange={onJoinAsChange}
                      disabled={false}
                   />
             </Tooltip>      
             &nbsp;   
-            <Tooltip withArrow content={EStrings.kJoinConversationKeyPrompt} relationship="label">
-                  <Input id={nameInputId} aria-label={EStrings.kJoinConversationKeyPrompt}
+            <Tooltip withArrow content={EUIStrings.kJoinConversationKeyPrompt} relationship="label">
+                  <Input aria-label={EUIStrings.kJoinConversationKeyPrompt}
                      className={keyInputClasses.root}                  
                      required={true}                  
-                     value={name}
+                     value={key}
                      maxLength={40}
                      contentBefore={<Key24Regular />}
-                     placeholder={EStrings.kJoinConversationKeyPlaceholder}
+                     placeholder={EUIStrings.kJoinConversationKeyPlaceholder}
                      onChange={onKeyChange}
                      disabled={false}
                   />
             </Tooltip>             
             &nbsp;     
-            <Button {...props} className={joinButtonClasses.root}>Join</Button>  
+            <Button disabled={(!canJoin) || validator.isBusy()} className={joinButtonClasses.root}
+            onClick={onTryJoin}>Join</Button>  
             </div>           
          </div>
          <div className={rightColumnClasses.root}></div>           
       </div>
       );
+   };
 }

@@ -70,6 +70,20 @@ describe("Persona", function () {
       expect(caught).toEqual(true);
    });
 
+   it("Needs to throw error if checkedThumbnail is not satisfied", function () {
+
+      var personaEmpty = new Persona();
+
+      var caught: boolean = false;
+      try {
+         let thumb = personaEmpty.checkedThumbnailB64;
+
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).toEqual(true);
+   });
+
    it("Needs to detect invalid thumbnail", function () {
 
       var caught: boolean = false;
@@ -90,10 +104,18 @@ describe("Persona", function () {
       expect(persona1.equals(persona2)).toEqual(false);
    });
    
+   it("Needs to detect inequality on date", function () {
+
+      var personaNew: Persona = new Persona(persona1.id, persona1.name, persona1.icon, persona1.thumbnailB64, new Date());
+
+      expect(persona1.equals(personaNew)).toEqual(false);
+   });
+
    it("Needs to correctly store attributes", function () {
          
       expect(persona1.name === myName).toEqual(true);
       expect(persona1.thumbnailB64 === myThumbnail).toEqual(true);
+      expect(persona1.checkedThumbnailB64 === myThumbnail).toEqual(true);
       expect(persona1.lastSeenAt.getTime() === myLastSeenAt.getTime()).toEqual(true);
    });
 
