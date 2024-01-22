@@ -1,19 +1,22 @@
-/*! Copyright TXPCo 2022 */
+/*! Copyright Braid Technologies 2022 */
 
 // React
-import React from 'react';
+import React, { useState } from 'react';
 import { createRoot } from "react-dom/client";
 
 // Fluent
 import {
-   FluentProvider, teamsDarkTheme
+   FluentProvider, teamsDarkTheme, makeStyles
 } from '@fluentui/react-components';
 
 // Other 3rd party imports
 import { log, LogLevel, tag } from 'missionlog';
 
 // Local
+import { EConfigStrings } from './ConfigStrings';
+import { EMainPageMessageTypes, MainPageMessage } from './MainPageMessage';
 import { JoinPage } from './JoinPage';
+import { EUIStrings } from './UIStrings';
 
 
 // Logging handler
@@ -30,28 +33,61 @@ export interface IAppProps {
 }
 
 class AppState {
-
+   key: string;
+   lastError: string;
 }
 
-export class App extends React.Component<IAppProps, AppState> {
+const pageOuterStyles = makeStyles({
+   root: {
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh' /* fill the screen with flex layout */    
+   },
+});
+
+export const App = (props: IAppProps) => {
    
-   constructor(props: IAppProps) {
+   const [lastMessage, setLastMessage] = useState<string>("");
+   const [lastMessageType, setLastMessageType] = useState<EMainPageMessageTypes> (EMainPageMessageTypes.kNothing);
+   const [key, setKey] = useState<string>("");
 
-      super(props);
+   const pageOuterClasses = pageOuterStyles();
 
-      // Initialise logging
-      log.init({ application: 'DEBUG', notification: 'DEBUG' }, (level, tag, msg, params) => {
-         logger[level as keyof typeof logger](tag, msg, params);
-      });
+   // Initialise logging
+   log.init({ application: 'DEBUG', notification: 'DEBUG' }, (level, tag, msg, params) => {
+      logger[level as keyof typeof logger](tag, msg, params);
+   });
+
+   function onConnect (key_: string) : void  {
+      setKey (key_);
    }
 
-   render() {
-      return (
+   function onConnectError (hint_: string) : void  {
+
+      let params = new Array();
+      params.length = 1;
+      params[0] = hint_;
+
+      logger.INFO (EConfigStrings.kApiLogCategory, "Error connecting to conversation.", params);
+
+      setLastMessage (EUIStrings.kJoinApiError);
+      setLastMessageType (EMainPageMessageTypes.kError);
+   }
+
+   return (
          <FluentProvider theme={teamsDarkTheme} >
-            <JoinPage></JoinPage>
+            
+            <div className={pageOuterClasses.root}>
+
+               <MainPageMessage 
+                  intent={lastMessageType} 
+                  text={lastMessage} />
+
+               <JoinPage onConnect={onConnect} onConnectError={onConnectError}></JoinPage>
+
+            </div>
          </FluentProvider>         
       );
-   }
 }
 
 // This allows code to be loaded in node.js for tests, even if we dont run actual React methods

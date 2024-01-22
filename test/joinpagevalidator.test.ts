@@ -1,5 +1,5 @@
 'use strict';
-// Copyright TXPCo ltd, 2021
+// Copyright Braid Technologies ltd, 2021
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
 import { IKeyGenerator } from '../core/KeyGenerator';

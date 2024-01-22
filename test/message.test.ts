@@ -1,5 +1,5 @@
 'use strict';
-// Copyright TXPCo ltd, 2021
+// Copyright Braid Technologies ltd, 2021
 import { MDynamicStreamable } from '../core/StreamingFramework';
 import { Message} from '../core/Message';
 import { IKeyGenerator } from '../core/KeyGenerator';

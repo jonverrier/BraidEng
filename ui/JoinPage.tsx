@@ -1,11 +1,11 @@
-/*! Copyright TXPCo 2022 */
+/*! Copyright Braid Technologies 2022 */
 
 // React
 import React, { ChangeEvent, useState } from 'react';
 
 // Fluent
 import {
-   makeStyles, Button, ButtonProps, Tooltip,
+   makeStyles, Button, Tooltip,
    Text, Input, 
    InputOnChangeData
 } from '@fluentui/react-components';
@@ -16,9 +16,12 @@ import {
 } from '@fluentui/react-icons';
 
 import { JoinPageValidator } from '../core/JoinPageValidator';
-import { EStrings } from './UIStrings';
+import { EUIStrings } from './UIStrings';
+import { EConfigStrings } from './ConfigStrings';
 
 export interface IJoinPageProps {
+    onConnect (key_: string) : void;
+    onConnectError (hint_: string) : void;    
 }
 
 const viewOuterStyles = makeStyles({
@@ -137,44 +140,61 @@ export const JoinPage = (props: IJoinPageProps) => {
       setCanJoin (validator.isJoinAttemptReady (name, data.value));
    }   
 
+   function onTryJoin(ev: React.MouseEvent<HTMLButtonElement>) : void {
+
+      let onConnect = props.onConnect;
+      let onConnectError = props.onConnectError;
+
+      validator.requestConversationKey (EConfigStrings.kRequestKeyUrl, key)
+      .then (
+         (conversationKey) => {
+            onConnect(conversationKey);
+          },
+          (e) => {
+            onConnectError(e.toString());
+          }
+      );
+   }
+
    return (
       <div className={viewOuterClasses.root} >     
          <div className={leftColumnClasses.root}></div>         
          <div className={centerColumnClasses.root}>
             <div className={headerClasses.root}>
                &nbsp;
-               <Text align="justify">{EStrings.kJoinPagePreamble}</Text>
+               <Text align="justify">{EUIStrings.kJoinPagePreamble}</Text>
                &nbsp;    
             </div> 
             <div className={formClasses.root}>   
             &nbsp;       
-            <Tooltip withArrow content={EStrings.kJoinConversationAsPrompt} relationship="label">
-                  <Input aria-label={EStrings.kJoinConversationAsPrompt} 
+            <Tooltip withArrow content={EUIStrings.kJoinConversationAsPrompt} relationship="label">
+                  <Input aria-label={EUIStrings.kJoinConversationAsPrompt} 
                      className={nameInputClasses.root}
                      required={true}
                      value={name}
                      maxLength={20}
                      contentBefore={<Person24Regular />}
-                     placeholder={EStrings.kJoinConversationAsPlaceholder}
+                     placeholder={EUIStrings.kJoinConversationAsPlaceholder}
                      onChange={onJoinAsChange}
                      disabled={false}
                   />
             </Tooltip>      
             &nbsp;   
-            <Tooltip withArrow content={EStrings.kJoinConversationKeyPrompt} relationship="label">
-                  <Input aria-label={EStrings.kJoinConversationKeyPrompt}
+            <Tooltip withArrow content={EUIStrings.kJoinConversationKeyPrompt} relationship="label">
+                  <Input aria-label={EUIStrings.kJoinConversationKeyPrompt}
                      className={keyInputClasses.root}                  
                      required={true}                  
                      value={key}
                      maxLength={40}
                      contentBefore={<Key24Regular />}
-                     placeholder={EStrings.kJoinConversationKeyPlaceholder}
+                     placeholder={EUIStrings.kJoinConversationKeyPlaceholder}
                      onChange={onKeyChange}
                      disabled={false}
                   />
             </Tooltip>             
             &nbsp;     
-            <Button disabled={!canJoin} className={joinButtonClasses.root}>Join</Button>  
+            <Button disabled={!canJoin} className={joinButtonClasses.root}
+            onClick={onTryJoin}>Join</Button>  
             </div>           
          </div>
          <div className={rightColumnClasses.root}></div>           
