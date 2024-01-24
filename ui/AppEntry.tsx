@@ -42,13 +42,26 @@ class AppState {
 const pageOuterStyles = makeStyles({
    root: {
       display: 'flex',
+      flexDirection: 'row',
+      height: '100vh', /* fill the screen with flex layout */ 
+      width: '100vw', /* fill the screen with flex layout */ 
+   },
+});
+
+const centerColumnStyles = makeStyles({
+   root: {    
+      display: 'flex',
       flexDirection: 'column',
-      height: '100vh' /* fill the screen with flex layout */    
+      marginLeft: '20px',
+      marginRight: '20px',
+      alignItems: 'bottom'           
    },
 });
 
 export const App = (props: IAppProps) => {
    
+   const centerColumnClasses = centerColumnStyles();
+
    const [lastMessage, setLastMessage] = useState<string>("");
    const [lastMessageType, setLastMessageType] = useState<EMainPageMessageTypes> (EMainPageMessageTypes.kNothing);
    const [conversationKey, setConversationKey] = useState<string>("");
@@ -87,18 +100,21 @@ export const App = (props: IAppProps) => {
    return (
          <FluentProvider theme={teamsDarkTheme} >
             
-            <div className={pageOuterClasses.root}>
+            <div className={pageOuterClasses.root}>                  
+               <div className={centerColumnClasses.root}>   
 
-               <MainPageMessage 
-                  intent={lastMessageType} 
-                  text={lastMessage} 
-                  onDismiss={onDismissMessage}/>
+                     <MainPageMessage 
+                        intent={lastMessageType} 
+                        text={lastMessage} 
+                        onDismiss={onDismissMessage}/>
 
-               <JoinPage conversationKey={conversationKey} onConnect={onConnect} onConnectError={onConnectError}></JoinPage>
+                     <JoinPage conversationKey={conversationKey} onConnect={onConnect} onConnectError={onConnectError}></JoinPage>
+   
+                     <ConversationPage conversationKey={conversationKey}></ConversationPage>
 
-               <ConversationPage conversationKey={conversationKey}></ConversationPage>
-
+               </div>             
             </div>
+
          </FluentProvider>         
       );
 }
