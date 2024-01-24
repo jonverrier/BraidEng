@@ -5,10 +5,14 @@ import React, { ChangeEvent, useState } from 'react';
 
 // Fluent
 import {
-   makeStyles, shorthands, Button, Tooltip,
+   makeStyles, shorthands, useId, 
+   Button, ButtonProps, 
+   Tooltip,
    Body1,
    Caption1,
-   Text, Input, 
+   Label,
+   Text, 
+   Input, 
    InputOnChangeData,
    Card,
    CardFooter,
@@ -18,8 +22,8 @@ import {
 
 import {
    Person24Regular,
-   Key24Regular,
-   ArrowReplyRegular
+   Mail24Regular,
+   Send24Regular
 } from '@fluentui/react-icons';
 
 import { EUIStrings } from './UIStrings';
@@ -37,20 +41,32 @@ export interface IConversationPageProps {
 const viewOuterStyles = makeStyles({
    root: {
       display: 'flex',
-      flexDirection: 'row',
-      height: '100vh', /* fill the screen with flex layout */ 
+      flexDirection: 'column',
       paddingLeft: '5px',
       paddingRight: '5px',
       paddingTop: '5px',
       paddingBottom: '5px',
-      textAlign: 'center',
-      alignItems: 'top'      
+      textAlign: 'left',
+      alignItems: 'bottom',
+      width: "100%"      
+   },
+});
+
+const formStyles = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'column',      
+      textAlign: 'left',
+      alignItems: 'bottom',
+      alignSelf: 'bottom',
+      width: '100%'
    },
 });
 
 export const ConversationPage = (props: IConversationPageProps) => {
 
    const viewOuterClasses = viewOuterStyles();
+   const formClasses = formStyles();  
 
    let keyGenerator = new UuidKeyGenerator();
    let person = new Persona (keyGenerator.generateKey(), "Jon", EIcon.kPersonPersona, undefined, new Date());
@@ -63,12 +79,24 @@ export const ConversationPage = (props: IConversationPageProps) => {
    messages.push (personMessage);
    messages.push (botMessage);   
 
-   return (
-      <div className={viewOuterClasses.root} >     
-         <MessageView message={messages[0]} author={person}></MessageView>
-         <MessageView message={messages[1]} author={bot}></MessageView>         
-      </div>
+   if (props.conversationKey.length === 0) {
+      return (<div></div>);
+   }
+   else {
+      return (
+         <div className={viewOuterClasses.root} >  
+            <div className={formClasses.root}>            
+               &nbsp;           
+               <MessageView message={messages[0]} author={person}></MessageView>
+               &nbsp;           
+               <MessageView message={messages[1]} author={bot}></MessageView>  
+               &nbsp;    
+               <InputView></InputView>   
+               &nbsp;           
+            </div>
+         </div>
       );
+   }
 }
 
 export interface IMessageViewProps {
@@ -79,41 +107,86 @@ export interface IMessageViewProps {
 
 const messageViewStyles = makeStyles({
    card: {
-     ...shorthands.margin("auto"),
-     width: "720px",
-     maxWidth: "100%",
+     ...shorthands.margin("5px"),
+     width: "100%"
    },
  });
 
 export const MessageView = (props: IMessageViewProps) => {
 
-   const styles = messageViewStyles();
+   const messageViewClasses = messageViewStyles();
  
    return (
-     <Card className={styles.card}>
+     <Card className={messageViewClasses.card}>
        <CardHeader
          image={
             <Person24Regular/>
          }
          header={
            <Body1>
-             <b>author.name</b> 
+             <b>{props.author.name}</b> 
            </Body1>
          }
-         description={<Caption1>props.message.text</Caption1>}
+         description={<Caption1>{props.message.text}</Caption1>}
        />
- 
-       <CardPreview
-         logo={
-            <Person24Regular/>
-         }
-       >
-       </CardPreview>
- 
-       <CardFooter>
-         <Button icon={<ArrowReplyRegular/>}>Reply</Button>
-       </CardFooter>
+
      </Card>
    );
 }
 
+
+export interface IInputViewProps {
+
+}
+
+const SendButton: React.FC<ButtonProps> = (props) => {
+   return (
+     <Button
+       {...props}
+       appearance="transparent"
+       icon={<Send24Regular />}
+       size="medium"
+     />
+   );
+ };
+
+ const messageInputGroupStyles = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'column',      
+      textAlign: 'left',
+      width: '100%'
+   },
+});
+
+ const messageInputStyles = makeStyles({
+   root: {    
+      minWidth: '350px',
+      maxWidth: '1000px'
+   },
+});
+
+export const InputView = (props: IInputViewProps) => {
+
+   const messageInputGroupClasses = messageInputGroupStyles();
+   const messageInputClasses = messageInputStyles();
+
+   return (
+      <div className={messageInputGroupClasses.root}>
+         <Text>{EUIStrings.kSendMessagePreamble}</Text>
+         <Tooltip withArrow content={EUIStrings.kSendButtonPrompt} relationship="label">
+            <Input aria-label={EUIStrings.kSendButtonPrompt}
+               className={messageInputClasses.root}                  
+               required={true}                  
+               /*value={key}*/
+               maxLength={40}
+               contentBefore={<Mail24Regular />}
+               placeholder={EUIStrings.kSendMessagePlaceholder}
+               /*onChange={onKeyChange}*/
+               disabled={false}
+               contentAfter={<SendButton aria-label={EUIStrings.kSendButtonPrompt} />}            
+         />
+         </Tooltip>   
+      </div>        
+   );
+}

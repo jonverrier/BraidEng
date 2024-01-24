@@ -28,54 +28,14 @@ export interface IJoinPageProps {
 const viewOuterStyles = makeStyles({
    root: {
       display: 'flex',
-      flexDirection: 'row',
-      height: '100vh', /* fill the screen with flex layout */ 
+      flexDirection: 'column',
       paddingLeft: '5px',
       paddingRight: '5px',
       paddingTop: '5px',
       paddingBottom: '5px',
-      textAlign: 'center',
-      alignItems: 'top'      
-   },
-});
-
-const leftColumnStyles = makeStyles({
-   root: {
-      display: 'flex',
-      flexDirection: 'column',
-      width: '10%',
-      alignSelf: 'left',
-      marginLeft: '0',
-      marginRight: 'auto'
-   },
-});
-
-const rightColumnStyles = makeStyles({
-   root: {
-      display: 'flex',
-      flexDirection: 'column',
-      width: '10%',
-      alignSelf: 'right',
-      marginLeft: 'auto',
-      marginRight: '0'
-   },
-});
-
-const centerColumnStyles = makeStyles({
-   root: {    
-      display: 'flex',
-      flexDirection: 'column',
-      marginLeft: '0px',
-      marginRight: '0px'
-   },
-});
-
-const headerStyles = makeStyles({
-   root: {    
-      display: 'flex',
-      flexDirection: 'column',      
-      textAlign: 'center',
-      alignItems: 'center'
+      textAlign: 'left',
+      alignItems: 'bottom',      
+      width: "100%"         
    },
 });
 
@@ -84,21 +44,22 @@ const formStyles = makeStyles({
       display: 'flex',
       flexDirection: 'column',      
       textAlign: 'left',
-      alignItems: 'left'
+      alignItems: 'bottom',
+      alignSelf: 'bottom'
    },
 });
 
 const nameInputStyles = makeStyles({
    root: {    
-      minWidth: '200px',
-      maxWidth: '400px',
+      minWidth: '175px',
+      maxWidth: '300px',
       alignSelf: 'left'
    },
 });
 
 const keyInputStyles = makeStyles({
    root: {    
-      minWidth: '400px',
+      minWidth: '350px',
       maxWidth: '600px',
       alignSelf: 'left'
    },
@@ -114,10 +75,6 @@ const joinButtonStyles = makeStyles({
 export const JoinPage = (props: IJoinPageProps) => {
 
    const viewOuterClasses = viewOuterStyles();
-   const leftColumnClasses = leftColumnStyles();
-   const centerColumnClasses = centerColumnStyles();
-   const rightColumnClasses = rightColumnStyles();
-   const headerClasses = headerStyles();    
    const formClasses = formStyles();   
    const nameInputClasses = nameInputStyles();
    const keyInputClasses = keyInputStyles();
@@ -163,45 +120,39 @@ export const JoinPage = (props: IJoinPageProps) => {
    else {
    return (
       <div className={viewOuterClasses.root} >     
-         <div className={leftColumnClasses.root}></div>         
-         <div className={centerColumnClasses.root}>
-            &nbsp;            
-            <div className={headerClasses.root}>
-               <Text align="justify">{EUIStrings.kJoinPagePreamble}</Text>   
-            </div> 
-            <div className={formClasses.root}>   
+         &nbsp;            
+         <Text align="start">{EUIStrings.kJoinPagePreamble}</Text>   
+         <div className={formClasses.root}>   
             &nbsp;       
             <Tooltip withArrow content={EUIStrings.kJoinConversationAsPrompt} relationship="label">
-                  <Input aria-label={EUIStrings.kJoinConversationAsPrompt} 
-                     className={nameInputClasses.root}
-                     required={true}
-                     value={name}
-                     maxLength={20}
-                     contentBefore={<Person24Regular />}
-                     placeholder={EUIStrings.kJoinConversationAsPlaceholder}
-                     onChange={onJoinAsChange}
-                     disabled={false}
-                  />
+               <Input aria-label={EUIStrings.kJoinConversationAsPrompt} 
+                  className={nameInputClasses.root}
+                  required={true}
+                  value={name}
+                  maxLength={20}
+                  contentBefore={<Person24Regular />}
+                  placeholder={EUIStrings.kJoinConversationAsPlaceholder}
+                  onChange={onJoinAsChange}
+                  disabled={false}
+               />
             </Tooltip>      
             &nbsp;   
             <Tooltip withArrow content={EUIStrings.kJoinConversationKeyPrompt} relationship="label">
-                  <Input aria-label={EUIStrings.kJoinConversationKeyPrompt}
-                     className={keyInputClasses.root}                  
-                     required={true}                  
-                     value={key}
-                     maxLength={40}
-                     contentBefore={<Key24Regular />}
-                     placeholder={EUIStrings.kJoinConversationKeyPlaceholder}
-                     onChange={onKeyChange}
-                     disabled={false}
-                  />
+               <Input aria-label={EUIStrings.kJoinConversationKeyPrompt}
+                  className={keyInputClasses.root}                  
+                  required={true}                  
+                  value={key}
+                  maxLength={40}
+                  contentBefore={<Key24Regular />}
+                  placeholder={EUIStrings.kJoinConversationKeyPlaceholder}
+                  onChange={onKeyChange}
+                  disabled={false}
+               />
             </Tooltip>             
             &nbsp;     
             <Button disabled={(!canJoin) || validator.isBusy()} className={joinButtonClasses.root}
-            onClick={onTryJoin}>Join</Button>  
-            </div>           
-         </div>
-         <div className={rightColumnClasses.root}></div>           
+               onClick={onTryJoin}>Join</Button>  
+         </div>                   
       </div>
       );
    };
