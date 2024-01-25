@@ -44,7 +44,9 @@ const pageOuterStyles = makeStyles({
       display: 'flex',
       flexDirection: 'row',
       height: '100vh', /* fill the screen with flex layout */ 
-      width: '100vw', /* fill the screen with flex layout */ 
+      width: '100vw',  /* fill the screen with flex layout */ 
+      alignItems: 'flex-end',
+      justifyContent: 'center'
    },
 });
 
@@ -53,8 +55,7 @@ const centerColumnStyles = makeStyles({
       display: 'flex',
       flexDirection: 'column',
       marginLeft: '20px',
-      marginRight: '20px',
-      alignItems: 'bottom'           
+      marginRight: '20px'
    },
 });
 

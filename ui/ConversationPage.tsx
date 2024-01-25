@@ -45,9 +45,7 @@ const viewOuterStyles = makeStyles({
       paddingLeft: '5px',
       paddingRight: '5px',
       paddingTop: '5px',
-      paddingBottom: '5px',
-      textAlign: 'left',
-      alignItems: 'bottom',
+      paddingBottom: '5px',    
       width: "100%"      
    },
 });
@@ -56,9 +54,6 @@ const formStyles = makeStyles({
    root: {    
       display: 'flex',
       flexDirection: 'column',      
-      textAlign: 'left',
-      alignItems: 'bottom',
-      alignSelf: 'bottom',
       width: '100%'
    },
 });
@@ -161,8 +156,7 @@ const SendButton: React.FC<ButtonProps> = (props) => {
 
  const messageInputStyles = makeStyles({
    root: {    
-      minWidth: '350px',
-      maxWidth: '1000px'
+      width: '100%'
    },
 });
 
@@ -174,6 +168,7 @@ export const InputView = (props: IInputViewProps) => {
    return (
       <div className={messageInputGroupClasses.root}>
          <Text>{EUIStrings.kSendMessagePreamble}</Text>
+         &nbsp;
          <Tooltip withArrow content={EUIStrings.kSendButtonPrompt} relationship="label">
             <Input aria-label={EUIStrings.kSendButtonPrompt}
                className={messageInputClasses.root}                  
