@@ -3,19 +3,17 @@ import { expect } from 'expect';
 import { describe, it } from 'mocha';
 
 import { Persona } from '../core/Persona';
+import { Message } from '../core/Message';
 import { Interest, NotificationFor } from '../core/NotificationFramework';
-import { FluidConnection } from '../core/FluidConnection';
 import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
 import { EIcon } from '../core/Icons';
 
 var myId: string = "1234";
-var mySecondId: string = "5678";
 var myName: string = "Jon";
-var mySecondName: string = "Jon V";
 var myThumbnail: string = "abcd";
 var myLastSeenAt = new Date();
 
-class MockLocation { // Just create the fields we use in the Mick
+class MockLocation { // Just create the fields we use in the Mock
    protocol: string;
    host: string;
    hostname: string;
@@ -138,27 +136,32 @@ describe("Caucus", function () {
 
    it("Can return an ordered array", async function () {
 
-      // Create two persona objects
-      var workingPersona: Persona = new Persona(persona);
-      var workingPersona2: Persona = new Persona(persona);      
-      workingPersona2.id = mySecondId;
-      workingPersona2.name = mySecondName;
+      // Create three Message objects
+      var workingMessage: Message = new Message();
+      var workingMessage2: Message = new Message();    
+      var workingMessage3: Message = new Message(); 
+      
+      // Space them out a second apart
+      let now = new Date();
+      workingMessage2.sentAt = new Date(now.getTime() + 1000);
+      workingMessage3.sentAt = new Date(now.getTime() + 2000);
 
-      let caucus = newConnection.participantCaucus();
+      let caucus = newConnection.messageCaucus();
 
-      var synchMap: Map<string, Persona> = new Map<string, Persona>();
+      var synchMap: Map<string, Message> = new Map<string, Message>();
+      synchMap.set (workingMessage.id, workingMessage);
+      synchMap.set (workingMessage2.id, workingMessage2);
+      synchMap.set (workingMessage3.id, workingMessage3);
 
-      // Sync down to no elements
+      // Sync in 3 elements     
       caucus.synchFrom(synchMap);
-      expect(caucus.current().size === 0).toEqual(true);
+      expect(caucus.current().size === 3).toEqual(true);
 
-      // Sync in two elements
-      synchMap.set(workingPersona.id, workingPersona);
-      synchMap.set(workingPersona2.id, workingPersona2);      
-      caucus.synchFrom(synchMap);
+      let tempArray = caucus.currentAsArray();
 
-      expect(caucus.currentAsArray().length === 2).toEqual(true);
-      // expect(caucus.get(workingPersona.id).equals(workingPersona)).toEqual(true);
+      expect(tempArray.length === 3).toEqual(true);
+      expect(tempArray[0].sentAt.getTime() <= tempArray[1].sentAt.getTime()).toEqual(true);
+      expect(tempArray[1].sentAt.getTime() <= tempArray[2].sentAt.getTime()).toEqual(true);
    });   
 });
 

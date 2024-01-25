@@ -4,6 +4,7 @@ import axios from "axios";
 import { IKeyGenerator } from './KeyGenerator';
 import { UuidKeyGenerator } from './UuidKeyGenerator';
 import { ConnectionError } from "./Errors";
+import { EEnvironment, Environment } from "./Environment";
 
 
 export class JoinPageValidator {
@@ -34,6 +35,11 @@ export class JoinPageValidator {
    // makes Axios call to request the ID of a Fluid Container to use for the conversation
    async requestConversationKey  (apiUrl_: string, key_: string) : Promise<string> {
      
+      let environment = new Environment();
+
+      if (environment.environment() === EEnvironment.kLocal)
+         return "1234";
+      
       this.activeCallCount++;
 
       const response = await axios.get(apiUrl_, {

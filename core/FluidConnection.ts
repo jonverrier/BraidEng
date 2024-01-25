@@ -1,12 +1,10 @@
 // Copyright (c) 2024 Braid Technologies Ltd
-import { IFluidContainer, ConnectionState, SharedMap, IValueChanged } from "fluid-framework";
+import { IFluidContainer, ConnectionState } from "fluid-framework";
 import { AzureClient } from "@fluidframework/azure-client";
 
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
-import { Persona } from './Persona';
 import { ConnectionError, InvalidOperationError, InvalidStateError} from './Errors';
 import { ClientProps } from './FluidConnectionProps';
-import { CaucusOf } from './CaucusFramework';
 
 export interface IConnectionProps {
 }
@@ -52,7 +50,7 @@ export abstract class FluidConnection extends Notifier {
 
             containerIdPromise.then((containerId) => {
                if (this._container) {
-                  self.setupAfterConnection(containerId, true, this._container);
+                  self.setupAfterConnection(containerId, this._container);
                }
                else {
                   throw new InvalidStateError("FluidConnection has reached inconsistent internal state.");
@@ -81,7 +79,7 @@ export abstract class FluidConnection extends Notifier {
          const { container, services } = await this._client.getContainer(containerId, this.schema());
          this._container = container;
 
-         this.setupAfterConnection(containerId, false, this._container);
+         this.setupAfterConnection(containerId, this._container);
 
          return containerId;
       }
@@ -117,12 +115,12 @@ export abstract class FluidConnection extends Notifier {
          return true;
       }
       else {
-         throw new InvalidOperationError("The remote data service is not connected - please try again in a short while.")
+         throw new InvalidOperationError("The remote data service is not connected.")
       }
    }
 
    // local function to cut down duplication between createNew() and AttachToExisting())
-   private setupAfterConnection(id: string, creating: boolean, container: IFluidContainer): void {
+   private setupAfterConnection(id: string, container: IFluidContainer): void {
 
       // Create caucuses so they exist when observers are notified of connection
       this.setupLocalCaucuses (container.initialObjects);

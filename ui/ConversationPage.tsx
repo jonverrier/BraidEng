@@ -22,6 +22,7 @@ import {
 
 import {
    Person24Regular,
+   Laptop24Regular,
    Mail24Regular,
    Send24Regular
 } from '@fluentui/react-icons';
@@ -54,21 +55,48 @@ const formStyles = makeStyles({
    },
 });
 
+// create a forceUpdate hook
+// https://stackoverflow.com/questions/46240647/how-to-force-a-functional-react-component-to-render
+function useForceUpdate() {
+   const [value, setValue] = useState(0); // simple integer state
+   return () => setValue(value => value + 1); // update state to force render
+}
+
 export const ConversationPage = (props: IConversationPageProps) => {
 
    const viewOuterClasses = viewOuterStyles();
    const formClasses = formStyles();  
 
+   // call the force update hook 
+   const forceUpdate = useForceUpdate();
+
    let keyGenerator = new UuidKeyGenerator();
    let person = new Persona (keyGenerator.generateKey(), "Jon", EIcon.kPersonPersona, undefined, new Date());
-   let bot = new Persona (keyGenerator.generateKey(), "FSChatBot", EIcon.kBotPersona, undefined, new Date());  
+   let bot = new Persona (keyGenerator.generateKey(), "Braid Bot", EIcon.kBotPersona, undefined, new Date());  
    
    let personMessage = new Message (keyGenerator.generateKey(), person.id, undefined, "Hello, from a person.", new Date());
-   let botMessage = new Message (keyGenerator.generateKey(), bot.id, undefined, "Hello, from a bot.", new Date());
+   let botMessage = new Message (keyGenerator.generateKey(), bot.id, undefined, "Hello, from the braid bot.", new Date());
+   let replaceMessage = new Message (keyGenerator.generateKey(), person.id, undefined, "Will change.", new Date());
 
    let messages = new Array<Message>();
    messages.push (personMessage);
-   messages.push (botMessage);   
+   messages.push (botMessage);  
+   messages.push (replaceMessage);
+
+   let personas = new Map<string, Persona> ();
+   personas.set (person.id, person);
+   personas.set (bot.id, bot);
+
+   function onSend (messageText_: string) : void {
+
+      let message = new Message ();
+      message.authorId = person.id;
+      message.text = messageText_;
+      message.sentAt = new Date();
+      messages[2] = message;
+
+      forceUpdate ();
+   }
 
    if (props.conversationKey.length === 0) {
       return (<div></div>);
@@ -78,11 +106,13 @@ export const ConversationPage = (props: IConversationPageProps) => {
          <div className={viewOuterClasses.root} >  
             <div className={formClasses.root}>            
                &nbsp;           
-               <MessageView message={messages[0]} author={person}></MessageView>
+               <MessageView message={messages[0]} author={(personas.get (messages[0].authorId) as Persona)}></MessageView>
                &nbsp;           
-               <MessageView message={messages[1]} author={bot}></MessageView>  
+               <MessageView message={messages[1]} author={(personas.get (messages[1].authorId) as Persona)}></MessageView>  
                &nbsp;    
-               <InputView></InputView>            
+               <MessageView message={messages[2]} author={(personas.get (messages[2].authorId) as Persona)}></MessageView>  
+               &nbsp;                
+               <InputView onSend={onSend}></InputView>            
             </div>
          </div>
       );
@@ -102,6 +132,21 @@ const messageViewStyles = makeStyles({
    },
  });
 
+ export interface IAuthorIconProps {
+ 
+   author: Persona;
+}
+
+ export const AuthorIcon = (props: IAuthorIconProps) => {
+
+   const messageViewClasses = messageViewStyles();
+ 
+   return ((props.author.icon === EIcon.kBotPersona) ?
+            <Laptop24Regular/>
+            : <Person24Regular/>
+   );
+}
+
 export const MessageView = (props: IMessageViewProps) => {
 
    const messageViewClasses = messageViewStyles();
@@ -110,7 +155,7 @@ export const MessageView = (props: IMessageViewProps) => {
      <Card className={messageViewClasses.card}>
        <CardHeader
          image={
-            <Person24Regular/>
+            <AuthorIcon author={props.author}/>
          }
          header={
            <Body1>
@@ -126,7 +171,7 @@ export const MessageView = (props: IMessageViewProps) => {
 
 
 export interface IInputViewProps {
-
+   onSend (message_: string) : void;
 }
 
 const SendButton: React.FC<ButtonProps> = (props) => {
@@ -160,6 +205,20 @@ export const InputView = (props: IInputViewProps) => {
    const messageInputGroupClasses = messageInputGroupStyles();
    const messageInputClasses = messageInputStyles();
 
+   const [message, setMessage] = useState<string>("");
+   const [canSend, setCanSend] = useState<boolean>(false);
+
+   function onKeyChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
+
+      setMessage (data.value);
+      setCanSend (data.value.length > 0);
+   }   
+
+   function onMessageSend (ev: React.MouseEvent<HTMLButtonElement>) : void {
+
+      props.onSend (message);
+   }
+
    return (
       <div className={messageInputGroupClasses.root}>
          <Text>{EUIStrings.kSendMessagePreamble}</Text>
@@ -172,9 +231,13 @@ export const InputView = (props: IInputViewProps) => {
                maxLength={40}
                contentBefore={<Mail24Regular />}
                placeholder={EUIStrings.kSendMessagePlaceholder}
-               /*onChange={onKeyChange}*/
+               onChange={onKeyChange}
                disabled={false}
-               contentAfter={<SendButton aria-label={EUIStrings.kSendButtonPrompt} />}            
+               contentAfter={<SendButton 
+                  aria-label={EUIStrings.kSendButtonPrompt} 
+                  disabled={!canSend} 
+                  onClick={onMessageSend}
+               />}            
          />
          </Tooltip>   
       </div>        

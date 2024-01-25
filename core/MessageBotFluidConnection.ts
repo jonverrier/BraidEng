@@ -34,10 +34,15 @@ export class MessageBotFluidConnection extends FluidConnection {
       return containerSchema;
    }
 
+   // This menas the list of Messages is ordered by send time ascending
+   compareFn (a: Message, b: Message) : number {
+      return a.sentAt.getTime() - b.sentAt.getTime();
+   }
+
    setupLocalCaucuses (initialObjects: any) : void {
       // Create caucuses so they exist when observers are notified of connection
-      this._participantCaucus = new CaucusOf<Persona>(initialObjects.participantMap as SharedMap);
-      this._messageCaucus = new CaucusOf<Message>(initialObjects.messageMap as SharedMap);  
+      this._participantCaucus = new CaucusOf<Persona>(initialObjects.participantMap as SharedMap, );
+      this._messageCaucus = new CaucusOf<Message>(initialObjects.messageMap as SharedMap, this.compareFn);  
       
       // Connect our own user ID to the participant caucus
       var storedVal: string = this._localUser.flatten();
