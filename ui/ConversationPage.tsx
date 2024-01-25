@@ -41,11 +41,7 @@ export interface IConversationPageProps {
 const viewOuterStyles = makeStyles({
    root: {
       display: 'flex',
-      flexDirection: 'column',
-      paddingLeft: '5px',
-      paddingRight: '5px',
-      paddingTop: '5px',
-      paddingBottom: '5px',    
+      flexDirection: 'column', 
       width: "100%"      
    },
 });
@@ -86,8 +82,7 @@ export const ConversationPage = (props: IConversationPageProps) => {
                &nbsp;           
                <MessageView message={messages[1]} author={bot}></MessageView>  
                &nbsp;    
-               <InputView></InputView>   
-               &nbsp;           
+               <InputView></InputView>            
             </div>
          </div>
       );
