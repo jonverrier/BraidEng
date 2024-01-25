@@ -45,8 +45,8 @@ const pageOuterStyles = makeStyles({
       flexDirection: 'row',
       height: '100vh', /* fill the screen with flex layout */ 
       width: '100vw',  /* fill the screen with flex layout */ 
-      alignItems: 'flex-end', /* for a row, the main axis is down vertical, flex-end is items aligned to the bottom of the row */
-      justifyContent: 'center' /* for a row, the cross-axis is horixontal, center means vertically centered */
+      alignItems: 'flex-end',  /* for a row, the main axis is vertical, flex-end is items aligned to the bottom of the row */
+      justifyContent: 'center' /* for a row, the cross-axis is horizontal, center means vertically centered */
    },
 });
 

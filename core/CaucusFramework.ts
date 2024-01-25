@@ -6,6 +6,8 @@ import { MDynamicStreamable } from './StreamingFramework';
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { throwIfUndefined } from "./Asserts";
 
+export type compareFn<T> = (left: T, right: T) => number;
+
 export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
 
    public static caucusMemberAddedNotificationId = "caucusMemberAdded";
@@ -17,14 +19,18 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
    public static caucusMemberRemovedNotificationId = "caucusMemberRemoved";
    public static caucusMemberRemovedInterest = new Interest(CaucusOf.caucusMemberRemovedNotificationId);
 
-   private _localCopy: Map<string, AType>;
+   private _localMap: Map<string, AType>;
+   private _localArray: Array<AType>;
    private _shared: SharedMap;
+   private _comparator: compareFn<AType> | null;
 
-   constructor(shared_: SharedMap) {
+   constructor(shared_: SharedMap, comparator_: compareFn<AType> | null = null) {
       super();
 
       this._shared = shared_;
-      this._localCopy = new Map<string, AType>();
+      this._localMap = new Map<string, AType>();
+      this._localArray = new Array<AType>;
+      this._comparator = comparator_;
 
       (this._shared as any).on("valueChanged", (changed: IValueChanged, local: boolean, target: SharedMap) => {
 
@@ -36,7 +42,7 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
 
       });
 
-      // This functions a a kickstarter for initail load - changes made by other parties before we were connected are not classed as 'remote'
+      // This functions as a kickstarter for initail load - changes made by other parties before we were connected are not classed as 'remote'
       // so we have to kick the UI
       function kickStart() {
          this.doNotification(false, false, undefined);
@@ -100,16 +106,41 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
 
    current(): Map<string, AType> {
 
-      this._localCopy.clear();
+      this._localMap.clear();
 
       this._shared.forEach((value: any, key: string, map: Map<string, any>) => {
 
          let object = MDynamicStreamable.resurrect(value) as AType;
 
-         this._localCopy.set(key, object);
+         this._localMap.set(key, object);
       }); 
 
-      return this._localCopy;
+      return this._localMap;
+   }
+
+   currentAsArray(): Array<AType> {
+
+      // Truncate the array, then refill from the shared map.
+      this._localArray.length = 0;
+
+      this._shared.forEach((value: any, key: string, map: Map<string, any>) => {
+
+         let object = MDynamicStreamable.resurrect(value) as AType;
+
+         this._localArray.push(object);
+      }); 
+
+      // Sort it if a comparison function is present
+      let comparator = this._comparator;
+
+      this._localArray.sort((a, b) => {
+         if (comparator)
+            return comparator (a, b);
+         else 
+            return 0;
+      });
+
+      return this._localArray;
    }
 
    synchFrom ( map_: Map<string, AType>) : void {

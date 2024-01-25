@@ -5,10 +5,13 @@ import { describe, it } from 'mocha';
 import { Persona } from '../core/Persona';
 import { Interest, NotificationFor } from '../core/NotificationFramework';
 import { FluidConnection } from '../core/FluidConnection';
+import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
 import { EIcon } from '../core/Icons';
 
 var myId: string = "1234";
+var mySecondId: string = "5678";
 var myName: string = "Jon";
+var mySecondName: string = "Jon V";
 var myThumbnail: string = "abcd";
 var myLastSeenAt = new Date();
 
@@ -41,7 +44,7 @@ describe("Caucus", function () {
 
    this.timeout(10000);
 
-   var newConnection: FluidConnection;
+   var newConnection: MessageBotFluidConnection;
    var persona: Persona;
    var id: string; 
 
@@ -52,10 +55,11 @@ describe("Caucus", function () {
       (global.location as any) = mockLocation;
 
       this.timeout(10000);
-      newConnection = new FluidConnection({});
-
       persona = new Persona(myId, myName, EIcon.kPersonPersona, myThumbnail, myLastSeenAt);
-      id = await newConnection.createNew(persona);
+
+      newConnection = new MessageBotFluidConnection({}, persona);
+
+      id = await newConnection.createNew();
 
       await wait();
    });
@@ -131,5 +135,30 @@ describe("Caucus", function () {
       expect(caucus.current().size === 1).toEqual(true);
       expect(caucus.get(workingPersona.id).equals(workingPersona)).toEqual(true);
    });
+
+   it("Can return an ordered array", async function () {
+
+      // Create two persona objects
+      var workingPersona: Persona = new Persona(persona);
+      var workingPersona2: Persona = new Persona(persona);      
+      workingPersona2.id = mySecondId;
+      workingPersona2.name = mySecondName;
+
+      let caucus = newConnection.participantCaucus();
+
+      var synchMap: Map<string, Persona> = new Map<string, Persona>();
+
+      // Sync down to no elements
+      caucus.synchFrom(synchMap);
+      expect(caucus.current().size === 0).toEqual(true);
+
+      // Sync in two elements
+      synchMap.set(workingPersona.id, workingPersona);
+      synchMap.set(workingPersona2.id, workingPersona2);      
+      caucus.synchFrom(synchMap);
+
+      expect(caucus.currentAsArray().length === 2).toEqual(true);
+      // expect(caucus.get(workingPersona.id).equals(workingPersona)).toEqual(true);
+   });   
 });
 
