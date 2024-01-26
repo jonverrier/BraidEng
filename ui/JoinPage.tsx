@@ -5,14 +5,15 @@ import React, { ChangeEvent, useState } from 'react';
 
 // Fluent
 import {
-   makeStyles, Button, Tooltip,
+   makeStyles, useId, Button, ButtonProps, Tooltip,
    Text, Input, 
    InputOnChangeData
 } from '@fluentui/react-components';
 
 import {
    Person24Regular,
-   Key24Regular
+   Key24Regular,
+   Send24Regular
 } from '@fluentui/react-icons';
 
 import { JoinPageValidator } from '../core/JoinPageValidator';
@@ -21,7 +22,7 @@ import { EConfigStrings } from './ConfigStrings';
 
 export interface IJoinPageProps {
    conversationKey: string;  
-   onConnect (key_: string) : void;
+   onConnect (key_: string, name: string) : void;
    onConnectError (hint_: string) : void;    
 }
 
@@ -33,8 +34,6 @@ const viewOuterStyles = makeStyles({
       paddingRight: '5px',
       paddingTop: '5px',
       paddingBottom: '5px',
-      textAlign: 'left',
-      alignItems: 'bottom',      
       width: "100%"         
    },
 });
@@ -42,43 +41,48 @@ const viewOuterStyles = makeStyles({
 const formStyles = makeStyles({
    root: {    
       display: 'flex',
-      flexDirection: 'column',      
-      textAlign: 'left',
-      alignItems: 'bottom',
-      alignSelf: 'bottom'
+      flexDirection: 'column'
+   },
+});
+
+const joinRowStyles = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'row'
    },
 });
 
 const nameInputStyles = makeStyles({
    root: {    
-      minWidth: '175px',
-      maxWidth: '300px',
-      alignSelf: 'left'
+      width: '100%'
    },
 });
 
 const keyInputStyles = makeStyles({
    root: {    
-      minWidth: '350px',
-      maxWidth: '600px',
-      alignSelf: 'left'
+      width: '100%'      
    },
 });
 
-const joinButtonStyles = makeStyles({
-   root: {    
-      maxWidth: '200px',
-      alignSelf: 'left'
-   },
-});
+const JoinButton: React.FC<ButtonProps> = (props) => {
+   return (
+     <Button
+       {...props}
+       appearance="transparent"
+       icon={<Send24Regular />}
+       size="medium"
+     />
+   );
+ };
 
 export const JoinPage = (props: IJoinPageProps) => {
 
    const viewOuterClasses = viewOuterStyles();
    const formClasses = formStyles();   
    const nameInputClasses = nameInputStyles();
+   const JoinRowClasses = joinRowStyles();
    const keyInputClasses = keyInputStyles();
-   const joinButtonClasses = joinButtonStyles();
+   const afterId = useId("content-after");   
   
    const validator = new JoinPageValidator();
 
@@ -105,11 +109,11 @@ export const JoinPage = (props: IJoinPageProps) => {
 
       validator.requestConversationKey (EConfigStrings.kRequestKeyUrl, key)
       .then (
-         (conversationKey) => {
-            onConnect(conversationKey);
+         (conversationKey):void => {
+            props.onConnect(conversationKey, name);
           },
           (e) => {
-            onConnectError(e.toString());
+            props.onConnectError(e.toString());
           }
       );
    }
@@ -123,20 +127,7 @@ export const JoinPage = (props: IJoinPageProps) => {
          &nbsp;            
          <Text align="start">{EUIStrings.kJoinPagePreamble}</Text>   
          <div className={formClasses.root}>   
-            &nbsp;       
-            <Tooltip withArrow content={EUIStrings.kJoinConversationAsPrompt} relationship="label">
-               <Input aria-label={EUIStrings.kJoinConversationAsPrompt} 
-                  className={nameInputClasses.root}
-                  required={true}
-                  value={name}
-                  maxLength={20}
-                  contentBefore={<Person24Regular />}
-                  placeholder={EUIStrings.kJoinConversationAsPlaceholder}
-                  onChange={onJoinAsChange}
-                  disabled={false}
-               />
-            </Tooltip>      
-            &nbsp;   
+            &nbsp;         
             <Tooltip withArrow content={EUIStrings.kJoinConversationKeyPrompt} relationship="label">
                <Input aria-label={EUIStrings.kJoinConversationKeyPrompt}
                   className={keyInputClasses.root}                  
@@ -148,10 +139,27 @@ export const JoinPage = (props: IJoinPageProps) => {
                   onChange={onKeyChange}
                   disabled={false}
                />
-            </Tooltip>             
-            &nbsp;     
-            <Button disabled={(!canJoin) || validator.isBusy()} className={joinButtonClasses.root}
-               onClick={onTryJoin}>Join</Button>  
+            </Tooltip>  
+            &nbsp;
+            <div className={JoinRowClasses.root}>               
+               <Tooltip withArrow content={EUIStrings.kJoinConversationAsPrompt} relationship="label">
+                  <Input aria-label={EUIStrings.kJoinConversationAsPrompt} 
+                     className={nameInputClasses.root}
+                     required={true}
+                     value={name}
+                     maxLength={20}
+                     contentBefore={<Person24Regular />}
+                     contentAfter={<JoinButton 
+                        aria-label={EUIStrings.kSendButtonPrompt} 
+                        disabled={(!canJoin) || validator.isBusy()} 
+                        onClick={onTryJoin}
+                     />}                
+                     placeholder={EUIStrings.kJoinConversationAsPlaceholder}
+                     onChange={onJoinAsChange}
+                     disabled={false}
+                  />
+               </Tooltip>                
+            </div>
          </div>                   
       </div>
       );

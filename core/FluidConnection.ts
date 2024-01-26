@@ -1,34 +1,23 @@
 // Copyright (c) 2024 Braid Technologies Ltd
-import { IFluidContainer, ConnectionState, SharedMap, IValueChanged } from "fluid-framework";
+import { IFluidContainer, ConnectionState } from "fluid-framework";
 import { AzureClient } from "@fluidframework/azure-client";
 
-import { throwIfUndefined } from './Asserts'; 
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
-import { Persona } from './Persona';
 import { ConnectionError, InvalidOperationError, InvalidStateError} from './Errors';
 import { ClientProps } from './FluidConnectionProps';
-import { CaucusOf } from './CaucusFramework';
 
 export interface IConnectionProps {
 }
 
-const containerSchema = {
-   initialObjects: {
-      participantMap: SharedMap,
-      shapeMap: SharedMap
-   }
-};
 
-export class FluidConnection extends Notifier {
+export abstract class FluidConnection extends Notifier {
 
    public static connectedNotificationId = "connected";
    public static connectedInterest = new Interest(FluidConnection.connectedNotificationId);
 
    _props: IConnectionProps;
-   _localUser: Persona | undefined;
    _client: AzureClient | undefined;
    _container: IFluidContainer | undefined;
-   _participantCaucus: CaucusOf<Persona> | undefined;
 
    constructor(props: IConnectionProps) {
 
@@ -37,11 +26,9 @@ export class FluidConnection extends Notifier {
       this._client = undefined;
       this._props = props;
       this._container = undefined;
-      this._localUser = undefined;
-      this._participantCaucus = undefined;
    }
 
-   async createNew(localUser: Persona): Promise<string> {
+   async createNew(): Promise<string> {
 
       try {
          var clientProps: ClientProps = new ClientProps();
@@ -50,9 +37,9 @@ export class FluidConnection extends Notifier {
 
          this._client = new AzureClient(clientProps);
 
-         this._localUser = localUser;
 
-         const { container, services } = await this._client.createContainer(containerSchema);
+
+         const { container, services } = await this._client.createContainer(this.schema());
          this._container = container;
 
          let self = this;
@@ -62,8 +49,8 @@ export class FluidConnection extends Notifier {
             const containerIdPromise = container.attach();
 
             containerIdPromise.then((containerId) => {
-               if (this._container && this._localUser) {
-                  self.setupAfterConnection(containerId, true, this._container, this._localUser);
+               if (this._container) {
+                  self.setupAfterConnection(containerId, this._container);
                }
                else {
                   throw new InvalidStateError("FluidConnection has reached inconsistent internal state.");
@@ -80,7 +67,7 @@ export class FluidConnection extends Notifier {
       }
    }
 
-   async attachToExisting(containerId: string, localUser: Persona): Promise<string> {
+   async attachToExisting(containerId: string): Promise<string> {
 
       try {
          var clientProps: ClientProps = new ClientProps();
@@ -89,12 +76,10 @@ export class FluidConnection extends Notifier {
 
          this._client = new AzureClient(clientProps);
 
-         this._localUser = localUser;
-
-         const { container, services } = await this._client.getContainer(containerId, containerSchema);
+         const { container, services } = await this._client.getContainer(containerId, this.schema());
          this._container = container;
 
-         this.setupAfterConnection(containerId, false, this._container, this._localUser);
+         this.setupAfterConnection(containerId, this._container);
 
          return containerId;
       }
@@ -102,27 +87,6 @@ export class FluidConnection extends Notifier {
          throw new ConnectionError("Error attaching existing container to remote data service: " + e ? e.message : "(no details found)")
       }
    }
-
-   // local function to cut down duplication between createNew() and AttachToExisting())
-   private setupAfterConnection(id: string, creating: boolean, container: IFluidContainer, localUser: Persona): void {
-
-      // Create caucuses so they exist when observers are notified of connection
-      this._participantCaucus = new CaucusOf<Persona>(container.initialObjects.participantMap as SharedMap);
-
-      // Notify observers we are connected
-      // They can then hook up their own observers to the caucus,
-      this.notifyObservers(FluidConnection.connectedInterest, new NotificationFor<string>(FluidConnection.connectedInterest, id));
-
-      // Connect our own user ID to the caucus
-      var storedVal: string = localUser.flatten();
-      if (localUser.id) {
-         (container.initialObjects.participantMap as SharedMap).set(localUser.id, storedVal);
-      }
-      else {
-         throw new InvalidStateError("FluidConnection has reached inconsistent internal state.");
-      }
-   }
-
 
    canDisconnect(): boolean {
 
@@ -147,19 +111,28 @@ export class FluidConnection extends Notifier {
          if (this._container) {
             await this._container.disconnect();
          }
-         this._participantCaucus = undefined;
 
          return true;
       }
       else {
-         throw new InvalidOperationError("The remote data service is not connected - please try again in a short while.")
+         throw new InvalidOperationError("The remote data service is not connected.")
       }
    }
 
-   participantCaucus(): CaucusOf<Persona> {
-      throwIfUndefined (this._participantCaucus);
-      return this._participantCaucus;
+   // local function to cut down duplication between createNew() and AttachToExisting())
+   private setupAfterConnection(id: string, container: IFluidContainer): void {
+
+      // Create caucuses so they exist when observers are notified of connection
+      this.setupLocalCaucuses (container.initialObjects);
+
+      // Notify observers we are connected
+      // They can then hook up their own observers to the caucus,
+      this.notifyObservers(FluidConnection.connectedInterest, new NotificationFor<string>(FluidConnection.connectedInterest, id));
    }
 
+   abstract schema() : any;
+   abstract setupLocalCaucuses(initialObjects: any) : void;
 }
+
+
 

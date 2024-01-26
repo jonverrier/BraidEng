@@ -5,49 +5,42 @@ import React, { ChangeEvent, useState } from 'react';
 
 // Fluent
 import {
-   makeStyles, shorthands, useId, 
+   makeStyles, shorthands, 
    Button, ButtonProps, 
    Tooltip,
    Body1,
    Caption1,
-   Label,
    Text, 
    Input, 
    InputOnChangeData,
    Card,
-   CardFooter,
-   CardHeader,
-   CardPreview  
+   CardHeader
 } from '@fluentui/react-components';
 
 import {
    Person24Regular,
+   Laptop24Regular,
    Mail24Regular,
    Send24Regular
 } from '@fluentui/react-icons';
 
 import { EUIStrings } from './UIStrings';
-import { EConfigStrings } from './ConfigStrings';
 import { EIcon } from '../core/Icons';
-import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 import { Persona } from '../core//Persona';
 import { Message } from '../core/Message';
 
 export interface IConversationPageProps {
 
-   conversationKey: string;  
+   isConnected: boolean;
+   audience: Map<string, Persona>;
+   conversation: Array<Message>;
+   onSend (message_: string) : void;   
 }
 
 const viewOuterStyles = makeStyles({
    root: {
       display: 'flex',
-      flexDirection: 'column',
-      paddingLeft: '5px',
-      paddingRight: '5px',
-      paddingTop: '5px',
-      paddingBottom: '5px',
-      textAlign: 'left',
-      alignItems: 'bottom',
+      flexDirection: 'column', 
       width: "100%"      
    },
 });
@@ -56,9 +49,6 @@ const formStyles = makeStyles({
    root: {    
       display: 'flex',
       flexDirection: 'column',      
-      textAlign: 'left',
-      alignItems: 'bottom',
-      alignSelf: 'bottom',
       width: '100%'
    },
 });
@@ -68,31 +58,28 @@ export const ConversationPage = (props: IConversationPageProps) => {
    const viewOuterClasses = viewOuterStyles();
    const formClasses = formStyles();  
 
-   let keyGenerator = new UuidKeyGenerator();
-   let person = new Persona (keyGenerator.generateKey(), "Jon", EIcon.kPersonPersona, undefined, new Date());
-   let bot = new Persona (keyGenerator.generateKey(), "FSChatBot", EIcon.kBotPersona, undefined, new Date());  
-   
-   let personMessage = new Message (keyGenerator.generateKey(), person.id, undefined, "Hello, from a person.", new Date());
-   let botMessage = new Message (keyGenerator.generateKey(), bot.id, undefined, "Hello, from a bot.", new Date());
+   // Shorthand only
+   let conversation = props.conversation;
+   let audience = props.audience;
 
-   let messages = new Array<Message>();
-   messages.push (personMessage);
-   messages.push (botMessage);   
+   function onSend (messageText_: string) : void {
 
-   if (props.conversationKey.length === 0) {
+      props.onSend (messageText_);
+   }
+
+   if (! props.isConnected) {
       return (<div></div>);
    }
    else {
       return (
          <div className={viewOuterClasses.root} >  
-            <div className={formClasses.root}>            
-               &nbsp;           
-               <MessageView message={messages[0]} author={person}></MessageView>
-               &nbsp;           
-               <MessageView message={messages[1]} author={bot}></MessageView>  
-               &nbsp;    
-               <InputView></InputView>   
-               &nbsp;           
+            <div className={formClasses.root}>    
+               {conversation.map (message => {
+                  return (         
+                     <MessageView message={message} author={(audience.get (message.authorId) as Persona)}></MessageView>
+               )})}
+               &nbsp;                
+               <InputView onSend={onSend}></InputView>            
             </div>
          </div>
       );
@@ -112,15 +99,31 @@ const messageViewStyles = makeStyles({
    },
  });
 
+ export interface IAuthorIconProps {
+ 
+   author: Persona;
+}
+
+ export const AuthorIcon = (props: IAuthorIconProps) => {
+
+   const messageViewClasses = messageViewStyles();
+ 
+   return ((props.author.icon === EIcon.kBotPersona) ?
+            <Laptop24Regular/>
+            : <Person24Regular/>
+   );
+}
+
 export const MessageView = (props: IMessageViewProps) => {
 
    const messageViewClasses = messageViewStyles();
  
-   return (
+   return (<div>
+     &nbsp; 
      <Card className={messageViewClasses.card}>
        <CardHeader
          image={
-            <Person24Regular/>
+            <AuthorIcon author={props.author}/>
          }
          header={
            <Body1>
@@ -131,12 +134,13 @@ export const MessageView = (props: IMessageViewProps) => {
        />
 
      </Card>
+     </div>
    );
 }
 
 
 export interface IInputViewProps {
-
+   onSend (message_: string) : void;
 }
 
 const SendButton: React.FC<ButtonProps> = (props) => {
@@ -161,8 +165,7 @@ const SendButton: React.FC<ButtonProps> = (props) => {
 
  const messageInputStyles = makeStyles({
    root: {    
-      minWidth: '350px',
-      maxWidth: '1000px'
+      width: '100%'
    },
 });
 
@@ -171,20 +174,40 @@ export const InputView = (props: IInputViewProps) => {
    const messageInputGroupClasses = messageInputGroupStyles();
    const messageInputClasses = messageInputStyles();
 
+   const [message, setMessage] = useState<string>("");
+   const [canSend, setCanSend] = useState<boolean>(false);
+
+   function onKeyChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
+
+      setMessage (data.value);
+      setCanSend (data.value.length > 0);
+   }   
+
+   function onMessageSend (ev: React.MouseEvent<HTMLButtonElement>) : void {
+
+      props.onSend (message);
+      setMessage ("");     
+   }
+
    return (
       <div className={messageInputGroupClasses.root}>
          <Text>{EUIStrings.kSendMessagePreamble}</Text>
+         &nbsp;
          <Tooltip withArrow content={EUIStrings.kSendButtonPrompt} relationship="label">
             <Input aria-label={EUIStrings.kSendButtonPrompt}
                className={messageInputClasses.root}                  
                required={true}                  
-               /*value={key}*/
+               value={message}
                maxLength={40}
                contentBefore={<Mail24Regular />}
                placeholder={EUIStrings.kSendMessagePlaceholder}
-               /*onChange={onKeyChange}*/
+               onChange={onKeyChange}
                disabled={false}
-               contentAfter={<SendButton aria-label={EUIStrings.kSendButtonPrompt} />}            
+               contentAfter={<SendButton 
+                  aria-label={EUIStrings.kSendButtonPrompt} 
+                  disabled={!canSend} 
+                  onClick={onMessageSend}
+               />}            
          />
          </Tooltip>   
       </div>        

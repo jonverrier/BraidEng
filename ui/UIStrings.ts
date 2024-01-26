@@ -2,7 +2,7 @@
 
 export enum EUIStrings {
 
-   kJoinPagePreamble = "To join a conversation with the Braid FSChat Bot, you need to enter your name or initials to identify yourself in the conversation, and you need to enter the key from your contact at Braid.",
+   kJoinPagePreamble = "To join a conversation with the Braid Bot, you need to enter the key from your contact at Braid, then your name or initials to identify yourself in the conversation.",
    kJoinConversationAsPrompt = "Join as (name/initials)",
    kJoinConversationAsPlaceholder = "Join as... ",
    kJoinConversationKeyPrompt = "Key",

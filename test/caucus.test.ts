@@ -3,8 +3,9 @@ import { expect } from 'expect';
 import { describe, it } from 'mocha';
 
 import { Persona } from '../core/Persona';
+import { Message } from '../core/Message';
 import { Interest, NotificationFor } from '../core/NotificationFramework';
-import { FluidConnection } from '../core/FluidConnection';
+import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
 import { EIcon } from '../core/Icons';
 
 var myId: string = "1234";
@@ -12,7 +13,7 @@ var myName: string = "Jon";
 var myThumbnail: string = "abcd";
 var myLastSeenAt = new Date();
 
-class MockLocation { // Just create the fields we use in the Mick
+class MockLocation { // Just create the fields we use in the Mock
    protocol: string;
    host: string;
    hostname: string;
@@ -41,7 +42,7 @@ describe("Caucus", function () {
 
    this.timeout(10000);
 
-   var newConnection: FluidConnection;
+   var newConnection: MessageBotFluidConnection;
    var persona: Persona;
    var id: string; 
 
@@ -52,10 +53,11 @@ describe("Caucus", function () {
       (global.location as any) = mockLocation;
 
       this.timeout(10000);
-      newConnection = new FluidConnection({});
-
       persona = new Persona(myId, myName, EIcon.kPersonPersona, myThumbnail, myLastSeenAt);
-      id = await newConnection.createNew(persona);
+
+      newConnection = new MessageBotFluidConnection({}, persona);
+
+      id = await newConnection.createNew();
 
       await wait();
    });
@@ -131,5 +133,35 @@ describe("Caucus", function () {
       expect(caucus.current().size === 1).toEqual(true);
       expect(caucus.get(workingPersona.id).equals(workingPersona)).toEqual(true);
    });
+
+   it("Can return an ordered array", async function () {
+
+      // Create three Message objects
+      var workingMessage: Message = new Message();
+      var workingMessage2: Message = new Message();    
+      var workingMessage3: Message = new Message(); 
+      
+      // Space them out a second apart
+      let now = new Date();
+      workingMessage2.sentAt = new Date(now.getTime() + 1000);
+      workingMessage3.sentAt = new Date(now.getTime() + 2000);
+
+      let caucus = newConnection.messageCaucus();
+
+      var synchMap: Map<string, Message> = new Map<string, Message>();
+      synchMap.set (workingMessage.id, workingMessage);
+      synchMap.set (workingMessage2.id, workingMessage2);
+      synchMap.set (workingMessage3.id, workingMessage3);
+
+      // Sync in 3 elements     
+      caucus.synchFrom(synchMap);
+      expect(caucus.current().size === 3).toEqual(true);
+
+      let tempArray = caucus.currentAsArray();
+
+      expect(tempArray.length === 3).toEqual(true);
+      expect(tempArray[0].sentAt.getTime() <= tempArray[1].sentAt.getTime()).toEqual(true);
+      expect(tempArray[1].sentAt.getTime() <= tempArray[2].sentAt.getTime()).toEqual(true);
+   });   
 });
 
