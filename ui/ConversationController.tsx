@@ -32,7 +32,6 @@ export const ConversationController = (props: IConversationControllerProps) => {
    const [conversation, setConversation] = useState<Array<Message>>(new Array<Message>());
    const [audience, setAudience] = useState<Map<string, Persona>>(new Map<string, Persona>());
 
-
    // TEMP ***
    if (conversation.length === 0) {
 
@@ -54,7 +53,7 @@ export const ConversationController = (props: IConversationControllerProps) => {
    // TEMP ***
 
    audience.set (props.localPersona.id, props.localPersona);
-   
+
    // call the force update hook 
    const forceUpdate = useForceUpdate();   
 

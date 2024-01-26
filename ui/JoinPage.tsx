@@ -104,12 +104,9 @@ export const JoinPage = (props: IJoinPageProps) => {
 
    function onTryJoin(ev: React.MouseEvent<HTMLButtonElement>) : void {
 
-      let onConnect = props.onConnect;
-      let onConnectError = props.onConnectError;
-
       validator.requestConversationKey (EConfigStrings.kRequestKeyUrl, key)
       .then (
-         (conversationKey):void => {
+         (conversationKey: string):void => {
             props.onConnect(conversationKey, name);
           },
           (e) => {

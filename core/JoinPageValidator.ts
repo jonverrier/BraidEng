@@ -42,18 +42,22 @@ export class JoinPageValidator {
       
       this.activeCallCount++;
 
-      const response = await axios.get(apiUrl_, {
+      var response;
+
+      try {
+         response = await axios.get(apiUrl_, {
          params: {
             JoinKey: key_
          },
          withCredentials: false
       });
+      } catch (e) {
+         this.activeCallCount--;
 
-      this.activeCallCount--;
-
-      if (!response.data)
-         throw new ConnectionError("Error connecting to remote data services for conversation key: " + key_ + ".");
-
+         if (!response || !response.data)
+            throw new ConnectionError("Error connecting to remote data services for conversation key: " + key_ + ".");
+      }
+      
       return response.data as string;
    }    
 
