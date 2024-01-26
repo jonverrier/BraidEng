@@ -5,19 +5,16 @@ import React, { ChangeEvent, useState } from 'react';
 
 // Fluent
 import {
-   makeStyles, shorthands, useId, 
+   makeStyles, shorthands, 
    Button, ButtonProps, 
    Tooltip,
    Body1,
    Caption1,
-   Label,
    Text, 
    Input, 
    InputOnChangeData,
    Card,
-   CardFooter,
-   CardHeader,
-   CardPreview  
+   CardHeader
 } from '@fluentui/react-components';
 
 import {
@@ -28,15 +25,16 @@ import {
 } from '@fluentui/react-icons';
 
 import { EUIStrings } from './UIStrings';
-import { EConfigStrings } from './ConfigStrings';
 import { EIcon } from '../core/Icons';
-import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 import { Persona } from '../core//Persona';
 import { Message } from '../core/Message';
 
 export interface IConversationPageProps {
 
-   conversationKey: string;  
+   isConnected: boolean;
+   audience: Map<string, Persona>;
+   conversation: Array<Message>;
+   onSend (message_: string) : void;   
 }
 
 const viewOuterStyles = makeStyles({
@@ -55,62 +53,31 @@ const formStyles = makeStyles({
    },
 });
 
-// create a forceUpdate hook
-// https://stackoverflow.com/questions/46240647/how-to-force-a-functional-react-component-to-render
-function useForceUpdate() {
-   const [value, setValue] = useState(0); // simple integer state
-   return () => setValue(value => value + 1); // update state to force render
-}
-
 export const ConversationPage = (props: IConversationPageProps) => {
 
    const viewOuterClasses = viewOuterStyles();
    const formClasses = formStyles();  
 
-   // call the force update hook 
-   const forceUpdate = useForceUpdate();
-
-   let keyGenerator = new UuidKeyGenerator();
-   let person = new Persona (keyGenerator.generateKey(), "Jon", EIcon.kPersonPersona, undefined, new Date());
-   let bot = new Persona (keyGenerator.generateKey(), "Braid Bot", EIcon.kBotPersona, undefined, new Date());  
-   
-   let personMessage = new Message (keyGenerator.generateKey(), person.id, undefined, "Hello, from a person.", new Date());
-   let botMessage = new Message (keyGenerator.generateKey(), bot.id, undefined, "Hello, from the braid bot.", new Date());
-   let replaceMessage = new Message (keyGenerator.generateKey(), person.id, undefined, "Will change.", new Date());
-
-   let messages = new Array<Message>();
-   messages.push (personMessage);
-   messages.push (botMessage);  
-   messages.push (replaceMessage);
-
-   let personas = new Map<string, Persona> ();
-   personas.set (person.id, person);
-   personas.set (bot.id, bot);
+   // Shorthand only
+   let conversation = props.conversation;
+   let audience = props.audience;
 
    function onSend (messageText_: string) : void {
 
-      let message = new Message ();
-      message.authorId = person.id;
-      message.text = messageText_;
-      message.sentAt = new Date();
-      messages[2] = message;
-
-      forceUpdate ();
+      props.onSend (messageText_);
    }
 
-   if (props.conversationKey.length === 0) {
+   if (! props.isConnected) {
       return (<div></div>);
    }
    else {
       return (
          <div className={viewOuterClasses.root} >  
-            <div className={formClasses.root}>            
-               &nbsp;           
-               <MessageView message={messages[0]} author={(personas.get (messages[0].authorId) as Persona)}></MessageView>
-               &nbsp;           
-               <MessageView message={messages[1]} author={(personas.get (messages[1].authorId) as Persona)}></MessageView>  
-               &nbsp;    
-               <MessageView message={messages[2]} author={(personas.get (messages[2].authorId) as Persona)}></MessageView>  
+            <div className={formClasses.root}>    
+               {conversation.map (message => {
+                  return (         
+                     <MessageView message={message} author={(audience.get (message.authorId) as Persona)}></MessageView>
+               )})}
                &nbsp;                
                <InputView onSend={onSend}></InputView>            
             </div>
@@ -151,7 +118,8 @@ export const MessageView = (props: IMessageViewProps) => {
 
    const messageViewClasses = messageViewStyles();
  
-   return (
+   return (<div>
+     &nbsp; 
      <Card className={messageViewClasses.card}>
        <CardHeader
          image={
@@ -166,6 +134,7 @@ export const MessageView = (props: IMessageViewProps) => {
        />
 
      </Card>
+     </div>
    );
 }
 
@@ -217,6 +186,7 @@ export const InputView = (props: IInputViewProps) => {
    function onMessageSend (ev: React.MouseEvent<HTMLButtonElement>) : void {
 
       props.onSend (message);
+      setMessage ("");     
    }
 
    return (
@@ -227,7 +197,7 @@ export const InputView = (props: IInputViewProps) => {
             <Input aria-label={EUIStrings.kSendButtonPrompt}
                className={messageInputClasses.root}                  
                required={true}                  
-               /*value={key}*/
+               value={message}
                maxLength={40}
                contentBefore={<Mail24Regular />}
                placeholder={EUIStrings.kSendMessagePlaceholder}

@@ -16,8 +16,10 @@ import { log, LogLevel, tag } from 'missionlog';
 import { EConfigStrings } from './ConfigStrings';
 import { EUIStrings } from './UIStrings';
 import { EMainPageMessageTypes, MainPageMessage } from './MainPageMessage';
+import { Persona } from '../core/Persona';
 import { JoinPage } from './JoinPage';
-import { ConversationPage } from './ConversationPage';
+import { ConversationController } from './ConversationController';
+import { EIcon } from '../core/Icons';
 
 
 
@@ -63,22 +65,29 @@ const centerColumnStyles = makeStyles({
 
 export const App = (props: IAppProps) => {
    
+   let localPersona = new Persona ();
+   localPersona.icon = EIcon.kPersonPersona;
+
    const centerColumnClasses = centerColumnStyles();
 
    const [lastMessage, setLastMessage] = useState<string>("");
    const [lastMessageType, setLastMessageType] = useState<EMainPageMessageTypes> (EMainPageMessageTypes.kNothing);
    const [conversationKey, setConversationKey] = useState<string>("");
+   const [joinAsPersona, setJoinAsPersona] = useState<Persona>(localPersona);   
 
    const pageOuterClasses = pageOuterStyles();
+
+
 
    // Initialise logging
    log.init({ application: 'DEBUG', notification: 'DEBUG' }, (level, tag, msg, params) => {
       logger[level as keyof typeof logger](tag, msg, params);
    });
 
-   function onConnect (key_: string) : void  {
+   function onConnect (key_: string, name_: string) : void  {
 
       setConversationKey (key_);
+      setJoinAsPersona(new Persona (joinAsPersona.id, name_, joinAsPersona.icon, joinAsPersona.thumbnailB64, joinAsPersona.lastSeenAt));
    }
 
    function onConnectError (hint_: string) : void  {
@@ -101,8 +110,7 @@ export const App = (props: IAppProps) => {
    }
 
    return (
-         <FluentProvider theme={teamsDarkTheme} >
-            
+         <FluentProvider theme={teamsDarkTheme} >            
             <div className={pageOuterClasses.root}>                  
                <div className={centerColumnClasses.root}>   
 
@@ -111,13 +119,19 @@ export const App = (props: IAppProps) => {
                         text={lastMessage} 
                         onDismiss={onDismissMessage}/>
 
-                     <JoinPage conversationKey={conversationKey} onConnect={onConnect} onConnectError={onConnectError}></JoinPage>
+                     <JoinPage 
+                        conversationKey={conversationKey} 
+                        onConnect={onConnect} 
+                        onConnectError={onConnectError}>                     
+                     </JoinPage>
    
-                     <ConversationPage conversationKey={conversationKey}></ConversationPage>
+                     <ConversationController 
+                        conversationKey={conversationKey}
+                        localPersona={joinAsPersona}>                           
+                     </ConversationController>
 
                </div>             
             </div>
-
          </FluentProvider>         
       );
 }

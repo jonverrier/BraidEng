@@ -22,7 +22,7 @@ import { EConfigStrings } from './ConfigStrings';
 
 export interface IJoinPageProps {
    conversationKey: string;  
-   onConnect (key_: string) : void;
+   onConnect (key_: string, name: string) : void;
    onConnectError (hint_: string) : void;    
 }
 
@@ -109,11 +109,11 @@ export const JoinPage = (props: IJoinPageProps) => {
 
       validator.requestConversationKey (EConfigStrings.kRequestKeyUrl, key)
       .then (
-         (conversationKey) => {
-            onConnect(conversationKey);
+         (conversationKey):void => {
+            props.onConnect(conversationKey, name);
           },
           (e) => {
-            onConnectError(e.toString());
+            props.onConnectError(e.toString());
           }
       );
    }
