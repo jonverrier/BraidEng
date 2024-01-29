@@ -7,7 +7,7 @@ import { AzureRemoteConnectionConfig, AzureClientProps, ITokenProvider } from "@
 import axios from "axios";
 
 import { KeyRetriever } from "./KeyRetriever";
-import { EConfigStrings } from "../ui/ConfigStrings";
+import { EConfigStrings } from "./ConfigStrings";
 
 var documentUuid: string = "b03724b3-4be0-4491-b0fa-43b01ab80d50";
 
@@ -28,19 +28,19 @@ export class ConnectionConfig implements AzureRemoteConnectionConfig {
 
    async makeTokenProvider(joinKey_: string): Promise<ITokenProvider> {
 
-      var user: any = { id: documentUuid, name: "Whiteboard Application" };
+      var user: any = { id: documentUuid, name: "BraidBot Chat" };
 
       if (develop) {
-         this.tenantId = "06fcf322-99f7-412d-9889-f2e94b066b7e";
-         this.endpoint = "http://localhost:7070";
+         this.tenantId = EConfigStrings.kAzureTenantId
+         this.endpoint = EConfigStrings.kAzureLocalFluidHost;
          this.type = "local";
          this.tokenProvider = new InsecureTokenProvider('testKey', user);
 
          return (this.tokenProvider);
       }
       else {
-         this.tenantId = "06fcf322-99f7-412d-9889-f2e94b066b7e";
-         this.endpoint = "https://eu.fluidrelay.azure.com";
+         this.tenantId = EConfigStrings.kAzureTenantId;
+         this.endpoint = EConfigStrings.kAzureProductionFluidHost;
          this.type = "remote";
 
          let retriever = new KeyRetriever ()
@@ -49,6 +49,7 @@ export class ConnectionConfig implements AzureRemoteConnectionConfig {
                                                joinKey_);
 
          this.tokenProvider = new InsecureTokenProvider(key, user);
+         
          return (this.tokenProvider);
       }
    }

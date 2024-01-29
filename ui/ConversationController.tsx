@@ -5,9 +5,6 @@
 // React
 import React, { useState } from 'react';
 
-
-import { EUIStrings } from './UIStrings';
-import { EConfigStrings } from './ConfigStrings';
 import { EIcon } from '../core/Icons';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 import { Persona } from '../core//Persona';

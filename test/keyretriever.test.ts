@@ -7,7 +7,7 @@ import axios from "axios";
 import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 import { KeyRetriever } from '../core/KeyRetriever';
-import { EConfigStrings } from '../ui/ConfigStrings';
+import { EConfigStrings } from '../core/ConfigStrings';
 import { EEnvironment, Environment } from '../core/Environment';
 
 const badUuid = "9a0583f5xca56-421b-8545-aa23032d6c93"
