@@ -28,12 +28,12 @@ export abstract class FluidConnection extends Notifier {
       this._container = undefined;
    }
 
-   async createNew(): Promise<string> {
+   async createNew(joinKey_: string): Promise<string> {
 
       try {
          var clientProps: ClientProps = new ClientProps();
 
-         await clientProps.connection.makeTokenProvider();
+         await clientProps.connection.makeTokenProvider(joinKey_);
 
          this._client = new AzureClient(clientProps);
 
@@ -67,12 +67,12 @@ export abstract class FluidConnection extends Notifier {
       }
    }
 
-   async attachToExisting(containerId: string): Promise<string> {
+   async attachToExisting(joinKey_: string, containerId: string): Promise<string> {
 
       try {
          var clientProps: ClientProps = new ClientProps();
 
-         await clientProps.connection.makeTokenProvider();
+         await clientProps.connection.makeTokenProvider(joinKey_);
 
          this._client = new AzureClient(clientProps);
 

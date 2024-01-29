@@ -16,23 +16,24 @@ let keyGenerator : IKeyGenerator = new UuidKeyGenerator();
 
 describe("KeyRetriever", function () {
    
-   // Force use of actual API calls rather than local stubs
-   let old = Environment.override (EEnvironment.kProduction);
-
    it("Needs to throw exception on communication error", async function () {
 
-      let validator = new KeyRetriever();
+      let retriever = new KeyRetriever();
 
       let caught = false;
+      // Force use of actual API calls rather than local stubs
+      let oldEnv = Environment.override (EEnvironment.kProduction);
 
       try {
          var url = 'https://madeuphost.com/api/key';
 
-         let conversation = await validator.requestKey(url, EConfigStrings.kRequestKeyParameterName, keyGenerator.generateKey());
+         let conversation = await retriever.requestKey(url, EConfigStrings.kRequestKeyParameterName, keyGenerator.generateKey());
       }
       catch (err) {
          caught = true;
       }
+
+      Environment.override (oldEnv);  
 
       expect(caught).toEqual(true);   
          
@@ -43,6 +44,8 @@ describe("KeyRetriever", function () {
       let retriever = new KeyRetriever();
 
       let caught = false;
+      // Force use of actual API calls rather than local stubs
+      let oldEnv = Environment.override (EEnvironment.kProduction);      
       
       let old = axios.get;
 
@@ -59,6 +62,7 @@ describe("KeyRetriever", function () {
       }
 
       axios.get = old;
+      Environment.override (oldEnv);       
 
       expect(caught).toEqual(true);      
    }).timeout (5000); 
@@ -70,6 +74,8 @@ describe("KeyRetriever", function () {
       let caught = false;
       
       let old = axios.get;
+      // Force use of actual API calls rather than local stubs
+      let oldEnv = Environment.override (EEnvironment.kProduction);      
 
         axios.get = (function async (key: string, params: any) {  return Promise.resolve({data: 'a string'}) }) as any;
 
@@ -84,6 +90,7 @@ describe("KeyRetriever", function () {
       }
 
       axios.get = old;
+      Environment.override (oldEnv);        
 
       expect(caught).toEqual(false);      
    }).timeout (5000); 
@@ -93,6 +100,9 @@ describe("KeyRetriever", function () {
       let validator = new KeyRetriever();
 
       let caught = false;
+      
+      // Force use of actual API calls rather than local stubs
+      let oldEnv = Environment.override (EEnvironment.kProduction);
 
       try {
          var url = 'https://ambitious-ground-0a343ae03.4.azurestaticapps.net/api/key';
@@ -102,9 +112,9 @@ describe("KeyRetriever", function () {
       catch (err) {
          caught = true;
       }
+      Environment.override (oldEnv);          
 
       expect(caught).toEqual(false);      
    }).timeout (5000); 
-
-   Environment.override (old);   
+ 
 });

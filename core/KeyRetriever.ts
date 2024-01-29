@@ -16,7 +16,8 @@ export class KeyRetriever {
       this.activeCallCount = 0;
    }   
 
-   // makes Axios call to request the ID of a Fluid Container to use for the conversation
+   // Makes an Axios call to request the key
+   // If running locally, looks for an environment variable
    async requestKey  (apiUrl_: string, paramName_: string, key_: string) : Promise<string> {
      
       let environment = Environment.environment();
@@ -43,7 +44,7 @@ export class KeyRetriever {
       }
 
       if (!response || !response.data)
-         throw new ConnectionError("Error connecting to remote data services for conversation key: " + key_ + ".");      
+         throw new ConnectionError("Error connecting to remote data services for remote, key: " + paramName_ + "," + key_ + ".");      
       
       return response.data as string;
    }    
