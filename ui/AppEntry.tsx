@@ -13,14 +13,13 @@ import {
 import { log, LogLevel, tag } from 'missionlog';
 
 // Local
-import { EConfigStrings } from './ConfigStrings';
+import { EConfigStrings } from '../core/ConfigStrings';
+import { Persona } from '../core/Persona';
+import { EIcon } from '../core/Icons';
 import { EUIStrings } from './UIStrings';
 import { EMainPageMessageTypes, MainPageMessage } from './MainPageMessage';
-import { Persona } from '../core/Persona';
 import { JoinPage } from './JoinPage';
 import { ConversationController } from './ConversationController';
-import { EIcon } from '../core/Icons';
-
 
 
 // Logging handler

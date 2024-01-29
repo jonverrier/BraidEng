@@ -2,13 +2,12 @@
 import { IFluidContainer, ConnectionState } from "fluid-framework";
 import { AzureClient } from "@fluidframework/azure-client";
 
-import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { ConnectionError, InvalidOperationError, InvalidStateError} from './Errors';
+import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { ClientProps } from './FluidConnectionProps';
 
 export interface IConnectionProps {
 }
-
 
 export abstract class FluidConnection extends Notifier {
 

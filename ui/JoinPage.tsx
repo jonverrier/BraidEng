@@ -19,7 +19,7 @@ import {
 import { JoinPageValidator } from '../core/JoinPageValidator';
 import { KeyRetriever } from '../core/KeyRetriever';
 import { EUIStrings } from './UIStrings';
-import { EConfigStrings } from './ConfigStrings';
+import { EConfigStrings } from '../core/ConfigStrings';
 
 export interface IJoinPageProps {
    conversationKey: string;  
