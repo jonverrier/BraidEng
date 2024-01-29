@@ -10,13 +10,20 @@ export enum EEnvironment {
 
 let environment = EEnvironment.kLocal;
 
-
 export class Environment {
 
    // returns the environment type.
    // code lines are different for each environment
-   environment  () : EEnvironment {
+   static environment  () : EEnvironment {
       return environment;
+   }
+
+   static override (newEnvironment: EEnvironment): EEnvironment {
+
+      let prev = environment;
+      environment = newEnvironment;
+
+      return  prev;
    }
 
 }
