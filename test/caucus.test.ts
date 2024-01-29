@@ -2,6 +2,7 @@
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
 
+import { throwIfUndefined } from '../core/Asserts';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { Interest, NotificationFor } from '../core/NotificationFramework';
@@ -57,7 +58,9 @@ describe("Caucus", function () {
 
       newConnection = new MessageBotFluidConnection({}, persona);
 
-      id = await newConnection.createNew();
+      let checked = process.env.JoinKey;
+      throwIfUndefined(checked);
+      id = await newConnection.createNew(checked);
 
       await wait();
    });
