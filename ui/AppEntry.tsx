@@ -77,8 +77,6 @@ export const App = (props: IAppProps) => {
 
    const pageOuterClasses = pageOuterStyles();
 
-
-
    // Initialise logging
    log.init({ application: 'DEBUG', notification: 'DEBUG' }, (level, tag, msg, params) => {
       logger[level as keyof typeof logger](tag, msg, params);

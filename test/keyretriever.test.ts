@@ -1,0 +1,110 @@
+'use strict';
+// Copyright Braid Technologies ltd, 2021
+import { expect } from 'expect';
+import { describe, it } from 'mocha';
+import axios from "axios";
+
+import { IKeyGenerator } from '../core/KeyGenerator';
+import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
+import { KeyRetriever } from '../core/KeyRetriever';
+import { EConfigStrings } from '../ui/ConfigStrings';
+import { EEnvironment, Environment } from '../core/Environment';
+
+const badUuid = "9a0583f5xca56-421b-8545-aa23032d6c93"
+
+let keyGenerator : IKeyGenerator = new UuidKeyGenerator();
+
+describe("KeyRetriever", function () {
+   
+   // Force use of actual API calls rather than local stubs
+   let old = Environment.override (EEnvironment.kProduction);
+
+   it("Needs to throw exception on communication error", async function () {
+
+      let validator = new KeyRetriever();
+
+      let caught = false;
+
+      try {
+         var url = 'https://madeuphost.com/api/key';
+
+         let conversation = await validator.requestKey(url, EConfigStrings.kRequestKeyParameterName, keyGenerator.generateKey());
+      }
+      catch (err) {
+         caught = true;
+      }
+
+      expect(caught).toEqual(true);   
+         
+   }).timeout (5000);;   
+
+   it("Needs to throw error on a mocked communication error", async function () {
+
+      let retriever = new KeyRetriever();
+
+      let caught = false;
+      
+      let old = axios.get;
+
+        axios.get = (function async (key: string, params: any) {  return Promise.resolve({data: null}) }) as any;
+
+      try {
+         var url = 'https://madeuphost.com/api/key';
+
+         let conversation = await retriever.requestKey(url, EConfigStrings.kRequestKeyParameterName, keyGenerator.generateKey());
+      }
+      catch (err) {
+         console.log (err);
+         caught = true;
+      }
+
+      axios.get = old;
+
+      expect(caught).toEqual(true);      
+   }).timeout (5000); 
+
+   it("Needs to return a string on successful communication", async function () {
+
+      let retriever = new KeyRetriever();
+
+      let caught = false;
+      
+      let old = axios.get;
+
+        axios.get = (function async (key: string, params: any) {  return Promise.resolve({data: 'a string'}) }) as any;
+
+      try {
+         var url = 'https://madeuphost.com/api/key';
+
+         let conversation = await retriever.requestKey(url, EConfigStrings.kRequestKeyParameterName, keyGenerator.generateKey());
+      }
+      catch (err) {
+         console.log (err);
+         caught = true;
+      }
+
+      axios.get = old;
+
+      expect(caught).toEqual(false);      
+   }).timeout (5000); 
+
+   it("Needs to return a string on successful communication with real back end", async function () {
+
+      let validator = new KeyRetriever();
+
+      let caught = false;
+
+      try {
+         var url = 'https://ambitious-ground-0a343ae03.4.azurestaticapps.net/api/key';
+
+         let conversation = await validator.requestKey(url, EConfigStrings.kRequestKeyParameterName, "49b65194-26e1-4041-ab11-4078229f478a");
+      }
+      catch (err) {
+         caught = true;
+      }
+
+      expect(caught).toEqual(false);      
+   }).timeout (5000); 
+
+   Environment.override (old);   
+});
