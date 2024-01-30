@@ -4,6 +4,7 @@ import axios from "axios";
 import { ConnectionError } from "./Errors";
 import { EEnvironment, Environment } from "./Environment";
 import { throwIfUndefined } from "./Asserts";
+import { KStubEnvironmentVariables } from "./ConfigStrings";
 
 export class KeyRetriever {
 
@@ -22,8 +23,11 @@ export class KeyRetriever {
      
       let environment = Environment.environment();
 
+      // If we are running locally, use the stub values - no Production secrets are really stored locally 
       if (environment === EEnvironment.kLocal) {
-         let checked = process.env[paramName_];
+         type KStubEnvironmentVariableKey = keyof typeof KStubEnvironmentVariables;
+         let memberKeyAsStr: KStubEnvironmentVariableKey = paramName_ as any;
+         let checked = KStubEnvironmentVariables[memberKeyAsStr];
          throwIfUndefined(checked);
          return checked;
       }
@@ -44,7 +48,7 @@ export class KeyRetriever {
       }
 
       if (!response || !response.data)
-         throw new ConnectionError("Error connecting to remote data services for remote, key: " + paramName_ + "," + key_ + ".");      
+         throw new ConnectionError("Error connecting to remote data services for url, remote, key: " + apiUrl_ + "," + paramName_ + "," + key_ + ".");      
       
       return response.data as string;
    }    

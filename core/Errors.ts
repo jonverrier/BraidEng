@@ -23,7 +23,7 @@ export class InvalidStateError extends Error {
       super(message);
       // see: typescriptlang.org/docs/handbook/release-notes/typescript-2-2.html
       Object.setPrototypeOf(this, new.target.prototype); // restore prototype chain
-      this.name = InvalidOperationError.name; // stack traces display correctly now
+      this.name = InvalidStateError.name; // stack traces display correctly now
    }
 }
 
@@ -32,7 +32,7 @@ export class ConnectionError extends Error {
       super(message);
       // see: typescriptlang.org/docs/handbook/release-notes/typescript-2-2.html
       Object.setPrototypeOf(this, new.target.prototype); // restore prototype chain
-      this.name = InvalidOperationError.name; // stack traces display correctly now
+      this.name = ConnectionError.name; // stack traces display correctly now
    }
 }
 
@@ -50,7 +50,7 @@ export class AssertionFailedError extends Error {
       super(message);
       // see: typescriptlang.org/docs/handbook/release-notes/typescript-2-2.html
       Object.setPrototypeOf(this, new.target.prototype); // restore prototype chain
-      this.name = InvalidOperationError.name; // stack traces display correctly now
+      this.name = AssertionFailedError.name; // stack traces display correctly now
    }
 }
 

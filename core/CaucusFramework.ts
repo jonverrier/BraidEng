@@ -38,7 +38,7 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
             return;
          }
 
-         this.doNotification(changed.previousValue !== null, target.has(changed.key), changed.key);
+         this.doNotification(changed.previousValue !== undefined, target.has(changed.key), changed.key);
 
       });
 

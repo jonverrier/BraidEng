@@ -5,16 +5,22 @@
 // React
 import React, { useState } from 'react';
 
-import { EIcon } from '../core/Icons';
-import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
-import { Persona } from '../core//Persona';
+import { throwIfUndefined } from '../core/Asserts';
+import { debounce } from '../core/Debounce';
+import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
+import { CaucusOf } from '../core/CaucusFramework';
+import { JoinKey } from '../core/JoinKey';
 import { ConversationPage } from './ConversationPage';
+import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
+import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } from '../core/NotificationFramework';
+import { FluidConnection } from '../core/FluidConnection';
 
 export interface IConversationControllerProps {
 
-   conversationKey: string;
+   joinKey: JoinKey;
    localPersona: Persona; 
+   onError (hint_: string) : void;    
 }
 
 // create a forceUpdate hook
@@ -28,26 +34,93 @@ export const ConversationController = (props: IConversationControllerProps) => {
 
    const [conversation, setConversation] = useState<Array<Message>>(new Array<Message>());
    const [audience, setAudience] = useState<Map<string, Persona>>(new Map<string, Persona>());
+   const [fluidConnection, setFluidConnection] = useState<MessageBotFluidConnection | undefined>(undefined);
+   const [joining, setJoining] = useState<boolean> (false);
+   const [fullJoinKey, setFullJoinKey] = useState<JoinKey> (props.joinKey);
 
-   // TEMP ***
-   if (conversation.length === 0) {
+   function initialiseConnectionState (fluidMessagesConnection_: MessageBotFluidConnection, 
+      containerId: string) : void {
 
-      let keyGenerator = new UuidKeyGenerator();
-      let person = new Persona (keyGenerator.generateKey(), "Jon", EIcon.kPersonPersona, undefined, new Date());
-      let bot = new Persona (keyGenerator.generateKey(), "Braid Bot", EIcon.kBotPersona, undefined, new Date());  
-   
-      let personMessage = new Message (keyGenerator.generateKey(), person.id, undefined, "Hello, from a person.", new Date());
-      let botMessage = new Message (keyGenerator.generateKey(), bot.id, undefined, "Hello, from the braid bot.", new Date());
-      let replaceMessage = new Message (keyGenerator.generateKey(), person.id, undefined, "Will change.", new Date());   
+      setFluidConnection (fluidMessagesConnection_);
 
-      conversation.push (personMessage);
-      conversation.push (botMessage);  
-      conversation.push (replaceMessage);
+      // Notifications function for adds, removes, changes
+      // Warning - this function must be decalred after the call to setFluidConnection(), else it binds to the original value - which is always undefined. 
+      // **************************************
+      let remoteChanged = function (interest: Interest, data: NotificationFor<Message>) : void {
 
-      audience.set (person.id, person);
-      audience.set (bot.id, bot);
+         let offlineRefresh = function () {       
+
+            if (typeof fluidMessagesConnection_ !== "undefined") {
+
+               throwIfUndefined(fluidMessagesConnection_);   // This is just to keep the compiler happy with statement below. 
+               let messageArray = fluidMessagesConnection_.messageCaucus().currentAsArray();
+               setConversation (messageArray); 
+               let audienceMap = fluidMessagesConnection_.participantCaucus().current();
+               setAudience (audienceMap);               
+            }
+         }
+
+         ///debounce (offlineRefresh, 100);
+         offlineRefresh();
+         forceUpdate ();            
+      }      
+
+      let messageArray = fluidMessagesConnection_.messageCaucus().currentAsArray();
+      setConversation (messageArray);
+      let audienceMap = fluidMessagesConnection_.participantCaucus().current();
+      setAudience (audienceMap);
+
+      let changeObserver = new NotificationRouterFor<Message> (remoteChanged);
+
+      // Hook up a notification function for adds, removes, changes
+      let changeObserverInterest = new ObserverInterest (changeObserver, CaucusOf.caucusMemberChangedInterest);
+      fluidMessagesConnection_.messageCaucus().addObserver (changeObserverInterest);
+
+      let addedObserverInterest = new ObserverInterest (changeObserver, CaucusOf.caucusMemberAddedInterest);
+      fluidMessagesConnection_.messageCaucus().addObserver (addedObserverInterest);   
+      
+      let removedObserverInterest = new ObserverInterest (changeObserver, CaucusOf.caucusMemberRemovedInterest);
+      fluidMessagesConnection_.messageCaucus().addObserver (removedObserverInterest);      
+      
+      setFullJoinKey (JoinKey.makeFromTwoParts (props.joinKey.firstPart, containerId));      
    }
-   // TEMP ***
+
+   if (props.joinKey.isValid && fluidConnection === undefined && !joining) {
+
+      setJoining(true);
+
+      let joinKey = props.joinKey;
+
+      let fluidMessagesConnection = new MessageBotFluidConnection ( {}, props.localPersona);
+      
+      if (joinKey.isSinglePart) {
+
+         fluidMessagesConnection.createNew (joinKey.firstPart).then (containerId => {
+        
+            initialiseConnectionState (fluidMessagesConnection, containerId);
+            setJoining (false);
+
+         }).catch ((e) => {
+         
+               props.onError (e? e.toString() : "");
+               setJoining (false);
+         })
+      }
+      else if (joinKey.isTwoPart) {
+
+         fluidMessagesConnection.attachToExisting (joinKey.firstPart, joinKey.secondPart).then (containerId => {
+
+            initialiseConnectionState (fluidMessagesConnection, joinKey.secondPart);
+         
+            setJoining (false);
+
+         }).catch ((e) => {
+         
+               props.onError (e? e.toString() : "");
+               setJoining (false);
+         })
+      }
+   }
 
    audience.set (props.localPersona.id, props.localPersona);
 
@@ -56,21 +129,31 @@ export const ConversationController = (props: IConversationControllerProps) => {
 
    function onSend (messageText_: string) : void {
 
+      throwIfUndefined (fluidConnection);
+      let fluidMessagesConnection : MessageBotFluidConnection = fluidConnection;
+
       // set up a message to append
       let message = new Message ();
       message.authorId = props.localPersona.id;
       message.text = messageText_;
       message.sentAt = new Date();
-      conversation.push (message);
+
+      // Push it to shared data
+      fluidMessagesConnection.messageCaucus().add (message.id, message);
 
       // Save state and force a refresh
-      setConversation(conversation);
+      let messageArray = fluidMessagesConnection.messageCaucus().currentAsArray();      
+      setConversation (messageArray);      
+      let audienceMap = fluidMessagesConnection.participantCaucus().current();
+      setAudience (audienceMap);
+
       forceUpdate ();      
    }
 
    return (
          <ConversationPage 
-             isConnected={props.conversationKey.length > 0}
+             isConnected={fullJoinKey.isValid && fullJoinKey.isTwoPart}
+             joinKey={fullJoinKey}
              conversation={conversation}
              audience={audience} 
              onSend={onSend} >
