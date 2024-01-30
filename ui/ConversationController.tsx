@@ -38,35 +38,39 @@ export const ConversationController = (props: IConversationControllerProps) => {
    const [joining, setJoining] = useState<boolean> (false);
    const [fullJoinKey, setFullJoinKey] = useState<JoinKey> (props.joinKey);
 
-   // Notifications function for adds, removes, changes
-   // **************************************
-   function remoteChanged (interest: Interest, data: NotificationFor<Message>) : void {
-
-      function offlineRefresh () {       
-
-         if (typeof fluidConnection !== "undefined") {
-
-            throwIfUndefined(fluidConnection);   // This is just to keep the compiler happy with statement below. 
-            let messageArray = fluidConnection.messageCaucus().currentAsArray();
-            setConversation (messageArray); 
-         }
-      }
-
-      ///debounce (offlineRefresh, 100);
-      offlineRefresh();
-   }
-
    function initialiseConnectionState (fluidMessagesConnection_: MessageBotFluidConnection, 
       containerId: string) : void {
 
       setFluidConnection (fluidMessagesConnection_);
+
+      // Notifications function for adds, removes, changes
+      // Warning - this function must be decalred after the call to setFluidConnection(), else it binds to the original value - which is always undefined. 
+      // **************************************
+      let remoteChanged = function (interest: Interest, data: NotificationFor<Message>) : void {
+
+         let offlineRefresh = function () {       
+
+            if (typeof fluidMessagesConnection_ !== "undefined") {
+
+               throwIfUndefined(fluidMessagesConnection_);   // This is just to keep the compiler happy with statement below. 
+               let messageArray = fluidMessagesConnection_.messageCaucus().currentAsArray();
+               setConversation (messageArray); 
+               let audienceMap = fluidMessagesConnection_.participantCaucus().current();
+               setAudience (audienceMap);               
+            }
+         }
+
+         ///debounce (offlineRefresh, 100);
+         offlineRefresh();
+         forceUpdate ();            
+      }      
 
       let messageArray = fluidMessagesConnection_.messageCaucus().currentAsArray();
       setConversation (messageArray);
       let audienceMap = fluidMessagesConnection_.participantCaucus().current();
       setAudience (audienceMap);
 
-      let changeObserver = new NotificationRouterFor<Message> (remoteChanged.bind(this));
+      let changeObserver = new NotificationRouterFor<Message> (remoteChanged);
 
       // Hook up a notification function for adds, removes, changes
       let changeObserverInterest = new ObserverInterest (changeObserver, CaucusOf.caucusMemberChangedInterest);
@@ -140,6 +144,9 @@ export const ConversationController = (props: IConversationControllerProps) => {
       // Save state and force a refresh
       let messageArray = fluidMessagesConnection.messageCaucus().currentAsArray();      
       setConversation (messageArray);      
+      let audienceMap = fluidMessagesConnection.participantCaucus().current();
+      setAudience (audienceMap);
+
       forceUpdate ();      
    }
 
