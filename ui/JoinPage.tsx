@@ -16,14 +16,15 @@ import {
    Send24Regular
 } from '@fluentui/react-icons';
 
+import { JoinKey } from '../core/JoinKey';
 import { JoinPageValidator } from '../core/JoinPageValidator';
 import { KeyRetriever } from '../core/KeyRetriever';
 import { EUIStrings } from './UIStrings';
 import { EConfigStrings } from '../core/ConfigStrings';
 
 export interface IJoinPageProps {
-   conversationKey: string;  
-   onConnect (key_: string, name: string) : void;
+   joinKey: JoinKey;  
+   onConnect (joinKey: JoinKey, name: string) : void;
    onConnectError (hint_: string) : void;    
 }
 
@@ -88,29 +89,33 @@ export const JoinPage = (props: IJoinPageProps) => {
    const retriever = new KeyRetriever();
 
    const [name, setName] = useState<string>("");
-   const [key, setKey] = useState<string>("");
+   const [joinKey, setJoinKey] = useState<JoinKey>(new JoinKey(""));
+   const [joinKeyText, setJoinKeyText] = useState<string>("");   
    const [canJoin, setCanJoin] = useState<boolean>(false);
 
    function onJoinAsChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
 
       setName(data.value);
-      setCanJoin (validator.isJoinAttemptReady (data.value, key));
+      setCanJoin (validator.isJoinAttemptReady (data.value, joinKey));
    }
 
    function onKeyChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
 
-      setKey(data.value);
-      setCanJoin (validator.isJoinAttemptReady (name, data.value));
+      let asKey = new JoinKey (data.value);
+
+      setJoinKey(asKey);
+      setJoinKeyText(data.value);
+      setCanJoin (validator.isJoinAttemptReady (name, asKey));
    }   
 
    function onTryJoin(ev: React.MouseEvent<HTMLButtonElement>) : void {
 
       retriever.requestKey (EConfigStrings.kRequestKeyUrl, 
          EConfigStrings.kRequestKeyParameterName, 
-         key)
+         joinKey.firstPart)
       .then (
-         (conversationKey: string):void => {
-            props.onConnect(conversationKey, name);
+         (returnedKey: string):void => {
+            props.onConnect(joinKey, name);
           },
           (e) => {
             props.onConnectError(e.toString());
@@ -118,7 +123,7 @@ export const JoinPage = (props: IJoinPageProps) => {
       );
    }
 
-   if (props.conversationKey.length !== 0) {
+   if (props.joinKey.isValid) {
       return (<div></div>);
    }
    else {
@@ -132,8 +137,8 @@ export const JoinPage = (props: IJoinPageProps) => {
                   <Input aria-label={EUIStrings.kJoinConversationKeyPrompt}
                      className={keyInputClasses.root}                  
                      required={true}                  
-                     value={key}
-                     maxLength={40}
+                     value={joinKeyText}
+                     maxLength={75}
                      contentBefore={<Key24Regular />}
                      placeholder={EUIStrings.kJoinConversationKeyPlaceholder}
                      onChange={onKeyChange}
@@ -160,7 +165,9 @@ export const JoinPage = (props: IJoinPageProps) => {
                      />
                   </Tooltip>                
                </div>
-            </div>                   
+            </div>     
+            &nbsp;                          
+            <Text align="start">{canJoin ? EUIStrings.kJoinConversationLooksLikeKeyAndName : EUIStrings.kJoinConversationDoesNotLookLikeKeyAndName}</Text>   
          </div>
       );
    };

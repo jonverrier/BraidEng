@@ -18,9 +18,9 @@ import { Persona } from '../core/Persona';
 import { EIcon } from '../core/Icons';
 import { EUIStrings } from './UIStrings';
 import { EMainPageMessageTypes, MainPageMessage } from './MainPageMessage';
+import { JoinKey } from '../core/JoinKey';
 import { JoinPage } from './JoinPage';
 import { ConversationController } from './ConversationController';
-
 
 // Logging handler
 const logger = {
@@ -33,11 +33,6 @@ const logger = {
 
 export interface IAppProps {
 
-}
-
-class AppState {
-   key: string;
-   lastError: string;
 }
 
 const pageOuterStyles = makeStyles({
@@ -63,7 +58,7 @@ const centerColumnStyles = makeStyles({
 });
 
 export const App = (props: IAppProps) => {
-   
+
    let localPersona = new Persona ();
    localPersona.icon = EIcon.kPersonPersona;
 
@@ -71,7 +66,7 @@ export const App = (props: IAppProps) => {
 
    const [lastMessage, setLastMessage] = useState<string>("");
    const [lastMessageType, setLastMessageType] = useState<EMainPageMessageTypes> (EMainPageMessageTypes.kNothing);
-   const [conversationKey, setConversationKey] = useState<string>("");
+   const [joinKey, setJoinKey] = useState<JoinKey>(new JoinKey(""));
    const [joinAsPersona, setJoinAsPersona] = useState<Persona>(localPersona);   
 
    const pageOuterClasses = pageOuterStyles();
@@ -81,9 +76,9 @@ export const App = (props: IAppProps) => {
       logger[level as keyof typeof logger](tag, msg, params);
    });
 
-   function onConnect (key_: string, name_: string) : void  {
+   function onConnect (joinKey: JoinKey, name_: string) : void  {
 
-      setConversationKey (key_);
+      setJoinKey (joinKey);
       setJoinAsPersona(new Persona (joinAsPersona.id, name_, joinAsPersona.icon, joinAsPersona.thumbnailB64, joinAsPersona.lastSeenAt));
    }
 
@@ -99,6 +94,17 @@ export const App = (props: IAppProps) => {
       setLastMessageType (EMainPageMessageTypes.kError);
    }
 
+   function onConversationError (hint_: string) : void  {
+
+      let params = new Array();
+      params.length = 1;
+      params[0] = hint_;
+
+      logger.INFO (EConfigStrings.kApiLogCategory, "Error with remote conversation.", params);
+
+      setLastMessage (EUIStrings.kJoinApiError);
+      setLastMessageType (EMainPageMessageTypes.kError);
+   }
    
    function onDismissMessage () : void {
 
@@ -117,14 +123,15 @@ export const App = (props: IAppProps) => {
                         onDismiss={onDismissMessage}/>
 
                      <JoinPage 
-                        conversationKey={conversationKey} 
+                        joinKey={joinKey} 
                         onConnect={onConnect} 
                         onConnectError={onConnectError}>                     
                      </JoinPage>
    
                      <ConversationController 
-                        conversationKey={conversationKey}
-                        localPersona={joinAsPersona}>                           
+                        joinKey={joinKey}
+                        localPersona={joinAsPersona}
+                        onError={onConversationError}>                           
                      </ConversationController>
 
                </div>             

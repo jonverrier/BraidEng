@@ -21,17 +21,20 @@ import {
    Person24Regular,
    Laptop24Regular,
    Mail24Regular,
-   Send24Regular
+   Send24Regular,
+   Copy24Regular
 } from '@fluentui/react-icons';
 
 import { EUIStrings } from './UIStrings';
 import { EIcon } from '../core/Icons';
+import { JoinKey } from '../core/JoinKey';
 import { Persona } from '../core//Persona';
 import { Message } from '../core/Message';
 
 export interface IConversationPageProps {
 
    isConnected: boolean;
+   joinKey: JoinKey;
    audience: Map<string, Persona>;
    conversation: Array<Message>;
    onSend (message_: string) : void;   
@@ -79,7 +82,7 @@ export const ConversationPage = (props: IConversationPageProps) => {
                      <MessageView message={message} author={(audience.get (message.authorId) as Persona)}></MessageView>
                )})}
                &nbsp;                
-               <InputView onSend={onSend}></InputView>            
+               <InputView joinKey={props.joinKey} onSend={onSend}></InputView>            
             </div>
          </div>
       );
@@ -140,6 +143,8 @@ export const MessageView = (props: IMessageViewProps) => {
 
 
 export interface IInputViewProps {
+   
+   joinKey: JoinKey;
    onSend (message_: string) : void;
 }
 
@@ -149,6 +154,16 @@ const SendButton: React.FC<ButtonProps> = (props) => {
        {...props}
        appearance="transparent"
        icon={<Send24Regular />}
+       size="medium"
+     />
+   );
+ };
+
+ const CopyButton: React.FC<ButtonProps> = (props) => {
+   return (
+     <Button
+       {...props}
+       icon={<Copy24Regular />}
        size="medium"
      />
    );
@@ -169,10 +184,27 @@ const SendButton: React.FC<ButtonProps> = (props) => {
    },
 });
 
+const joinKeyGroupStyles = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'row',      
+      textAlign: 'left',
+      justifyContent: 'center'
+   },
+});
+
+const joinKeyItemStyles = makeStyles({
+   root: {    
+      alignSelf: 'center'
+   },
+});
+
 export const InputView = (props: IInputViewProps) => {
 
    const messageInputGroupClasses = messageInputGroupStyles();
    const messageInputClasses = messageInputStyles();
+   const joinKeyGroupClasses = joinKeyGroupStyles();
+   const joinKeyItemClasses = joinKeyItemStyles();
 
    const [message, setMessage] = useState<string>("");
    const [canSend, setCanSend] = useState<boolean>(false);
@@ -189,6 +221,11 @@ export const InputView = (props: IInputViewProps) => {
       setMessage ("");     
    }
 
+   function onCopy (ev: React.MouseEvent<HTMLButtonElement>) : void {
+
+      navigator.clipboard.writeText (props.joinKey.asString);
+   }
+
    return (
       <div className={messageInputGroupClasses.root}>
          <Text>{EUIStrings.kSendMessagePreamble}</Text>
@@ -198,7 +235,7 @@ export const InputView = (props: IInputViewProps) => {
                className={messageInputClasses.root}                  
                required={true}                  
                value={message}
-               maxLength={40}
+               maxLength={256}
                contentBefore={<Mail24Regular />}
                placeholder={EUIStrings.kSendMessagePlaceholder}
                onChange={onKeyChange}
@@ -209,7 +246,23 @@ export const InputView = (props: IInputViewProps) => {
                   onClick={onMessageSend}
                />}            
          />
-         </Tooltip>   
+         </Tooltip> 
+         &nbsp;
+         <div className={joinKeyGroupClasses.root}>         
+            <Text 
+               className={joinKeyItemClasses.root}>
+               {EUIStrings.kJoinKeySharingPrompt}
+            </Text>  
+            &nbsp;
+            <Tooltip withArrow content={EUIStrings.kCopyJoinKeyButtonPrompt} relationship="label">
+               <CopyButton 
+                  className={joinKeyItemClasses.root}
+                  aria-label={EUIStrings.kCopyJoinKeyButtonPrompt} 
+                  disabled={!(props.joinKey.isValid)} 
+                  onClick={onCopy}
+               />  
+               </Tooltip>
+         </div>       
       </div>        
    );
 }

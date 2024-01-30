@@ -2,6 +2,7 @@
 import { IFluidContainer, ConnectionState } from "fluid-framework";
 import { AzureClient } from "@fluidframework/azure-client";
 
+import { throwIfUndefined } from "./Asserts";
 import { ConnectionError, InvalidOperationError, InvalidStateError} from './Errors';
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { ClientProps } from './FluidConnectionProps';
@@ -30,14 +31,9 @@ export abstract class FluidConnection extends Notifier {
    async createNew(joinKey_: string): Promise<string> {
 
       try {
-         var clientProps: ClientProps = new ClientProps();
+         await this.setupBeforeConnection (joinKey_);
 
-         await clientProps.connection.makeTokenProvider(joinKey_);
-
-         this._client = new AzureClient(clientProps);
-
-
-
+         throwIfUndefined (this._client);
          const { container, services } = await this._client.createContainer(this.schema());
          this._container = container;
 
@@ -69,12 +65,9 @@ export abstract class FluidConnection extends Notifier {
    async attachToExisting(joinKey_: string, containerId: string): Promise<string> {
 
       try {
-         var clientProps: ClientProps = new ClientProps();
+         await this.setupBeforeConnection (joinKey_);
 
-         await clientProps.connection.makeTokenProvider(joinKey_);
-
-         this._client = new AzureClient(clientProps);
-
+         throwIfUndefined (this._client);
          const { container, services } = await this._client.getContainer(containerId, this.schema());
          this._container = container;
 
@@ -116,6 +109,14 @@ export abstract class FluidConnection extends Notifier {
       else {
          throw new InvalidOperationError("The remote data service is not connected.")
       }
+   }
+
+   // local function to cut down duplication between createNew() and AttachToExisting())
+   private async setupBeforeConnection(joinKey_: string): Promise<void> {
+
+      var clientProps: ClientProps = new ClientProps();
+      await clientProps.connection.makeTokenProvider(joinKey_);
+      this._client = new AzureClient(clientProps);
    }
 
    // local function to cut down duplication between createNew() and AttachToExisting())

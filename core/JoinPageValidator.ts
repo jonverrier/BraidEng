@@ -3,6 +3,7 @@ import axios from "axios";
 
 import { IKeyGenerator } from './KeyGenerator';
 import { UuidKeyGenerator } from './UuidKeyGenerator';
+import { JoinKey } from "./JoinKey";
 
 export class JoinPageValidator {
 
@@ -13,14 +14,12 @@ export class JoinPageValidator {
    }   
 
    // Looks at the name and key provided, and returns true if the data looks ready to join a conversation, else false.
-   isJoinAttemptReady  (name_: string, key_: string) : boolean {
+   isJoinAttemptReady  (name_: string, key_: JoinKey) : boolean {
 
       if (name_.length < 1)
          return false;
 
-      let keyGenerator : IKeyGenerator = new UuidKeyGenerator();
-
-      if (!keyGenerator.couldBeAKey (key_))
+      if (!key_.isValid)
          return false;
 
       return true;
