@@ -88,7 +88,7 @@ export const App = (props: IAppProps) => {
       params.length = 1;
       params[0] = hint_;
 
-      logger.INFO (EConfigStrings.kApiLogCategory, "Error connecting to conversation.", params);
+      logger.ERROR (EConfigStrings.kApiLogCategory, "Error connecting to conversation.", params);
 
       setLastMessage (EUIStrings.kJoinApiError);
       setLastMessageType (EMainPageMessageTypes.kError);
@@ -100,10 +100,13 @@ export const App = (props: IAppProps) => {
       params.length = 1;
       params[0] = hint_;
 
-      logger.INFO (EConfigStrings.kApiLogCategory, "Error with remote conversation.", params);
+      logger.INFO (EConfigStrings.kApiLogCategory, "Error joining remote conversation.", params);
 
       setLastMessage (EUIStrings.kJoinApiError);
       setLastMessageType (EMainPageMessageTypes.kError);
+
+      // Clear the join key - takes up back to the join page.
+      setJoinKey (new JoinKey (""));
    }
    
    function onDismissMessage () : void {
