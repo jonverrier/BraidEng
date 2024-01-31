@@ -6,12 +6,11 @@ import { InsecureTokenProvider } from "@fluidframework/test-client-utils";
 import { AzureRemoteConnectionConfig, AzureClientProps, ITokenProvider } from "@fluidframework/azure-client";
 import axios from "axios";
 
+import { EEnvironment, Environment } from "./Environment";
 import { KeyRetriever } from "./KeyRetriever";
 import { EConfigStrings } from "./ConfigStrings";
 
 var documentUuid: string = "b03724b3-4be0-4491-b0fa-43b01ab80d50";
-
-var develop = true;
 
 export class ConnectionConfig implements AzureRemoteConnectionConfig {
 
@@ -30,7 +29,8 @@ export class ConnectionConfig implements AzureRemoteConnectionConfig {
 
       var user: any = { id: documentUuid, name: "BraidBot Chat" };
 
-      if (develop) {
+      if (Environment.environment() == EEnvironment.kLocal) {
+
          this.tenantId = EConfigStrings.kAzureTenantId
          this.endpoint = EConfigStrings.kAzureLocalFluidHost;
          this.type = "local";
@@ -39,12 +39,13 @@ export class ConnectionConfig implements AzureRemoteConnectionConfig {
          return (this.tokenProvider);
       }
       else {
+
          this.tenantId = EConfigStrings.kAzureTenantId;
          this.endpoint = EConfigStrings.kAzureProductionFluidHost;
          this.type = "remote";
 
          let retriever = new KeyRetriever ()
-         var key = await retriever.requestKey (EConfigStrings.kRequestKeyUrl, 
+         var key = await retriever.requestKey (EConfigStrings.kRequestConversationKeyUrl, 
                                                EConfigStrings.kRequestKeyParameterName, 
                                                joinKey_);
 
