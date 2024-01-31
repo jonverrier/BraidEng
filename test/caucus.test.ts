@@ -3,6 +3,7 @@ import { expect } from 'expect';
 import { describe, it } from 'mocha';
 
 import { throwIfUndefined } from '../core/Asserts';
+import { EEnvironment, Environment } from '../core/Environment';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { Interest, NotificationFor } from '../core/NotificationFramework';
@@ -46,12 +47,14 @@ describe("Caucus", function () {
    var newConnection: MessageBotFluidConnection;
    var persona: Persona;
    var id: string; 
+   var oldEnv : EEnvironment; 
 
    var oldLocation: any = global.location;
 
    beforeEach(async () => {
 
       (global.location as any) = mockLocation;
+      oldEnv = Environment.override (EEnvironment.kProduction);
 
       this.timeout(10000);
       persona = new Persona(myId, myName, EIcon.kPersonPersona, myThumbnail, myLastSeenAt);
@@ -67,10 +70,11 @@ describe("Caucus", function () {
 
    afterEach(async () => {
 
-      (global.location as any) = oldLocation;
-
       await wait();
       await newConnection.disconnect();
+
+      oldEnv = Environment.override (EEnvironment.kProduction);      
+      (global.location as any) = oldLocation;
    });
 
    it("Can create a valid caucus", async function () {

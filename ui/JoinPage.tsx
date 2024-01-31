@@ -110,7 +110,7 @@ export const JoinPage = (props: IJoinPageProps) => {
 
    function onTryJoin(ev: React.MouseEvent<HTMLButtonElement>) : void {
 
-      retriever.requestKey (EConfigStrings.kRequestKeyUrl, 
+      retriever.requestKey (EConfigStrings.kRequestJoinKeyUrl, 
          EConfigStrings.kRequestKeyParameterName, 
          joinKey.firstPart)
       .then (

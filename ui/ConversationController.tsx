@@ -100,10 +100,10 @@ export const ConversationController = (props: IConversationControllerProps) => {
             initialiseConnectionState (fluidMessagesConnection, containerId);
             setJoining (false);
 
-         }).catch ((e) => {
+         }).catch ((e : any) => {
          
-               props.onError (e? e.toString() : "");
-               setJoining (false);
+            props.onError (e? e.toString() : "Error creating new conversation, " + joinKey.secondPart + ".");
+            setJoining (false);
          })
       }
       else if (joinKey.isTwoPart) {
@@ -114,10 +114,10 @@ export const ConversationController = (props: IConversationControllerProps) => {
          
             setJoining (false);
 
-         }).catch ((e) => {
+         }).catch ((e: any) => {
          
-               props.onError (e? e.toString() : "");
-               setJoining (false);
+            props.onError (e? e.toString() : "Error connecting to conversation, " + joinKey.secondPart + ".");
+            setJoining (false);
          })
       }
    }
