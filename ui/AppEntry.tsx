@@ -17,8 +17,9 @@ import { EConfigStrings } from '../core/ConfigStrings';
 import { Persona } from '../core/Persona';
 import { EIcon } from '../core/Icons';
 import { EUIStrings } from './UIStrings';
-import { EMainPageMessageTypes, MainPageMessage } from './MainPageMessage';
 import { JoinKey } from '../core/JoinKey';
+import { Environment, EEnvironment } from '../core/Environment';
+import { EMainPageMessageTypes, MainPageMessage } from './MainPageMessage';
 import { JoinPage } from './JoinPage';
 import { ConversationController } from './ConversationController';
 
@@ -62,6 +63,8 @@ export const App = (props: IAppProps) => {
    let localPersona = new Persona ();
    localPersona.icon = EIcon.kPersonPersona;
 
+   Environment.override (EEnvironment.kProduction);
+
    const centerColumnClasses = centerColumnStyles();
 
    const [lastMessage, setLastMessage] = useState<string>("");
@@ -77,6 +80,9 @@ export const App = (props: IAppProps) => {
    });
 
    function onConnect (joinKey: JoinKey, name_: string) : void  {
+      
+      setLastMessage ("");
+      setLastMessageType (EMainPageMessageTypes.kNothing);      
 
       setJoinKey (joinKey);
       setJoinAsPersona(new Persona (joinAsPersona.id, name_, joinAsPersona.icon, joinAsPersona.thumbnailB64, joinAsPersona.lastSeenAt));
