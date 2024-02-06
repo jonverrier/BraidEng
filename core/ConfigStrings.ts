@@ -9,7 +9,11 @@ export enum EConfigStrings {
 
    kAzureTenantId = "5dcb73bd-782d-4979-9c12-4f14106313b0",
    kAzureProductionFluidHost = "https://eu.fluidrelay.azure.com",
-   kAzureLocalFluidHost = "http://localhost:7070"
+   kAzureLocalFluidHost = "http://localhost:7070",
+
+   kBotName = 'BraidBot',
+   kBotRequestSignature = '@BraidBot',
+   kOpenAiPersonaPrompt = "You are a customer service agent for a bank, skilled in explaining complex products in simple language. You limit replies to 100 words or less."
 };
 
 // This is ised for local running only, as in browser we cannot access environment variables
