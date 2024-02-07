@@ -6,7 +6,7 @@ import { Persona} from '../core/Persona';
 import { EIcon } from '../core/Icons';
 import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
-import { OpenAiAPi, OpenAiCaller } from '../core/OpenAiAPi';
+import { AIConnection, OpenAiCaller } from '../core/AIConnection';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -53,16 +53,16 @@ describe("OpenAiApi", function () {
 
       var messageEmpty = new Message();
 
-      expect(OpenAiAPi.isBotMessage(botMessage, authors)).toEqual(true);
-      expect(OpenAiAPi.isBotMessage(personMessage, authors)).toEqual(false); 
-      expect(OpenAiAPi.isBotMessage(botRequest, authors)).toEqual(false);           
+      expect(AIConnection.isBotMessage(botMessage, authors)).toEqual(true);
+      expect(AIConnection.isBotMessage(personMessage, authors)).toEqual(false); 
+      expect(AIConnection.isBotMessage(botRequest, authors)).toEqual(false);           
    });
 
    it("Needs to detect Bot request type", function () {
 
-      expect(OpenAiAPi.isBotRequest(personMessage, authors)).toEqual(false);   
-      expect(OpenAiAPi.isBotRequest(botMessage, authors)).toEqual(false);     
-      expect(OpenAiAPi.isBotRequest(botRequest, authors)).toEqual(true);          
+      expect(AIConnection.isBotRequest(personMessage, authors)).toEqual(false);   
+      expect(AIConnection.isBotRequest(botMessage, authors)).toEqual(false);     
+      expect(AIConnection.isBotRequest(botRequest, authors)).toEqual(true);          
    });   
 
    it("Needs to detect reference errors", function () {
@@ -73,7 +73,7 @@ describe("OpenAiApi", function () {
       let caught = false;
 
       try {
-         OpenAiAPi.isBotMessage(newMessage, authors);
+         AIConnection.isBotMessage(newMessage, authors);
       }
       catch (e) {
          caught = true;
@@ -89,7 +89,7 @@ describe("OpenAiApi", function () {
       messages[1] = botRequest;
       messages[2] = botMessage;
 
-      let query = OpenAiAPi.makeOpenAiQuery (messages, authors);
+      let query = AIConnection.makeOpenAiQuery (messages, authors);
 
       expect(query.length).toEqual(3);         
    });    
@@ -102,14 +102,14 @@ describe("OpenAiApi", function () {
       messages[1] = botRequest;
       messages[2] = botMessage;
 
-      let query = OpenAiAPi.makeOpenAiQuery (messages, authors);
-
-      let caller = new OpenAiCaller();
+      let query = AIConnection.makeOpenAiQuery (messages, authors);
 
       throwIfUndefined(process);
       throwIfUndefined(process.env);
-      throwIfUndefined(process.env.OPENAI_API_KEY);      
-      let result = await caller.callAI (query, process.env.OPENAI_API_KEY);
+      throwIfUndefined(process.env.OPENAI_API_KEY);        
+      let caller = new AIConnection(process.env.OPENAI_API_KEY);
+
+      let result = await caller.callAI (query);
 
       console.log (result);
 

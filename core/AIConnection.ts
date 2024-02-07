@@ -21,7 +21,58 @@ const logger = {
    [LogLevel.DEBUG]: (tag, msg, params) => console.log(msg, ...params),
 } as Record<LogLevel, (tag: string, msg: unknown, params: unknown[]) => void>;
 
-export class OpenAiAPi {
+export class AIConnection {
+
+   private _activeCallCount: number;
+   private _key: string;   
+
+   /**
+    * Create an AIConnection object 
+    */
+   constructor(key_: string) {
+
+      this._activeCallCount = 0;
+      this._key = key_
+   }  
+
+   // Makes an Axios call to call web endpoint
+   async callAI  (query: Array<Object>) : Promise<string> {
+      
+      this._activeCallCount++;
+
+      var response : any = null;
+
+      await axios.post('https://api.openai.com/v1/chat/completions', {
+         messages: query,
+         model: "gpt-3.5-turbo",
+      },
+      {
+         headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this._key}`
+         }
+      })
+      .then((resp : any) => {
+
+         response = resp;
+         this._activeCallCount--;         
+      })
+      .catch((error: any) => {
+
+         this._activeCallCount--;     
+
+         logger.ERROR (EConfigStrings.kApiLogCategory, EConfigStrings.kErrorConnectingToAiAPI, [error]);
+      });
+
+      if (!response)
+         throw new ConnectionError(EConfigStrings.kErrorConnectingToAiAPI);      
+
+      return response.data.choices[0].message.content as string;
+   }    
+
+   isBusy () {
+      return this._activeCallCount !== 0;
+   }
 
    static makeOpenAiQuery (messages: Array<Message>, authors: Map<string, Persona>): Array<Object> {
 
@@ -31,12 +82,12 @@ export class OpenAiAPi {
       builtQuery.push (prompt);      
 
       for (const message of messages) {
-         if (OpenAiAPi.isBotRequest(message, authors)) {
+         if (AIConnection.isBotRequest(message, authors)) {
             let entry = { role: 'user', content: message.text };
             builtQuery.push (entry);
          }
 
-         if (OpenAiAPi.isBotMessage(message, authors)) {
+         if (AIConnection.isBotMessage(message, authors)) {
             let entry = { role: 'assistant', content: message.text };
             builtQuery.push (entry);
          }         
@@ -67,51 +118,7 @@ export class OpenAiAPi {
 
 export class OpenAiCaller {
 
-   private activeCallCount: number;
+ 
 
-   /**
-    * Create an empty AICaller object 
-    */
-   constructor() {
-      this.activeCallCount = 0;
-   }   
 
-   // Makes an Axios call to call web endpoint
-   async callAI  (query: Array<Object>, key: string) : Promise<string> {
-      
-      this.activeCallCount++;
-
-      var response : any = null;
-
-      await axios.post('https://api.openai.com/v1/chat/completions', {
-         messages: query,
-         model: "gpt-3.5-turbo",
-      },
-      {
-         headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${key}`
-         }
-      })
-      .then((resp : any) => {
-
-         response = resp;
-         this.activeCallCount--;         
-      })
-      .catch((error: any) => {
-
-         this.activeCallCount--;     
-
-         logger.ERROR (EConfigStrings.kApiLogCategory, EConfigStrings.kErrorConnectingToAiAPI, [error]);
-      });
-
-      if (!response)
-         throw new ConnectionError(EConfigStrings.kErrorConnectingToAiAPI);      
-
-      return response.data.choices[0].message.content as string;
-   }    
-
-   isBusy () {
-      return this.activeCallCount !== 0;
-   }
 }
