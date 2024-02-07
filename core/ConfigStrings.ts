@@ -3,6 +3,7 @@
 export enum EConfigStrings {
 
    kApiLogCategory = "API",
+
    kRequestJoinKeyUrl = "https://ambitious-ground-0a343ae03.4.azurestaticapps.net/api/key",
    kRequestConversationKeyUrl = "https://ambitious-ground-0a343ae03.4.azurestaticapps.net/api/conversation",   
    kRequestKeyParameterName = "JoinKey",
@@ -13,7 +14,10 @@ export enum EConfigStrings {
 
    kBotName = 'BraidBot',
    kBotRequestSignature = '@BraidBot',
-   kOpenAiPersonaPrompt = "You are a customer service agent for a bank, skilled in explaining complex products in simple language. You limit replies to 100 words or less."
+   kOpenAiPersonaPrompt = "You are a customer service agent for a bank, skilled in explaining complex products in simple language. You limit replies to 100 words or less.",
+
+   kErrorConnectingToKeyAPI = "Error connecting to server.",
+   kErrorConnectingToAiAPI = "Error connecting to AI." 
 };
 
 // This is ised for local running only, as in browser we cannot access environment variables

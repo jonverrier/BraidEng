@@ -35,21 +35,8 @@ class MockObserver implements IObserver {
    };
 };
 
-// handler which does logging to the console 
-const logger = {
-   [LogLevel.ERROR]: (tag, msg, params) => console.error(msg, ...params),
-   [LogLevel.WARN]: (tag, msg, params) => console.warn(msg, ...params),
-   [LogLevel.INFO]: (tag, msg, params) => console.log(msg, ...params),
-   [LogLevel.TRACE]: (tag, msg, params) => console.log(msg, ...params),
-   [LogLevel.DEBUG]: (tag, msg, params) => console.log(msg, ...params),
-} as Record<LogLevel, (tag: string, msg: unknown, params: unknown[]) => void>;
-
 describe("NotificationFramework", function () {
-
-   log.init({ notification: 'DEBUG' }, (level, tag, msg, params) => {
-      logger[level as keyof typeof logger](tag, msg, params);
-   });
-   
+  
    it("Needs to create, test & assign Interest", function () {
 
       var notificationId1 : string = "Playing";

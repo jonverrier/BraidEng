@@ -1,20 +1,23 @@
 'use strict';
 // Copyright Braid Technologies ltd, 2021
+import { throwIfUndefined } from '../core/Asserts';
 import { Message} from '../core/Message';
 import { Persona} from '../core/Persona';
 import { EIcon } from '../core/Icons';
 import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
-import { OpenAiAPi } from '../core/OpenAiAPi';
+import { OpenAiAPi, OpenAiCaller } from '../core/OpenAiAPi';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
+
+import axios from "axios";
 
 let keyGenerator: IKeyGenerator = new UuidKeyGenerator();
 
 let myMessageId: string = "1234";
 let myAuthorId: string = "Jon";
-let myText = "Hello";
+let myText = "Please help me understand the difference between investing in a unit trust and investing in an equity in less than 50 words.";
 let mySentAt = new Date();
 
 let botMessageId: string = "5678";
@@ -23,7 +26,7 @@ let botText = "Bye";
 var botSentAt = new Date(0);
 
 let myBotRequestId: string = "12345";
-let myBotRequestText = "Hello @BraidBot";
+let myBotRequestText = "Hello @BraidBot Please help me understand the difference between investing in a unit trust and investing in an equity in less than 50 words.";
 
 describe("OpenAiApi", function () {
 
@@ -38,6 +41,13 @@ describe("OpenAiApi", function () {
    let botMessage = new Message(botMessageId, botAuthorId, undefined, botText, botSentAt);
 
    let botRequest = new Message(myBotRequestId, myAuthorId, undefined, myBotRequestText, mySentAt); 
+
+   this.timeout(10000);
+
+   beforeEach(async () => {
+
+      this.timeout(10000);
+   });
 
    it("Needs to detect Bot message type", function () {
 
@@ -79,10 +89,51 @@ describe("OpenAiApi", function () {
       messages[1] = botRequest;
       messages[2] = botMessage;
 
-      let resp = OpenAiAPi.makeOpenAiQuery (messages, authors);
+      let query = OpenAiAPi.makeOpenAiQuery (messages, authors);
 
-      console.log (resp);
+      expect(query.length).toEqual(3);         
+   });    
+   
+   it("Needs to generate valid response from Open AI web endpoint", async function () {
 
-      expect(messages.length).toEqual(3);         
-   });      
+      let messages = new Array<Message>();
+      messages.length = 3;
+      messages[0] = personMessage;
+      messages[1] = botRequest;
+      messages[2] = botMessage;
+
+      let query = OpenAiAPi.makeOpenAiQuery (messages, authors);
+
+      let caller = new OpenAiCaller();
+
+      throwIfUndefined(process);
+      throwIfUndefined(process.env);
+      throwIfUndefined(process.env.OPENAI_API_KEY);      
+      let result = await caller.callAI (query, process.env.OPENAI_API_KEY);
+
+      console.log (result);
+
+      expect (result.length > 0).toBe(true);
+
+      /*
+      axios.post('https://api.openai.com/v1/chat/completions', {
+         messages: query,
+         model: "gpt-3.5-turbo",
+      },
+      {
+      headers: {
+         'Content-Type': 'application/json',
+         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      }
+      })
+      .then((response : any) => {
+         console.log(response.data.choices[0].message.content);
+      })
+      .catch((error: any) => {
+         console.error(error);
+      });
+      */
+   });   
 });
+
+

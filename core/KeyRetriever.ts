@@ -1,17 +1,33 @@
 // Copyright (c) 2024 Braid Technologies Ltd
+
 import axios from "axios";
 
+// Other 3rd party imports
+import { log, LogLevel, tag } from 'missionlog';
+
+// Local
+import { EConfigStrings } from './ConfigStrings';
 import { ConnectionError } from "./Errors";
 import { EEnvironment, Environment } from "./Environment";
 import { throwIfUndefined } from "./Asserts";
 import { KStubEnvironmentVariables } from "./ConfigStrings";
+
+
+// Logging handler
+const logger = {
+   [LogLevel.ERROR]: (tag, msg, params) => console.error(msg, ...params),
+   [LogLevel.WARN]: (tag, msg, params) => console.warn(msg, ...params),
+   [LogLevel.INFO]: (tag, msg, params) => console.log(msg, ...params),
+   [LogLevel.TRACE]: (tag, msg, params) => console.log(msg, ...params),
+   [LogLevel.DEBUG]: (tag, msg, params) => console.log(msg, ...params),
+} as Record<LogLevel, (tag: string, msg: unknown, params: unknown[]) => void>;
 
 export class KeyRetriever {
 
    private activeCallCount: number;
 
    /**
-    * Create an empty JoinPageValidator object 
+    * Create an empty KeyRetriever object 
     */
    constructor() {
       this.activeCallCount = 0;
@@ -38,17 +54,22 @@ export class KeyRetriever {
 
       try {
          response = await axios.get(apiUrl_, {
-         params: {
-            [paramName_]: key_
-         },
-         withCredentials: false
-      });
+            params: {
+               [paramName_]: key_
+            },
+            withCredentials: false
+         });
+         this.activeCallCount--; 
+
       } catch (e) {
+         
          this.activeCallCount--;
+   
+         logger.ERROR (EConfigStrings.kApiLogCategory, EConfigStrings.kErrorConnectingToKeyAPI, [e]);           
       }
 
       if (!response || !response.data)
-         throw new ConnectionError("Error connecting to remote data services for url, remote, key: " + apiUrl_ + "," + paramName_ + "," + key_ + ".");      
+         throw new ConnectionError(EConfigStrings.kErrorConnectingToKeyAPI);      
       
       return response.data as string;
    }    
