@@ -105,7 +105,7 @@ describe("KeyRetriever", function () {
       let oldEnv = Environment.override (EEnvironment.kProduction);
 
       try {
-         var url = 'https://ambitious-ground-0a343ae03.4.azurestaticapps.net/api/key';
+         var url = EConfigStrings.kRequestJoinKeyUrl;
 
          let conversation = await validator.requestKey(url, EConfigStrings.kRequestKeyParameterName, "49b65194-26e1-4041-ab11-4078229f478a");
       }
