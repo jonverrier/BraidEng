@@ -5,8 +5,8 @@
 // React
 import React, { useState } from 'react';
 
+// Local
 import { throwIfUndefined } from '../core/Asserts';
-import { debounce } from '../core/Debounce';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { CaucusOf } from '../core/CaucusFramework';
@@ -14,7 +14,7 @@ import { JoinKey } from '../core/JoinKey';
 import { ConversationPage } from './ConversationPage';
 import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
 import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } from '../core/NotificationFramework';
-import { FluidConnection } from '../core/FluidConnection';
+import { AIConnection } from '../core/AIConnection';
 
 export interface IConversationControllerProps {
 
@@ -37,6 +37,7 @@ export const ConversationController = (props: IConversationControllerProps) => {
    const [fluidConnection, setFluidConnection] = useState<MessageBotFluidConnection | undefined>(undefined);
    const [joining, setJoining] = useState<boolean> (false);
    const [fullJoinKey, setFullJoinKey] = useState<JoinKey> (props.joinKey);
+   const [aiKey, setAiKey] = useState<string> ("");
 
    function initialiseConnectionState (fluidMessagesConnection_: MessageBotFluidConnection, 
       containerId: string) : void {
@@ -60,7 +61,6 @@ export const ConversationController = (props: IConversationControllerProps) => {
             }
          }
 
-         ///debounce (offlineRefresh, 100);
          offlineRefresh();
          forceUpdate ();            
       }      
@@ -146,6 +146,9 @@ export const ConversationController = (props: IConversationControllerProps) => {
       setConversation (messageArray);      
       let audienceMap = fluidMessagesConnection.participantCaucus().current();
       setAudience (audienceMap);
+
+      // TODO - check if AI is being invoked & make a call here 
+      // ======================================================
 
       forceUpdate ();      
    }

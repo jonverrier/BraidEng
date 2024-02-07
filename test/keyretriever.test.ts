@@ -116,5 +116,13 @@ describe("KeyRetriever", function () {
 
       expect(caught).toEqual(false);      
    }).timeout (5000); 
+
+   it("Needs to keep busy count", async function () {
+
+      let retriever = new KeyRetriever(); 
+
+      expect(retriever.isBusy()).toEqual(false);   
+         
+   });    
  
 });
