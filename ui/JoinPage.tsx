@@ -21,6 +21,7 @@ import { JoinPageValidator } from '../core/JoinPageValidator';
 import { KeyRetriever } from '../core/KeyRetriever';
 import { EUIStrings } from './UIStrings';
 import { EConfigStrings } from '../core/ConfigStrings';
+import { Environment, EEnvironment } from '../core/Environment';
 
 export interface IJoinPageProps {
    joinKey: JoinKey;  
@@ -110,7 +111,14 @@ export const JoinPage = (props: IJoinPageProps) => {
 
    function onTryJoin(ev: React.MouseEvent<HTMLButtonElement>) : void {
 
-      retriever.requestKey (EConfigStrings.kRequestJoinKeyUrl, 
+      var url: string;
+
+      if (Environment.environment() === EEnvironment.kLocal)
+         url = EConfigStrings.kRequestLocalAiKeyUrl;
+      else
+         url = EConfigStrings.kRequestAiKeyUrl;
+
+      retriever.requestKey (url, 
          EConfigStrings.kRequestKeyParameterName, 
          joinKey.firstPart)
       .then (

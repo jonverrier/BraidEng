@@ -31,7 +31,7 @@ export class ConnectionConfig implements AzureRemoteConnectionConfig {
 
       if (Environment.environment() == EEnvironment.kLocal) {
 
-         this.tenantId = EConfigStrings.kAzureTenantId
+         this.tenantId = EConfigStrings.kAzureTenantId;
          this.endpoint = EConfigStrings.kAzureLocalFluidHost;
          this.type = "local";
          this.tokenProvider = new InsecureTokenProvider('testKey', user);

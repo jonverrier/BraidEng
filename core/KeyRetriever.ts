@@ -39,6 +39,7 @@ export class KeyRetriever {
      
       let environment = Environment.environment();
 
+      /*  Now we use a localhost server bcs it can access environment variables
       // If we are running locally, use the stub values - no Production secrets are really stored locally 
       if (environment === EEnvironment.kLocal) {
          type KStubEnvironmentVariableKey = keyof typeof KStubEnvironmentVariables;
@@ -47,6 +48,7 @@ export class KeyRetriever {
          throwIfUndefined(checked);
          return checked;
       }
+      */
 
       this.activeCallCount++;
 
