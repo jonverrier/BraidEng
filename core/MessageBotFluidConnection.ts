@@ -5,6 +5,10 @@ import { Message } from './Message';
 import { IConnectionProps, FluidConnection } from './FluidConnection';
 import { CaucusOf } from './CaucusFramework';
 import { throwIfUndefined } from './Asserts'; 
+import { EConfigStrings } from "./ConfigStrings";
+import { EIcon } from "./Icons";
+
+
 
 const containerSchema = {
    initialObjects: {
@@ -40,13 +44,22 @@ export class MessageBotFluidConnection extends FluidConnection {
    }
 
    setupLocalCaucuses (initialObjects: any) : void {
+
       // Create caucuses so they exist when observers are notified of connection
       this._participantCaucus = new CaucusOf<Persona>(initialObjects.participantMap as SharedMap, );
       this._messageCaucus = new CaucusOf<Message>(initialObjects.messageMap as SharedMap, this.compareFn);  
       
       // Connect our own user ID to the participant caucus
-      var storedVal: string = this._localUser.flatten();
-      (initialObjects.participantMap as SharedMap).set(this._localUser.id, storedVal);      
+      let storedMe = this._localUser.flatten();
+      (initialObjects.participantMap as SharedMap).set(this._localUser.id, storedMe);      
+
+      // Add the Bot persona if its not already there
+      if (! initialObjects.participantMap.get(EConfigStrings.kBotGuid)) {
+
+         let botPersona = new Persona (EConfigStrings.kBotGuid, EConfigStrings.kBotName, EIcon.kBotPersona, undefined, new Date());
+         let storedBot = botPersona.flatten();
+         (initialObjects.participantMap as SharedMap).set(botPersona.id, storedBot);            
+      }
    }
 
    participantCaucus(): CaucusOf<Persona> {

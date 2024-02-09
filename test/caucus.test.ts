@@ -86,7 +86,7 @@ describe("Caucus", function () {
       caucus.add(workingPersona.id, workingPersona);
       expect(caucus.has(workingPersona.id)).toEqual(true);
       expect(caucus.get(workingPersona.id).equals(workingPersona)).toEqual(true);
-      expect(caucus.current().size).toEqual(1);
+      expect(caucus.current().size).toEqual(2); // The Bot perdona is added manually - size is alays >= 1
 
       workingPersona.name = "Joe";
       caucus.amend(workingPersona.id, workingPersona);
@@ -94,7 +94,7 @@ describe("Caucus", function () {
 
       caucus.remove(workingPersona.id);
       expect(caucus.has(workingPersona.id)).toEqual(false);
-      expect(caucus.current().size).toEqual(0);
+      expect(caucus.current().size).toEqual(1); // The Bot perdona is added manually - size is alays >= 1
     });
 
     it("Can detect invalid operations", async function () {
