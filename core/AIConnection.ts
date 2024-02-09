@@ -12,6 +12,7 @@ import { EConfigStrings } from './ConfigStrings';
 import { throwIfUndefined } from './Asserts';
 import { ConnectionError } from "./Errors";
 import { KeyRetriever } from "./KeyRetriever";
+import { Environment, EEnvironment } from "./Environment";
 
 // Logging handler
 const logger = {
@@ -125,8 +126,14 @@ export class AiConnector {
    static async connect (joinKey_: string) : Promise<AIConnection> {
 
       let retriever = new KeyRetriever ();
+      var url: string;
 
-      let aiKey = await retriever.requestKey (EConfigStrings.kRequestAiKeyUrl, 
+      if (Environment.environment() === EEnvironment.kLocal)
+         url = EConfigStrings.kRequestLocalAiKeyUrl;
+      else
+         url = EConfigStrings.kRequestAiKeyUrl;
+
+      let aiKey = await retriever.requestKey (url, 
                                        EConfigStrings.kRequestKeyParameterName, 
                                        joinKey_);
 
