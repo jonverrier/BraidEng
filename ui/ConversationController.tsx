@@ -16,6 +16,7 @@ import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
 import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } from '../core/NotificationFramework';
 import { AIConnection, AiConnector } from '../core/AIConnection';
 import { EUIStrings } from './UIStrings';
+import { EConfigStrings } from '../core/ConfigStrings';
 
 export interface IConversationControllerProps {
 
@@ -158,9 +159,23 @@ export const ConversationController = (props: IConversationControllerProps) => {
 
             let query = AIConnection.makeOpenAiQuery (messageArray, audienceMap);
 
-            connection.callAI (query).then ((result: string) => {
+            connection.callAI (query).then ((result_: string) => {
 
-               console.log ("AI:" + result);
+               console.log ("AI:" + result_);
+               
+               // set up a message to append
+               let message = new Message ();
+               message.authorId = EConfigStrings.kBotGuid;
+               message.text = result_;
+               message.sentAt = new Date();
+
+               // Push it to shared data
+               fluidMessagesConnection.messageCaucus().add (message.id, message);
+
+               // Save state and force a refresh
+               let messageArray = fluidMessagesConnection.messageCaucus().currentAsArray();      
+               setConversation (messageArray); 
+
             }).catch ( (e: any) => {
                
                props.onAiError (EUIStrings.kAiApiError);

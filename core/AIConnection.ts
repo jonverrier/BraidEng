@@ -83,8 +83,11 @@ export class AIConnection {
       builtQuery.push (prompt);      
 
       for (const message of messages) {
+
          if (AIConnection.isBotRequest(message, authors)) {
-            let entry = { role: 'user', content: message.text };
+
+            let edited = message.text.replace (EConfigStrings.kBotRequestSignature, "");
+            let entry = { role: 'user', content: edited };
             builtQuery.push (entry);
          }
 

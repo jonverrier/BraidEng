@@ -172,7 +172,7 @@ describe("AIConnector", function () {
 
    }).timeout (5000);    
 
-   it("Needs to return a connection on successful communication with real back end", async function () {
+   it("Needs to detect error on failure to connect to back end", async function () {
 
       let caught = false;
       

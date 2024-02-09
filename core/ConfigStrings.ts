@@ -13,6 +13,7 @@ export enum EConfigStrings {
    kAzureLocalFluidHost = "http://localhost:7070",
 
    kBotName = 'BraidBot',
+   kBotGuid = "313aafdb-a05c-4dc7-98d0-4db7f28f122f",
    kBotRequestSignature = '@BraidBot',
    kOpenAiPersonaPrompt = "You are a customer service agent for a bank, skilled in explaining complex products in simple language. You limit replies to 100 words or less.",
 
