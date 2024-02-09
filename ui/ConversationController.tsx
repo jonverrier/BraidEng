@@ -175,6 +175,7 @@ export const ConversationController = (props: IConversationControllerProps) => {
                // Save state and force a refresh
                let messageArray = fluidMessagesConnection.messageCaucus().currentAsArray();      
                setConversation (messageArray); 
+               forceUpdate ();                
 
             }).catch ( (e: any) => {
                
