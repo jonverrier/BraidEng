@@ -11,6 +11,7 @@ import { EIcon } from './Icons';
 import { EConfigStrings } from './ConfigStrings';
 import { throwIfUndefined } from './Asserts';
 import { ConnectionError } from "./Errors";
+import { KeyRetriever } from "./KeyRetriever";
 
 // Logging handler
 const logger = {
@@ -116,9 +117,16 @@ export class AIConnection {
 
 }
 
-export class OpenAiCaller {
+export class AiConnector {
+   
+   static async connect (joinKey_: string) : Promise<AIConnection> {
 
- 
+      let retriever = new KeyRetriever ();
 
+      let aiKey = await retriever.requestKey (EConfigStrings.kRequestAiKeyUrl, 
+                                       EConfigStrings.kRequestKeyParameterName, 
+                                       joinKey_);
 
+      return new AIConnection (aiKey);
+   }
 }

@@ -63,7 +63,7 @@ export const App = (props: IAppProps) => {
    let localPersona = new Persona ();
    localPersona.icon = EIcon.kPersonPersona;
 
-   Environment.override (EEnvironment.kProduction);
+   //Environment.override (EEnvironment.kProduction);
 
    const centerColumnClasses = centerColumnStyles();
 
@@ -100,7 +100,7 @@ export const App = (props: IAppProps) => {
       setLastMessageType (EMainPageMessageTypes.kError);
    }
 
-   function onConversationError (hint_: string) : void  {
+   function onFluidError (hint_: string) : void  {
 
       let params = new Array();
       params.length = 1;
@@ -115,6 +115,18 @@ export const App = (props: IAppProps) => {
       setJoinKey (new JoinKey (""));
    }
    
+   function onAiError (hint_: string) : void  {
+
+      let params = new Array();
+      params.length = 1;
+      params[0] = hint_;
+
+      logger.INFO (EConfigStrings.kApiLogCategory, "Error connecting to AI.", params);
+
+      setLastMessage (EUIStrings.kAiApiError);
+      setLastMessageType (EMainPageMessageTypes.kError);
+   }
+
    function onDismissMessage () : void {
 
       setLastMessage ("");
@@ -140,7 +152,8 @@ export const App = (props: IAppProps) => {
                      <ConversationController 
                         joinKey={joinKey}
                         localPersona={joinAsPersona}
-                        onError={onConversationError}>                           
+                        onFluidError={onFluidError}
+                        onAiError={onAiError}>                           
                      </ConversationController>
 
                </div>             

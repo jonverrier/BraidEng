@@ -7,7 +7,7 @@ import axios from "axios";
 import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 import { KeyRetriever } from '../core/KeyRetriever';
-import { EConfigStrings } from '../core/ConfigStrings';
+import { EConfigStrings, KStubEnvironmentVariables } from '../core/ConfigStrings';
 import { EEnvironment, Environment } from '../core/Environment';
 
 const badUuid = "9a0583f5xca56-421b-8545-aa23032d6c93"
@@ -107,14 +107,15 @@ describe("KeyRetriever", function () {
       try {
          var url = EConfigStrings.kRequestJoinKeyUrl;
 
-         let conversation = await validator.requestKey(url, EConfigStrings.kRequestKeyParameterName, "49b65194-26e1-4041-ab11-4078229f478a");
+         let conversation = await validator.requestKey(url, EConfigStrings.kRequestKeyParameterName, KStubEnvironmentVariables.JoinKey);
       }
       catch (err) {
          caught = true;
       }
       Environment.override (oldEnv);          
 
-      expect(caught).toEqual(false);      
+      expect(caught).toEqual(false);   
+         
    }).timeout (5000); 
 
    it("Needs to keep busy count", async function () {

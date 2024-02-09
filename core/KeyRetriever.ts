@@ -47,7 +47,7 @@ export class KeyRetriever {
          throwIfUndefined(checked);
          return checked;
       }
-      
+
       this.activeCallCount++;
 
       var response;

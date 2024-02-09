@@ -20,10 +20,10 @@ export enum EConfigStrings {
    kErrorConnectingToAiAPI = "Error connecting to AI server." 
 };
 
-// This is ised for local running only, as in browser we cannot access environment variables
-// NEVER PUT REAL SECRETS IN HERE
+// This is used for local running only, as in browser we cannot access environment variables
+// NEVER PUT PRODUCTION SECRETS IN HERE
 let KStubEnvironmentVariables = {
-   JoinKey : "8c8397aa-e002-438a-9783-a471b6bed2df",
+   JoinKey : "49b65194-26e1-4041-ab11-4078229f478a",
    ConversationKey : "abcde"
 };
 
