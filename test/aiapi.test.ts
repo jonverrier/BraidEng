@@ -4,9 +4,11 @@ import { throwIfUndefined } from '../core/Asserts';
 import { Message} from '../core/Message';
 import { Persona} from '../core/Persona';
 import { EIcon } from '../core/Icons';
+import { EConfigStrings, KStubEnvironmentVariables} from '../core/ConfigStrings'; 
+import { EEnvironment, Environment } from '../core/Environment';
 import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
-import { AIConnection, OpenAiCaller } from '../core/AIConnection';
+import { AIConnection, AiConnector } from '../core/AIConnection';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -28,7 +30,7 @@ var botSentAt = new Date(0);
 let myBotRequestId: string = "12345";
 let myBotRequestText = "Hello @BraidBot Please help me understand the difference between investing in a unit trust and investing in an equity in less than 50 words.";
 
-describe("OpenAiApi", function () {
+describe("AIConnection", function () {
 
    let authors = new Map<string, Persona> ();
    let person = new Persona (myAuthorId, myAuthorId, EIcon.kPersonPersona, undefined, new Date());   
@@ -137,3 +139,56 @@ describe("OpenAiApi", function () {
 });
 
 
+describe("AIConnector", function () {
+
+   it("Needs to connect to valid stub API", async function () {
+
+      let caught = false;
+      try {
+         let connection = await AiConnector.connect (KStubEnvironmentVariables.JoinKey);
+      }
+      catch (e) {
+         caught = true;
+      }
+      expect(caught).toEqual(false);         
+   });    
+   
+   it("Needs to return a connection on successful communication with real back end", async function () {
+
+      let caught = false;
+      
+      // Force use of actual API calls rather than local stubs
+      let oldEnv = Environment.override (EEnvironment.kProduction);
+
+      try {
+         let connection = await AiConnector.connect (KStubEnvironmentVariables.JoinKey);
+      }
+      catch (err) {
+         caught = true;
+      }
+      Environment.override (oldEnv);          
+
+      expect(caught).toEqual(false);      
+
+   }).timeout (5000);    
+
+   it("Needs to return a connection on successful communication with real back end", async function () {
+
+      let caught = false;
+      
+      // Force use of actual API calls rather than local stubs
+      let oldEnv = Environment.override (EEnvironment.kProduction);
+
+      try {
+         let connection = await AiConnector.connect ("thiswillfail");
+      }
+      catch (err) {
+         caught = true;
+      }
+      Environment.override (oldEnv);          
+
+      expect(caught).toEqual(true);    
+
+   }).timeout (5000);   
+
+});

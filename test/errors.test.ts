@@ -1,5 +1,5 @@
 'use strict';
-// Copyright TXPCo ltd, 2023
+// Copyright Braid technologies ltd, 2024
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
 

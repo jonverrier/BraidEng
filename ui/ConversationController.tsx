@@ -14,13 +14,15 @@ import { JoinKey } from '../core/JoinKey';
 import { ConversationPage } from './ConversationPage';
 import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
 import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } from '../core/NotificationFramework';
-import { AIConnection } from '../core/AIConnection';
+import { AIConnection, AiConnector } from '../core/AIConnection';
+import { EUIStrings } from './UIStrings';
 
 export interface IConversationControllerProps {
 
    joinKey: JoinKey;
    localPersona: Persona; 
-   onError (hint_: string) : void;    
+   onFluidError (hint_: string) : void;   
+   onAiError (hint_: string) : void;        
 }
 
 // create a forceUpdate hook
@@ -102,7 +104,7 @@ export const ConversationController = (props: IConversationControllerProps) => {
 
          }).catch ((e : any) => {
          
-            props.onError (e? e.toString() : "Error creating new conversation, " + joinKey.secondPart + ".");
+            props.onFluidError (e? e.toString() : "Error creating new conversation, " + joinKey.secondPart + ".");
             setJoining (false);
          })
       }
@@ -116,7 +118,7 @@ export const ConversationController = (props: IConversationControllerProps) => {
 
          }).catch ((e: any) => {
          
-            props.onError (e? e.toString() : "Error connecting to conversation, " + joinKey.secondPart + ".");
+            props.onFluidError (e? e.toString() : EUIStrings.kJoinApiError + " :" + joinKey.secondPart + ".");
             setJoining (false);
          })
       }
@@ -147,8 +149,27 @@ export const ConversationController = (props: IConversationControllerProps) => {
       let audienceMap = fluidMessagesConnection.participantCaucus().current();
       setAudience (audienceMap);
 
-      // TODO - check if AI is being invoked & make a call here 
+      // If AI is being invoked we make a call here 
       // ======================================================
+      if (AIConnection.isBotRequest (message, audienceMap)) {
+         let connectionPromise = AiConnector.connect (props.joinKey.firstPart);
+
+         connectionPromise.then ( (connection : AIConnection) => {
+
+            let query = AIConnection.makeOpenAiQuery (messageArray, audienceMap);
+
+            connection.callAI (query).then ((result: string) => {
+
+               console.log ("AI:" + result);
+            }).catch ( (e: any) => {
+               
+               props.onAiError (EUIStrings.kAiApiError);
+            });            
+
+         }).catch ( (e: any) => {
+            props.onAiError (EUIStrings.kJoinApiError + " :" + props.joinKey.firstPart + ".");
+         });
+      }
 
       forceUpdate ();      
    }

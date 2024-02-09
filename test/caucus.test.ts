@@ -1,4 +1,4 @@
-// Copyright TXPCo ltd, 2023
+// Copyright Braid technologies ltd, 2024
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
 
@@ -54,7 +54,7 @@ describe("Caucus", function () {
    beforeEach(async () => {
 
       (global.location as any) = mockLocation;
-      oldEnv = Environment.override (EEnvironment.kProduction);
+      oldEnv = Environment.override (EEnvironment.kLocal);
 
       this.timeout(10000);
       persona = new Persona(myId, myName, EIcon.kPersonPersona, myThumbnail, myLastSeenAt);
@@ -73,7 +73,7 @@ describe("Caucus", function () {
       await wait();
       await newConnection.disconnect();
 
-      oldEnv = Environment.override (EEnvironment.kProduction);      
+      Environment.override (oldEnv);      
       (global.location as any) = oldLocation;
    });
 

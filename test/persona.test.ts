@@ -1,5 +1,5 @@
 'use strict';
-// Copyright TXPCo ltd, 2021
+// Copyright Braid technologies ltd, 2024
 import { MDynamicStreamable } from '../core/StreamingFramework';
 import { Persona} from '../core/Persona';
 import { EIcon } from '../core/Icons';
