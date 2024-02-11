@@ -14,7 +14,9 @@ import {
    Input, 
    InputOnChangeData,
    Card,
-   CardHeader
+   CardHeader,
+   Spinner, 
+   SpinnerProps 
 } from '@fluentui/react-components';
 
 import {
@@ -38,6 +40,7 @@ export interface IConversationPageProps {
    audience: Map<string, Persona>;
    conversation: Array<Message>;
    onSend (message_: string) : void;   
+   isBusy: boolean;
 }
 
 const viewOuterStyles = makeStyles({
@@ -56,10 +59,20 @@ const formStyles = makeStyles({
    },
 });
 
+const scrollAreaStyles = makeStyles({
+   root: {         
+      overflowY: 'scroll',
+      maxHeight: 'calc(100vh)'
+   },
+});
+
+const DefaultSpinner = (props: Partial<SpinnerProps>) => <Spinner {...props} />;
+
 export const ConversationPage = (props: IConversationPageProps) => {
 
    const viewOuterClasses = viewOuterStyles();
-   const formClasses = formStyles();  
+   const formClasses = formStyles();
+   const scrollAreaClasses =  scrollAreaStyles();
 
    // Shorthand only
    let conversation = props.conversation;
@@ -77,12 +90,15 @@ export const ConversationPage = (props: IConversationPageProps) => {
       return (
          <div className={viewOuterClasses.root} >  
             <div className={formClasses.root}>    
-               {conversation.map (message => {
-                  return (         
-                     <MessageView message={message} author={(audience.get (message.authorId) as Persona)}></MessageView>
-               )})}
-               &nbsp;                
-               <InputView joinKey={props.joinKey} onSend={onSend}></InputView>            
+               <div className={scrollAreaClasses.root}>             
+                  {conversation.map (message => {
+                     return (         
+                        <MessageView message={message} author={(audience.get (message.authorId) as Persona)}></MessageView>
+                  )})}
+               </div>
+               &nbsp;  
+               {props.isBusy ? <DefaultSpinner/> : <div/>}              
+               <InputView joinKey={props.joinKey} onSend={onSend} isBusy={props.isBusy}></InputView>            
             </div>
          </div>
       );
@@ -146,6 +162,7 @@ export interface IInputViewProps {
    
    joinKey: JoinKey;
    onSend (message_: string) : void;
+   isBusy: boolean;
 }
 
 const SendButton: React.FC<ButtonProps> = (props) => {
@@ -218,7 +235,8 @@ export const InputView = (props: IInputViewProps) => {
    function onMessageSend (ev: React.MouseEvent<HTMLButtonElement>) : void {
 
       props.onSend (message);
-      setMessage ("");     
+      setMessage ("");   
+      setCanSend (false);        
    }
 
    function onCopy (ev: React.MouseEvent<HTMLButtonElement>) : void {
@@ -242,7 +260,7 @@ export const InputView = (props: IInputViewProps) => {
                disabled={false}
                contentAfter={<SendButton 
                   aria-label={EUIStrings.kSendButtonPrompt} 
-                  disabled={!canSend} 
+                  disabled={(!canSend) || (props.isBusy)} 
                   onClick={onMessageSend}
                />}            
          />

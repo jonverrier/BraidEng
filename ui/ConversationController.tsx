@@ -41,6 +41,7 @@ export const ConversationController = (props: IConversationControllerProps) => {
    const [joining, setJoining] = useState<boolean> (false);
    const [fullJoinKey, setFullJoinKey] = useState<JoinKey> (props.joinKey);
    const [aiKey, setAiKey] = useState<string> ("");
+   const [isBusy, setIsBusy] = useState<boolean>(false);
 
    function initialiseConnectionState (fluidMessagesConnection_: MessageBotFluidConnection, 
       containerId: string) : void {
@@ -153,6 +154,9 @@ export const ConversationController = (props: IConversationControllerProps) => {
       // If AI is being invoked we make a call here 
       // ======================================================
       if (AIConnection.isBotRequest (message, audienceMap)) {
+
+         setIsBusy(true);
+
          let connectionPromise = AiConnector.connect (props.joinKey.firstPart);
 
          connectionPromise.then ( (connection : AIConnection) => {
@@ -175,15 +179,18 @@ export const ConversationController = (props: IConversationControllerProps) => {
                // Save state and force a refresh
                let messageArray = fluidMessagesConnection.messageCaucus().currentAsArray();      
                setConversation (messageArray); 
+               setIsBusy(false);               
                forceUpdate ();                
 
             }).catch ( (e: any) => {
                
                props.onAiError (EUIStrings.kAiApiError);
+               setIsBusy(false);                
             });            
 
          }).catch ( (e: any) => {
             props.onAiError (EUIStrings.kJoinApiError + " :" + props.joinKey.firstPart + ".");
+            setIsBusy(false);             
          });
       }
 
@@ -193,6 +200,7 @@ export const ConversationController = (props: IConversationControllerProps) => {
    return (
          <ConversationPage 
              isConnected={fullJoinKey.isValid && fullJoinKey.isTwoPart}
+             isBusy = {isBusy}
              joinKey={fullJoinKey}
              conversation={conversation}
              audience={audience} 
