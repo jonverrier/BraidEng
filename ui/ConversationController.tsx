@@ -11,7 +11,7 @@ import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { CaucusOf } from '../core/CaucusFramework';
 import { JoinKey } from '../core/JoinKey';
-import { ConversationPage } from './ConversationPage';
+import { ConversationRow } from './ConversationPage';
 import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
 import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } from '../core/NotificationFramework';
 import { AIConnection, AiConnector } from '../core/AIConnection';
@@ -33,7 +33,7 @@ function useForceUpdate() {
    return () => setValue(value => value + 1); // update state to force render
 }
 
-export const ConversationController = (props: IConversationControllerProps) => {
+export const ConversationControllerRow = (props: IConversationControllerProps) => {
 
    const [conversation, setConversation] = useState<Array<Message>>(new Array<Message>());
    const [audience, setAudience] = useState<Map<string, Persona>>(new Map<string, Persona>());
@@ -198,14 +198,14 @@ export const ConversationController = (props: IConversationControllerProps) => {
    }
 
    return (
-         <ConversationPage 
+         <ConversationRow 
              isConnected={fullJoinKey.isValid && fullJoinKey.isTwoPart}
              isBusy = {isBusy}
              joinKey={fullJoinKey}
              conversation={conversation}
              audience={audience} 
              onSend={onSend} >
-         </ConversationPage>
+         </ConversationRow>
       );
 }
 

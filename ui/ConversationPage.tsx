@@ -16,7 +16,11 @@ import {
    Card,
    CardHeader,
    Spinner, 
-   SpinnerProps 
+   SpinnerProps,
+   partitionAvatarGroupItems,
+   AvatarGroup,
+   AvatarGroupPopover,
+   AvatarGroupItem
 } from '@fluentui/react-components';
 
 import {
@@ -27,11 +31,12 @@ import {
    Copy24Regular
 } from '@fluentui/react-icons';
 
-import { EUIStrings } from './UIStrings';
 import { EIcon } from '../core/Icons';
 import { JoinKey } from '../core/JoinKey';
 import { Persona } from '../core//Persona';
 import { Message } from '../core/Message';
+import { EUIStrings } from './UIStrings';
+import { innerColumnStyles, innerColumnFooterStyles } from './ColumnStyles';
 
 export interface IConversationPageProps {
 
@@ -46,37 +51,57 @@ export interface IConversationPageProps {
 const viewOuterStyles = makeStyles({
    root: {
       display: 'flex',
-      flexDirection: 'column', 
-      width: "100%"      
+      flexDirection: 'row', 
+      alignItems: 'stretch',  /* for a row, the main axis is vertical, flex-end is items aligned to the bottom of the row */
+      justifyContent: 'center' /* for a row, the cross-axis is horizontal, center means vertically centered */
    },
 });
 
-const formStyles = makeStyles({
+const audienceStyles = makeStyles({
    root: {    
       display: 'flex',
-      flexDirection: 'column',      
-      width: '100%'
+      flexDirection: 'row'
    },
 });
 
-const scrollAreaStyles = makeStyles({
-   root: {         
-      overflowY: 'scroll',
-      maxHeight: 'calc(100vh)'
+const messageRowStyles = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'row',
+      width: '100%',
+      marginTop: 'auto' 
+   },
+});
+
+const messageAreaStyles = makeStyles({
+   root: {  
+      display: 'flex',
+      flexDirection: 'column',         
+      width: '100%'    
    },
 });
 
 const DefaultSpinner = (props: Partial<SpinnerProps>) => <Spinner {...props} />;
 
-export const ConversationPage = (props: IConversationPageProps) => {
+export const ConversationRow = (props: IConversationPageProps) => {
 
    const viewOuterClasses = viewOuterStyles();
-   const formClasses = formStyles();
-   const scrollAreaClasses =  scrollAreaStyles();
+   const innerColumnClasses = innerColumnStyles();   
+   const audienceSectionClasses = audienceStyles(); 
+   const messageRowClasses = messageRowStyles();
+   const messageSectionClasses =  messageAreaStyles();
+   const footerSectionClasses = innerColumnFooterStyles();   
 
    // Shorthand only
    let conversation = props.conversation;
    let audience = props.audience;
+
+   // Copy audience to an array for consumption by Fluent classes
+   let audienceArray = Array.from(audience.values());
+
+   const { inlineItems, overflowItems } = partitionAvatarGroupItems({
+      items: audienceArray
+    });
 
    function onSend (messageText_: string) : void {
 
@@ -89,19 +114,43 @@ export const ConversationPage = (props: IConversationPageProps) => {
    else {
       return (
          <div className={viewOuterClasses.root} >  
-            <div className={formClasses.root}>    
-               <div className={scrollAreaClasses.root}>             
-                  {conversation.map (message => {
-                     return (         
-                        <MessageView message={message} author={(audience.get (message.authorId) as Persona)}></MessageView>
-                  )})}
+            <div className={innerColumnClasses.root} >                            
+
+               <div className={messageRowClasses.root}>                
+                  <div className={messageSectionClasses.root}>             
+                     {conversation.map (message => {
+                        return (         
+                           <MessageView message={message} author={(audience.get (message.authorId) as Persona)}></MessageView>
+                     )})}
+                  </div>
                </div>
                &nbsp;  
-               {props.isBusy ? <DefaultSpinner/> : <div/>}              
-               <InputView joinKey={props.joinKey} onSend={onSend} isBusy={props.isBusy}></InputView>            
+
+               <div className={footerSectionClasses.root}>               
+                  {props.isBusy ? <DefaultSpinner/> : <div/>}              
+                  <InputView joinKey={props.joinKey} onSend={onSend} isBusy={props.isBusy}></InputView>          
+               </div> 
+
+               <div className={audienceSectionClasses.root}>
+                  <AvatarGroup>
+                     {inlineItems.map((persona) => (
+                        <Tooltip content={persona.name} relationship="label" positioning={'above'}>
+                           <AvatarGroupItem name={persona.name} key={persona.id} />
+                        </Tooltip>
+                     ))}
+                    {overflowItems && (
+                    <AvatarGroupPopover indicator="icon">
+                       {overflowItems.map((persona) => (
+                          <AvatarGroupItem name={persona.name} key={persona.id} />
+                        ))}
+                    </AvatarGroupPopover>
+                    )}
+                    </AvatarGroup>
+               </div> 
+
             </div>
          </div>
-      );
+     );
    }
 }
 
@@ -156,7 +205,6 @@ export const MessageView = (props: IMessageViewProps) => {
      </div>
    );
 }
-
 
 export interface IInputViewProps {
    
@@ -248,7 +296,7 @@ export const InputView = (props: IInputViewProps) => {
       <div className={messageInputGroupClasses.root}>
          <Text>{EUIStrings.kSendMessagePreamble}</Text>
          &nbsp;
-         <Tooltip withArrow content={EUIStrings.kSendButtonPrompt} relationship="label">
+         <Tooltip content={EUIStrings.kSendButtonPrompt} relationship="label" positioning={'above'}>
             <Input aria-label={EUIStrings.kSendButtonPrompt}
                className={messageInputClasses.root}                  
                required={true}                  
@@ -272,7 +320,9 @@ export const InputView = (props: IInputViewProps) => {
                {EUIStrings.kJoinKeySharingPrompt}
             </Text>  
             &nbsp;
-            <Tooltip withArrow content={EUIStrings.kCopyJoinKeyButtonPrompt} relationship="label">
+            <Tooltip content={EUIStrings.kCopyJoinKeyButtonPrompt} 
+               relationship="label"
+               positioning={'before-top'}>
                <CopyButton 
                   className={joinKeyItemClasses.root}
                   aria-label={EUIStrings.kCopyJoinKeyButtonPrompt} 
@@ -280,6 +330,7 @@ export const InputView = (props: IInputViewProps) => {
                   onClick={onCopy}
                />  
                </Tooltip>
+            &nbsp;                
          </div>       
       </div>        
    );

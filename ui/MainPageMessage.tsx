@@ -20,7 +20,7 @@ import { EUIStrings } from './UIStrings';
 const messageBarStyles = makeStyles({
   messageBarGroup: {
     display: "flex",
-    flexDirection: "column"
+    flexDirection: "row"
   }
 });
 
@@ -38,7 +38,7 @@ interface IMainPageMessageProps {
    onDismiss () : void;   
 }
 
-export const MainPageMessage = (props: IMainPageMessageProps) => {
+export const MainPageMessageRow = (props: IMainPageMessageProps) => {
 
   const messageClasses = messageBarStyles();
   
