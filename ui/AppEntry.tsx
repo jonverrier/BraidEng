@@ -19,8 +19,8 @@ import { EIcon } from '../core/Icons';
 import { JoinKey } from '../core/JoinKey';
 import { EUIStrings } from './UIStrings';
 import { innerColumnStyles, innerColumnFooterStyles } from './ColumnStyles';
-import { EMainPageMessageTypes, MainPageMessageRow } from './MainPageMessage';
-import { JoinPageFormRow } from './JoinPage';
+import { EMainPageMessageTypes, MainPageMessageRow } from './ErrorRow';
+import { JoinRow } from './JoinRow';
 import { ConversationControllerRow } from './ConversationController';
 
 // Logging handler
@@ -61,8 +61,6 @@ export const App = (props: IAppProps) => {
 
    let localPersona = new Persona ();
    localPersona.icon = EIcon.kPersonPersona;
-
-   const footerSectionClasses = innerColumnFooterStyles();
 
    const [lastMessage, setLastMessage] = useState<string>("");
    const [lastMessageType, setLastMessageType] = useState<EMainPageMessageTypes> (EMainPageMessageTypes.kNothing);
@@ -135,28 +133,25 @@ export const App = (props: IAppProps) => {
          <FluentProvider theme={teamsDarkTheme} >            
             <div className={pageOuterClasses.root}>    
                <div className={innerColumnClasses.root}>             
-                  <p>Message area</p>           
+      
                   <MainPageMessageRow 
                      intent={lastMessageType} 
                      text={lastMessage} 
                      onDismiss={onDismissMessage}/>
+      
+                  <ConversationControllerRow 
+                     joinKey={joinKey}
+                     localPersona={joinAsPersona}
+                     onFluidError={onFluidError}
+                     onAiError={onAiError}>                           
+                  </ConversationControllerRow>      
 
-                  <div className={footerSectionClasses.root}>        
-                     <ConversationControllerRow 
-                        joinKey={joinKey}
-                        localPersona={joinAsPersona}
-                        onFluidError={onFluidError}
-                        onAiError={onAiError}>                           
-                     </ConversationControllerRow>      
-                  </div>  
+                  <JoinRow 
+                     joinKey={joinKey} 
+                     onConnect={onConnect} 
+                     onConnectError={onConnectError}>                     
+                  </JoinRow>   
 
-                  <div className={footerSectionClasses.root}>  
-                    <JoinPageFormRow 
-                        joinKey={joinKey} 
-                        onConnect={onConnect} 
-                        onConnectError={onConnectError}>                     
-                     </JoinPageFormRow>       
-                  </div>    
                </div>
             </div>
          </FluentProvider>         

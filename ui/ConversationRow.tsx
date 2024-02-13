@@ -33,12 +33,18 @@ import {
 
 import { EIcon } from '../core/Icons';
 import { JoinKey } from '../core/JoinKey';
-import { Persona } from '../core//Persona';
+import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { EUIStrings } from './UIStrings';
-import { innerColumnStyles, innerColumnFooterStyles } from './ColumnStyles';
+import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
 
-export interface IConversationPageProps {
+export interface IConversationHeaderProps {
+
+   joinKey: JoinKey;
+   audience: Map<string, Persona>;
+}
+
+export interface IConversationRowProps {
 
    isConnected: boolean;
    joinKey: JoinKey;
@@ -48,32 +54,92 @@ export interface IConversationPageProps {
    isBusy: boolean;
 }
 
-const viewOuterStyles = makeStyles({
-   root: {
+const headerRowStyles = makeStyles({
+   root: {    
       display: 'flex',
-      flexDirection: 'row', 
-      alignItems: 'stretch',  /* for a row, the main axis is vertical, flex-end is items aligned to the bottom of the row */
-      justifyContent: 'center' /* for a row, the cross-axis is horizontal, center means vertically centered */
+      flexDirection: 'row',
+      alignItems: 'center',
+      width: '100%' 
    },
 });
 
-const audienceStyles = makeStyles({
+const copyButtonStyles = makeStyles({
    root: {    
-      display: 'flex',
-      flexDirection: 'row'
+      marginLeft: '20px' 
    },
 });
+
+const CopyButton: React.FC<ButtonProps> = (props) => {
+   
+   return (
+     <Button
+       {...props}    
+       appearance="transparent"       
+       icon={<Copy24Regular />}
+       size="medium"
+     />
+   );
+ };
+
+export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
+
+   const headerRowClasses = headerRowStyles();
+   const copyButtonClasses = copyButtonStyles();
+
+   // Copy audience to an array for consumption by Fluent classes
+   let audienceArray = Array.from(props.audience.values());
+
+   const { inlineItems, overflowItems } = partitionAvatarGroupItems({
+      items: audienceArray
+    });
+
+
+    function onCopy (ev: React.MouseEvent<HTMLButtonElement>) : void {
+
+      navigator.clipboard.writeText (props.joinKey.asString);
+   }    
+
+   return (
+      <div className={headerRowClasses.root}>
+         <AvatarGroup>
+            {inlineItems.map((persona) => (
+               <Tooltip content={persona.name} relationship="label" positioning={'below'}>
+                  <AvatarGroupItem name={persona.name} key={persona.id} />
+               </Tooltip>
+            ))}
+            {overflowItems && (
+               <AvatarGroupPopover indicator="icon">
+                  {overflowItems.map((persona) => (
+                     <AvatarGroupItem name={persona.name} key={persona.id} />
+                  ))}
+               </AvatarGroupPopover>
+            )}
+         </AvatarGroup>  
+         &nbsp;  
+         <Tooltip content={EUIStrings.kCopyJoinKeyButtonPrompt} 
+            relationship="label" positioning={'below'}>
+            <CopyButton 
+               className={copyButtonClasses.root}
+               aria-label={EUIStrings.kCopyJoinKeyButtonPrompt} 
+               disabled={!(props.joinKey.isValid)} 
+               onClick={onCopy}
+            />  
+         </Tooltip>             
+      </div>
+   );
+}
 
 const messageRowStyles = makeStyles({
    root: {    
       display: 'flex',
       flexDirection: 'row',
       width: '100%',
-      marginTop: 'auto' 
+      marginTop: 'auto',
+      alignSelf: 'flex-end'        
    },
 });
 
-const messageAreaStyles = makeStyles({
+const messagesColumnStyles = makeStyles({
    root: {  
       display: 'flex',
       flexDirection: 'column',         
@@ -83,25 +149,15 @@ const messageAreaStyles = makeStyles({
 
 const DefaultSpinner = (props: Partial<SpinnerProps>) => <Spinner {...props} />;
 
-export const ConversationRow = (props: IConversationPageProps) => {
+export const ConversationRow = (props: IConversationRowProps) => {
 
-   const viewOuterClasses = viewOuterStyles();
-   const innerColumnClasses = innerColumnStyles();   
-   const audienceSectionClasses = audienceStyles(); 
    const messageRowClasses = messageRowStyles();
-   const messageSectionClasses =  messageAreaStyles();
+   const messagesColumnClasses =  messagesColumnStyles();
    const footerSectionClasses = innerColumnFooterStyles();   
 
    // Shorthand only
    let conversation = props.conversation;
    let audience = props.audience;
-
-   // Copy audience to an array for consumption by Fluent classes
-   let audienceArray = Array.from(audience.values());
-
-   const { inlineItems, overflowItems } = partitionAvatarGroupItems({
-      items: audienceArray
-    });
 
    function onSend (messageText_: string) : void {
 
@@ -113,42 +169,24 @@ export const ConversationRow = (props: IConversationPageProps) => {
    }
    else {
       return (
-         <div className={viewOuterClasses.root} >  
-            <div className={innerColumnClasses.root} >                            
+         <div>                           
+            <ConversationHeaderRow joinKey={props.joinKey} audience={props.audience}></ConversationHeaderRow>
 
-               <div className={messageRowClasses.root}>                
-                  <div className={messageSectionClasses.root}>             
-                     {conversation.map (message => {
-                        return (         
-                           <MessageView message={message} author={(audience.get (message.authorId) as Persona)}></MessageView>
-                     )})}
-                  </div>
+            <div className={messageRowClasses.root}>                
+               <div className={messagesColumnClasses.root}>             
+                  {conversation.map (message => {
+                     return (         
+                        <MessageView message={message} author={(audience.get (message.authorId) as Persona)}></MessageView>
+                  )})}
                </div>
-               &nbsp;  
-
-               <div className={footerSectionClasses.root}>               
-                  {props.isBusy ? <DefaultSpinner/> : <div/>}              
-                  <InputView joinKey={props.joinKey} onSend={onSend} isBusy={props.isBusy}></InputView>          
-               </div> 
-
-               <div className={audienceSectionClasses.root}>
-                  <AvatarGroup>
-                     {inlineItems.map((persona) => (
-                        <Tooltip content={persona.name} relationship="label" positioning={'above'}>
-                           <AvatarGroupItem name={persona.name} key={persona.id} />
-                        </Tooltip>
-                     ))}
-                    {overflowItems && (
-                    <AvatarGroupPopover indicator="icon">
-                       {overflowItems.map((persona) => (
-                          <AvatarGroupItem name={persona.name} key={persona.id} />
-                        ))}
-                    </AvatarGroupPopover>
-                    )}
-                    </AvatarGroup>
-               </div> 
-
             </div>
+            &nbsp;  
+
+            <div className={footerSectionClasses.root}>               
+               {props.isBusy ? <DefaultSpinner/> : <div/>}              
+               <InputView onSend={onSend} isBusy={props.isBusy}></InputView>          
+            </div> 
+
          </div>
      );
    }
@@ -208,7 +246,6 @@ export const MessageView = (props: IMessageViewProps) => {
 
 export interface IInputViewProps {
    
-   joinKey: JoinKey;
    onSend (message_: string) : void;
    isBusy: boolean;
 }
@@ -224,16 +261,6 @@ const SendButton: React.FC<ButtonProps> = (props) => {
    );
  };
 
- const CopyButton: React.FC<ButtonProps> = (props) => {
-   return (
-     <Button
-       {...props}
-       icon={<Copy24Regular />}
-       size="medium"
-     />
-   );
- };
-
  const messageInputGroupStyles = makeStyles({
    root: {    
       display: 'flex',
@@ -243,33 +270,10 @@ const SendButton: React.FC<ButtonProps> = (props) => {
    },
 });
 
- const messageInputStyles = makeStyles({
-   root: {    
-      width: '100%'
-   },
-});
-
-const joinKeyGroupStyles = makeStyles({
-   root: {    
-      display: 'flex',
-      flexDirection: 'row',      
-      textAlign: 'left',
-      justifyContent: 'center'
-   },
-});
-
-const joinKeyItemStyles = makeStyles({
-   root: {    
-      alignSelf: 'center'
-   },
-});
-
 export const InputView = (props: IInputViewProps) => {
 
    const messageInputGroupClasses = messageInputGroupStyles();
-   const messageInputClasses = messageInputStyles();
-   const joinKeyGroupClasses = joinKeyGroupStyles();
-   const joinKeyItemClasses = joinKeyItemStyles();
+   const messageInputClasses = textFieldStyles();
 
    const [message, setMessage] = useState<string>("");
    const [canSend, setCanSend] = useState<boolean>(false);
@@ -287,11 +291,6 @@ export const InputView = (props: IInputViewProps) => {
       setCanSend (false);        
    }
 
-   function onCopy (ev: React.MouseEvent<HTMLButtonElement>) : void {
-
-      navigator.clipboard.writeText (props.joinKey.asString);
-   }
-
    return (
       <div className={messageInputGroupClasses.root}>
          <Text>{EUIStrings.kSendMessagePreamble}</Text>
@@ -301,7 +300,7 @@ export const InputView = (props: IInputViewProps) => {
                className={messageInputClasses.root}                  
                required={true}                  
                value={message}
-               maxLength={256}
+               maxLength={75}
                contentBefore={<Mail24Regular />}
                placeholder={EUIStrings.kSendMessagePlaceholder}
                onChange={onKeyChange}
@@ -312,26 +311,7 @@ export const InputView = (props: IInputViewProps) => {
                   onClick={onMessageSend}
                />}            
          />
-         </Tooltip> 
-         &nbsp;
-         <div className={joinKeyGroupClasses.root}>         
-            <Text 
-               className={joinKeyItemClasses.root}>
-               {EUIStrings.kJoinKeySharingPrompt}
-            </Text>  
-            &nbsp;
-            <Tooltip content={EUIStrings.kCopyJoinKeyButtonPrompt} 
-               relationship="label"
-               positioning={'before-top'}>
-               <CopyButton 
-                  className={joinKeyItemClasses.root}
-                  aria-label={EUIStrings.kCopyJoinKeyButtonPrompt} 
-                  disabled={!(props.joinKey.isValid)} 
-                  onClick={onCopy}
-               />  
-               </Tooltip>
-            &nbsp;                
-         </div>       
+         </Tooltip>       
       </div>        
    );
 }

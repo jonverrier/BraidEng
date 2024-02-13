@@ -11,7 +11,7 @@ import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { CaucusOf } from '../core/CaucusFramework';
 import { JoinKey } from '../core/JoinKey';
-import { ConversationRow } from './ConversationPage';
+import { ConversationRow } from './ConversationRow';
 import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
 import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } from '../core/NotificationFramework';
 import { AIConnection, AiConnector } from '../core/AIConnection';
