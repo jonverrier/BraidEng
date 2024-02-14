@@ -7,7 +7,8 @@ import React, { ChangeEvent, useState } from 'react';
 import {
    makeStyles, shorthands, 
    Button, ButtonProps, 
-   Tooltip,
+   Toolbar, ToolbarButton, ToolbarButtonProps,
+   Tooltip, TooltipProps,
    Body1,
    Caption1,
    Text, 
@@ -36,7 +37,7 @@ import { JoinKey } from '../core/JoinKey';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { EUIStrings } from './UIStrings';
-import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
+import { innerColumnFooterStyles, innerColumnStyles, textFieldStyles } from './ColumnStyles';
 
 export interface IConversationHeaderProps {
 
@@ -69,14 +70,12 @@ const copyButtonStyles = makeStyles({
    },
 });
 
-const CopyButton: React.FC<ButtonProps> = (props) => {
+const CopyButton: React.FC<ToolbarButtonProps> = (props) => {
    
    return (
-     <Button
-       {...props}    
-       appearance="transparent"       
+     <ToolbarButton
+       {...props}          
        icon={<Copy24Regular />}
-       size="medium"
      />
    );
  };
@@ -116,34 +115,56 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
             )}
          </AvatarGroup>  
          &nbsp;  
-         <Tooltip content={EUIStrings.kCopyJoinKeyButtonPrompt} 
-            relationship="label" positioning={'below'}>
-            <CopyButton 
-               className={copyButtonClasses.root}
-               aria-label={EUIStrings.kCopyJoinKeyButtonPrompt} 
-               disabled={!(props.joinKey.isValid)} 
-               onClick={onCopy}
-            />  
-         </Tooltip>             
+         <Toolbar aria-label="Default" >      
+            <Tooltip content={EUIStrings.kCopyJoinKeyButtonPrompt} 
+               relationship="label" positioning={'after'}>
+               <CopyButton 
+                  className={copyButtonClasses.root}
+                  aria-label={EUIStrings.kCopyJoinKeyButtonPrompt} 
+                  disabled={!(props.joinKey.isValid)} 
+                  onClick={onCopy}
+               />  
+            </Tooltip>                
+         </Toolbar>           
       </div>
    );
 }
 
-const messageRowStyles = makeStyles({
+const embeddedRowStyles = makeStyles({
    root: {    
       display: 'flex',
       flexDirection: 'row',
       width: '100%',
-      marginTop: 'auto',
-      alignSelf: 'flex-end'        
+      height: '100%',
+      alignItems: 'stretch',   /* for a row, the main axis is vertical, stretch means fill the row with content */
+      justifyContent: 'center' /* for a row, the cross-axis is horizontal, center means vertically centered */           
    },
 });
 
-const messagesColumnStyles = makeStyles({
+const embeddedColumnStyles = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'flex-start'    // start layout at the top                  
+   },
+});
+
+const conversationContentRowStyles = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'row',         
+      width: '100%',           
+      alignItems: 'stretch',   /* for a row, the main axis is vertical, stretch means fill the row with content */
+      overflowY: 'auto'
+   },
+});
+
+const conversationContentColumnStyles = makeStyles({
    root: {  
       display: 'flex',
-      flexDirection: 'column',         
-      width: '100%'    
+      flexDirection: 'column',                        
+      width: '100%',
+      overflowY: 'auto'     
    },
 });
 
@@ -151,8 +172,10 @@ const DefaultSpinner = (props: Partial<SpinnerProps>) => <Spinner {...props} />;
 
 export const ConversationRow = (props: IConversationRowProps) => {
 
-   const messageRowClasses = messageRowStyles();
-   const messagesColumnClasses =  messagesColumnStyles();
+   const embeddedRowClasses = embeddedRowStyles();
+   const embeddedColumnClasses = embeddedColumnStyles();   
+   const conversationContentRowClasses = conversationContentRowStyles();
+   const conversationContentColumnClasses =  conversationContentColumnStyles();
    const footerSectionClasses = innerColumnFooterStyles();   
 
    // Shorthand only
@@ -169,24 +192,26 @@ export const ConversationRow = (props: IConversationRowProps) => {
    }
    else {
       return (
-         <div>                           
-            <ConversationHeaderRow joinKey={props.joinKey} audience={props.audience}></ConversationHeaderRow>
+         <div className={embeddedRowClasses.root}>      
+            <div className={embeddedColumnClasses.root}>                     
 
-            <div className={messageRowClasses.root}>                
-               <div className={messagesColumnClasses.root}>             
-                  {conversation.map (message => {
-                     return (         
-                        <MessageView message={message} author={(audience.get (message.authorId) as Persona)}></MessageView>
-                  )})}
+               <ConversationHeaderRow joinKey={props.joinKey} audience={props.audience}></ConversationHeaderRow>
+
+               <div className={conversationContentRowClasses.root}>                
+                  <div className={conversationContentColumnClasses.root}>             
+                     {conversation.map (message => {
+                        return (         
+                           <MessageView message={message} author={(audience.get (message.authorId) as Persona)}></MessageView>
+                     )})}
+                  </div>
                </div>
+               &nbsp;  
+
+               <div className={footerSectionClasses.root}>               
+                  {props.isBusy ? <DefaultSpinner/> : <div/>}              
+                  <InputView onSend={onSend} isBusy={props.isBusy}></InputView>          
+               </div> 
             </div>
-            &nbsp;  
-
-            <div className={footerSectionClasses.root}>               
-               {props.isBusy ? <DefaultSpinner/> : <div/>}              
-               <InputView onSend={onSend} isBusy={props.isBusy}></InputView>          
-            </div> 
-
          </div>
      );
    }
@@ -200,7 +225,7 @@ export interface IMessageViewProps {
 
 const messageViewStyles = makeStyles({
    card: {
-     ...shorthands.margin("5px"),
+     ...shorthands.margin("0px"),
      width: "100%"
    },
  });

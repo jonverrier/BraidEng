@@ -19,7 +19,7 @@ import { EIcon } from '../core/Icons';
 import { JoinKey } from '../core/JoinKey';
 import { EUIStrings } from './UIStrings';
 import { innerColumnStyles, innerColumnFooterStyles } from './ColumnStyles';
-import { EMainPageMessageTypes, MainPageMessageRow } from './ErrorRow';
+import { EMainPageMessageTypes, MainPageMessageRow } from './MainPageMessage';
 import { JoinRow } from './JoinRow';
 import { ConversationControllerRow } from './ConversationController';
 
