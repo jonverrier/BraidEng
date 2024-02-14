@@ -5,7 +5,7 @@ import React, { ChangeEvent, useState } from 'react';
 
 // Fluent
 import {
-   makeStyles, useId, Button, ButtonProps, Tooltip,
+   makeStyles, Button, ButtonProps, Tooltip,
    Text, Input, 
    InputOnChangeData
 } from '@fluentui/react-components';
@@ -22,6 +22,7 @@ import { KeyRetriever } from '../core/KeyRetriever';
 import { EUIStrings } from './UIStrings';
 import { EConfigStrings } from '../core/ConfigStrings';
 import { Environment, EEnvironment } from '../core/Environment';
+import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
 
 export interface IJoinPageProps {
    joinKey: JoinKey;  
@@ -29,43 +30,20 @@ export interface IJoinPageProps {
    onConnectError (hint_: string) : void;    
 }
 
-const viewOuterStyles = makeStyles({
-   root: {
-      display: 'flex',
-      flexDirection: 'column',
-      paddingLeft: '5px',
-      paddingRight: '5px',
-      paddingTop: '5px',
-      paddingBottom: '5px',
-      width: "100%"         
-   },
-});
-
-const formStyles = makeStyles({
+const joinPageInnerStyles = makeStyles({
    root: {    
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',  
    },
 });
 
-const joinRowStyles = makeStyles({
+const joinFormRowStyles = makeStyles({
    root: {    
       display: 'flex',
-      flexDirection: 'row'
+      flexDirection: 'row',    
    },
 });
 
-const nameInputStyles = makeStyles({
-   root: {    
-      width: '100%'
-   },
-});
-
-const keyInputStyles = makeStyles({
-   root: {    
-      width: '100%'      
-   },
-});
 
 const JoinButton: React.FC<ButtonProps> = (props) => {
    return (
@@ -78,14 +56,13 @@ const JoinButton: React.FC<ButtonProps> = (props) => {
    );
  };
 
-export const JoinPage = (props: IJoinPageProps) => {
+export const JoinRow = (props: IJoinPageProps) => {
 
-   const viewOuterClasses = viewOuterStyles();
-   const formClasses = formStyles();   
-   const nameInputClasses = nameInputStyles();
-   const JoinRowClasses = joinRowStyles();
-   const keyInputClasses = keyInputStyles(); 
-  
+   const joinPageInnerClasses = joinPageInnerStyles();   
+   const joinFormRowClasses = joinFormRowStyles();
+   const innerColumnFooterClasses = innerColumnFooterStyles(); 
+   const stretchClasses = textFieldStyles();
+
    const validator = new JoinPageValidator();
    const retriever = new KeyRetriever();
 
@@ -114,9 +91,9 @@ export const JoinPage = (props: IJoinPageProps) => {
       var url: string;
 
       if (Environment.environment() === EEnvironment.kLocal)
-         url = EConfigStrings.kRequestLocalAiKeyUrl;
+         url = EConfigStrings.kRequestLocalJoinKeyUrl;
       else
-         url = EConfigStrings.kRequestAiKeyUrl;
+         url = EConfigStrings.kRequestJoinKeyUrl;
 
       retriever.requestKey (url, 
          EConfigStrings.kRequestKeyParameterName, 
@@ -125,7 +102,7 @@ export const JoinPage = (props: IJoinPageProps) => {
          (returnedKey: string):void => {
             props.onConnect(joinKey, name);
           },
-          (e) => {
+          (e: any) => {
             props.onConnectError(e.toString());
           }
       );
@@ -136,28 +113,32 @@ export const JoinPage = (props: IJoinPageProps) => {
    }
    else {
       return (
-         <div className={viewOuterClasses.root} >     
-            &nbsp;            
-            <Text align="start">{EUIStrings.kJoinPagePreamble}</Text>   
-            <div className={formClasses.root}>   
+         <div className={innerColumnFooterClasses.root} >               
+            <div className={joinPageInnerClasses.root}>  
+               &nbsp;              
+               <div className={joinFormRowClasses.root}>             
+                  <Text align="start" className={stretchClasses.root}>{EUIStrings.kJoinPagePreamble}</Text> 
+               </div>             
                &nbsp;         
-               <Tooltip withArrow content={EUIStrings.kJoinConversationKeyPrompt} relationship="label">
-                  <Input aria-label={EUIStrings.kJoinConversationKeyPrompt}
-                     className={keyInputClasses.root}                  
-                     required={true}                  
-                     value={joinKeyText}
-                     maxLength={75}
-                     contentBefore={<Key24Regular />}
-                     placeholder={EUIStrings.kJoinConversationKeyPlaceholder}
-                     onChange={onKeyChange}
-                     disabled={false}
-                  />
+               <div className={joinFormRowClasses.root}>                   
+                  <Tooltip withArrow content={EUIStrings.kJoinConversationKeyPrompt} relationship="label">
+                     <Input aria-label={EUIStrings.kJoinConversationKeyPrompt}
+                        className={stretchClasses.root}                  
+                        required={true}                  
+                        value={joinKeyText}
+                        maxLength={75}
+                        contentBefore={<Key24Regular />}
+                        placeholder={EUIStrings.kJoinConversationKeyPlaceholder}
+                        onChange={onKeyChange}
+                        disabled={false}
+                     />
                </Tooltip>  
+               </div>
                &nbsp;
-               <div className={JoinRowClasses.root}>               
+               <div className={joinFormRowClasses.root}>               
                   <Tooltip withArrow content={EUIStrings.kJoinConversationAsPrompt} relationship="label">
                      <Input aria-label={EUIStrings.kJoinConversationAsPrompt} 
-                        className={nameInputClasses.root}
+                        className={stretchClasses.root}
                         required={true}
                         value={name}
                         maxLength={20}
@@ -173,9 +154,12 @@ export const JoinPage = (props: IJoinPageProps) => {
                      />
                   </Tooltip>                
                </div>
-            </div>     
-            &nbsp;                          
-            <Text align="start">{canJoin ? EUIStrings.kJoinConversationLooksLikeKeyAndName : EUIStrings.kJoinConversationDoesNotLookLikeKeyAndName}</Text>   
+               &nbsp;                   
+               <div className={joinFormRowClasses.root}> 
+                  <Text className={stretchClasses.root}>{canJoin ? EUIStrings.kJoinConversationLooksLikeKeyAndName : EUIStrings.kJoinConversationDoesNotLookLikeKeyAndName}</Text>   
+               </div>
+               &nbsp;                
+            </div>                          
          </div>
       );
    };

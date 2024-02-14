@@ -16,12 +16,12 @@ import { log, LogLevel, tag } from 'missionlog';
 import { EConfigStrings } from '../core/ConfigStrings';
 import { Persona } from '../core/Persona';
 import { EIcon } from '../core/Icons';
-import { EUIStrings } from './UIStrings';
 import { JoinKey } from '../core/JoinKey';
-import { Environment, EEnvironment } from '../core/Environment';
-import { EMainPageMessageTypes, MainPageMessage } from './MainPageMessage';
-import { JoinPage } from './JoinPage';
-import { ConversationController } from './ConversationController';
+import { EUIStrings } from './UIStrings';
+import { innerColumnStyles, innerColumnFooterStyles } from './ColumnStyles';
+import { EMainPageMessageTypes, MainPageMessageRow } from './MainPageMessage';
+import { JoinRow } from './JoinRow';
+import { ConversationControllerRow } from './ConversationController';
 
 // Logging handler
 const logger = {
@@ -40,21 +40,20 @@ const pageOuterStyles = makeStyles({
    root: {
       display: 'flex',
       flexDirection: 'row',
+      alignItems: 'stretch',  /* for a row, the main axis is vertical, flex-end is items aligned to the bottom of the row */
+      justifyContent: 'center', /* for a row, the cross-axis is horizontal, center means vertically centered */
       height: '100vh', /* fill the screen with flex layout */ 
-      width: '100vw',  /* fill the screen with flex layout */ 
-      alignItems: 'flex-end',  /* for a row, the main axis is vertical, flex-end is items aligned to the bottom of the row */
-      justifyContent: 'center' /* for a row, the cross-axis is horizontal, center means vertically centered */
-   },
-});
-
-const centerColumnStyles = makeStyles({
-   root: {    
-      display: 'flex',
-      flexDirection: 'column',
-      marginLeft: '20px',
-      marginRight: '20px',
-      marginTop: '20px',
-      marginBottom: '20px'
+      width: '100vw',  /* fill the screen with flex layout */       
+      minHeight: "128px", // Ask for enough for at least the error message
+      minWidth: "256px",  // Ask for enough for at least the error message
+      marginLeft: '0px',
+      marginRight: '0px',
+      marginTop: '0px',
+      marginBottom: '0px',
+      paddingLeft: '20px',
+      paddingRight: '20px',
+      paddingTop: '20px',
+      paddingBottom: '20px'         
    },
 });
 
@@ -63,16 +62,13 @@ export const App = (props: IAppProps) => {
    let localPersona = new Persona ();
    localPersona.icon = EIcon.kPersonPersona;
 
-   //Environment.override (EEnvironment.kProduction);
-
-   const centerColumnClasses = centerColumnStyles();
-
    const [lastMessage, setLastMessage] = useState<string>("");
    const [lastMessageType, setLastMessageType] = useState<EMainPageMessageTypes> (EMainPageMessageTypes.kNothing);
    const [joinKey, setJoinKey] = useState<JoinKey>(new JoinKey(""));
    const [joinAsPersona, setJoinAsPersona] = useState<Persona>(localPersona);   
 
    const pageOuterClasses = pageOuterStyles();
+   const innerColumnClasses = innerColumnStyles();
 
    // Initialise logging
    log.init({ application: 'DEBUG', notification: 'DEBUG' }, (level, tag, msg, params) => {
@@ -135,28 +131,28 @@ export const App = (props: IAppProps) => {
 
    return (
          <FluentProvider theme={teamsDarkTheme} >            
-            <div className={pageOuterClasses.root}>                  
-               <div className={centerColumnClasses.root}>   
+            <div className={pageOuterClasses.root}>    
+               <div className={innerColumnClasses.root}>             
+      
+                  <MainPageMessageRow 
+                     intent={lastMessageType} 
+                     text={lastMessage} 
+                     onDismiss={onDismissMessage}/>
+      
+                  <ConversationControllerRow 
+                     joinKey={joinKey}
+                     localPersona={joinAsPersona}
+                     onFluidError={onFluidError}
+                     onAiError={onAiError}>                           
+                  </ConversationControllerRow>      
 
-                     <MainPageMessage 
-                        intent={lastMessageType} 
-                        text={lastMessage} 
-                        onDismiss={onDismissMessage}/>
+                  <JoinRow 
+                     joinKey={joinKey} 
+                     onConnect={onConnect} 
+                     onConnectError={onConnectError}>                     
+                  </JoinRow>   
 
-                     <JoinPage 
-                        joinKey={joinKey} 
-                        onConnect={onConnect} 
-                        onConnectError={onConnectError}>                     
-                     </JoinPage>
-   
-                     <ConversationController 
-                        joinKey={joinKey}
-                        localPersona={joinAsPersona}
-                        onFluidError={onFluidError}
-                        onAiError={onAiError}>                           
-                     </ConversationController>
-
-               </div>             
+               </div>
             </div>
          </FluentProvider>         
       );
