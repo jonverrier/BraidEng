@@ -1,7 +1,7 @@
 /*! Copyright Braid Technologies 2022 */
 
 // React
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, useState, useRef, useEffect } from 'react';
 
 // Fluent
 import {
@@ -187,6 +187,13 @@ export const ConversationRow = (props: IConversationRowProps) => {
       props.onSend (messageText_);
    }
 
+   // https://stackoverflow.com/questions/45719909/scroll-to-bottom-of-an-overflowing-div-in-react
+   const AlwaysScrollToBottom = () => {
+      const elementRef = useRef();
+      useEffect(() => (elementRef.current as any).scrollIntoView());
+      return <div ref={elementRef as any} />;
+    };   
+
    if (! props.isConnected) {
       return (<div></div>);
    }
@@ -203,7 +210,8 @@ export const ConversationRow = (props: IConversationRowProps) => {
                         return (         
                            <MessageView message={message} author={(audience.get (message.authorId) as Persona)}></MessageView>
                      )})}
-                  </div>
+                     <AlwaysScrollToBottom />  
+                  </div>               
                </div>
                &nbsp;  
 
