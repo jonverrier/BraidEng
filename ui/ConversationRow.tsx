@@ -1,7 +1,7 @@
 /*! Copyright Braid Technologies 2022 */
 
 // React
-import React, { ChangeEvent, useState, useRef, useEffect } from 'react';
+import React, { ChangeEvent, KeyboardEvent, useState, useRef, useEffect } from 'react';
 
 // Fluent
 import {
@@ -14,8 +14,6 @@ import {
    Text, 
    Input, 
    InputOnChangeData,
-   Card,
-   CardHeader,
    Spinner, 
    SpinnerProps,
    partitionAvatarGroupItems,
@@ -34,6 +32,7 @@ import {
 } from '@fluentui/react-icons';
 
 import { EIcon } from '../core/Icons';
+import { EConfigStrings }  from '../core/ConfigStrings';
 import { JoinKey } from '../core/JoinKey';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
@@ -204,16 +203,23 @@ export const ConversationRow = (props: IConversationRowProps) => {
             <div className={embeddedColumnClasses.root}>                     
 
                <ConversationHeaderRow joinKey={props.joinKey} audience={props.audience} onDelete={props.onDelete}></ConversationHeaderRow>
+               
+               &nbsp;
 
                <div className={conversationContentRowClasses.root}>                
                   <div className={conversationContentColumnClasses.root}>             
                      {conversation.map (message => {
                         return (         
-                           <MessageView message={message} author={(audience.get (message.authorId) as Persona)}></MessageView>
+                           <SingleMessageView 
+                              message={message} 
+                              author={(audience.get (message.authorId) as Persona)}
+                              showAiWarning={message.authorId === EConfigStrings.kBotGuid}
+                           />
                      )})}
                      <AlwaysScrollToBottom />  
                   </div>               
                </div>
+
                &nbsp;  
 
                <div className={footerSectionClasses.root}>               
@@ -226,56 +232,94 @@ export const ConversationRow = (props: IConversationRowProps) => {
    }
 }
 
-export interface IMessageViewProps {
+export interface ISingleMessageViewProps {
 
    message: Message;  
    author: Persona;
+   showAiWarning: boolean;
 }
-
-const messageViewStyles = makeStyles({
-   card: {
-     ...shorthands.margin("0px"),
-     width: "100%"
-   },
- });
 
  export interface IAuthorIconProps {
  
    author: Persona;
 }
 
+const glow = makeStyles({
+   root: {    
+      marginBottom: '10px' ,      
+      boxShadow: '0px 0px 5px 0px white;'
+   },
+});
+
+const noGlow = makeStyles({
+   root: {    
+      marginBottom: '10px'       
+   },
+});
+
  export const AuthorIcon = (props: IAuthorIconProps) => {
 
-   const messageViewClasses = messageViewStyles();
- 
+   const glowClasses = glow();    
+   const noGlowClasses = noGlow(); 
+
    return ((props.author.icon === EIcon.kBotPersona) ?
-            <Laptop24Regular/>
-            : <Person24Regular/>
+            <Laptop24Regular className={glowClasses.root} />
+            : <Person24Regular className={noGlowClasses.root}/>
    );
 }
 
-export const MessageView = (props: IMessageViewProps) => {
+const singleMessageRow = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'left'
+   },
+});
 
-   const messageViewClasses = messageViewStyles();
- 
-   return (<div>
-     &nbsp; 
-     <Card className={messageViewClasses.card}>
-       <CardHeader
-         image={
-            <AuthorIcon author={props.author}/>
-         }
-         header={
-           <Body1>
-             <b>{props.author.name}</b> 
-           </Body1>
-         }
-         description={<Caption1>{props.message.text}</Caption1>}
-       />
+const singleMessageIconColumn = makeStyles({
+   root: {    
+      ...shorthands.margin("10px"),      
+      display: 'flex',
+      flexDirection: 'column'
+   },
+});
 
-     </Card>
-     </div>
-   );
+const singleMessageTextColumn = makeStyles({
+   root: {    
+      ...shorthands.margin("10px"),       
+      display: 'flex',
+      flexDirection: 'column'
+   },
+});
+
+const padAfterMessage = makeStyles({
+   root: {    
+      marginBottom: '10px'    
+   },
+});
+
+
+export const SingleMessageView = (props: ISingleMessageViewProps) => {
+
+   const singleMessageRowClasses = singleMessageRow();
+   const singleMessageIconColumnClasses = singleMessageIconColumn();
+   const singleMessageTextColumnClasses = singleMessageTextColumn();
+   const padAfterMessageClasses = padAfterMessage();  
+
+   return (
+      <div className={singleMessageRowClasses.root}>
+         <div className={singleMessageIconColumnClasses.root}>
+            <AuthorIcon author={props.author}/>            
+         </div>   
+         <div className={singleMessageTextColumnClasses.root}>
+            <Body1><b>{props.author.name}</b></Body1>     
+            <Caption1 className={padAfterMessageClasses.root}>{props.message.text}</Caption1>             
+            {props.showAiWarning  
+               ? <Text size={100}> {EUIStrings.kAiContentWarning} </Text>
+               : <div/>
+            }
+         </div>                
+      </div>);    
 }
 
 export interface IInputViewProps {
@@ -318,11 +362,23 @@ export const InputView = (props: IInputViewProps) => {
       setCanSend (data.value.length > 0);
    }   
 
-   function onMessageSend (ev: React.MouseEvent<HTMLButtonElement>) : void {
+   function doSend () : void {
 
       props.onSend (message);
       setMessage ("");   
       setCanSend (false);        
+   }   
+
+   function onKeyDown(ev: KeyboardEvent<HTMLInputElement>): void {
+  
+      if (ev.key === 'Enter' && canSend) {
+         doSend();
+      }
+   };
+
+   function onMessageSend (ev: React.MouseEvent<HTMLButtonElement>) : void {
+
+      doSend();       
    }
 
    return (
@@ -334,10 +390,11 @@ export const InputView = (props: IInputViewProps) => {
                className={messageInputClasses.root}                  
                required={true}                  
                value={message}
-               maxLength={75}
+               maxLength={512}
                contentBefore={<Mail24Regular />}
                placeholder={EUIStrings.kSendMessagePlaceholder}
                onChange={onKeyChange}
+               onKeyDown={onKeyDown}
                disabled={false}
                contentAfter={<SendButton 
                   aria-label={EUIStrings.kSendButtonPrompt} 
