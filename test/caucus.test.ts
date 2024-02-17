@@ -141,6 +141,29 @@ describe("Caucus", function () {
       expect(caucus.get(workingPersona.id).equals(workingPersona)).toEqual(true);
    });
 
+   it("Can remove all", async function () {
+
+      var workingPersona: Persona = new Persona(persona);
+
+      let caucus = newConnection.participantCaucus();
+
+      var synchMap: Map<string, Persona> = new Map<string, Persona>();
+
+      // Sync down to no elements
+      caucus.synchFrom(synchMap);
+      expect(caucus.current().size === 0).toEqual(true);
+
+      // Sync in a new element
+      synchMap.set(workingPersona.id, workingPersona);
+      caucus.synchFrom(synchMap);
+      expect(caucus.current().size === 1).toEqual(true);
+      expect(caucus.get(workingPersona.id).equals(workingPersona)).toEqual(true);
+
+      // Remove all elements
+      caucus.removeAll ();
+      expect(caucus.current().size === 0).toEqual(true);
+   });
+
    it("Can return an ordered array", async function () {
 
       // Create three Message objects

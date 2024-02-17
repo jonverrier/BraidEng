@@ -29,7 +29,8 @@ import {
    Laptop24Regular,
    Mail24Regular,
    Send24Regular,
-   Copy24Regular
+   Copy24Regular,
+   Delete24Regular
 } from '@fluentui/react-icons';
 
 import { EIcon } from '../core/Icons';
@@ -43,6 +44,7 @@ export interface IConversationHeaderProps {
 
    joinKey: JoinKey;
    audience: Map<string, Persona>;
+   onDelete () : void;   
 }
 
 export interface IConversationRowProps {
@@ -52,6 +54,7 @@ export interface IConversationRowProps {
    audience: Map<string, Persona>;
    conversation: Array<Message>;
    onSend (message_: string) : void;   
+   onDelete () : void;
    isBusy: boolean;
 }
 
@@ -70,12 +73,22 @@ const copyButtonStyles = makeStyles({
    },
 });
 
-const CopyButton: React.FC<ToolbarButtonProps> = (props) => {
+const CopyButton: React.FC<ToolbarButtonProps> = (props: any) => {
    
    return (
      <ToolbarButton
        {...props}          
        icon={<Copy24Regular />}
+     />
+   );
+ };
+
+ const DeleteButton: React.FC<ToolbarButtonProps> = (props: any) => {
+   
+   return (
+     <ToolbarButton
+       {...props}          
+       icon={<Delete24Regular />}
      />
    );
  };
@@ -93,10 +106,15 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
     });
 
 
-    function onCopy (ev: React.MouseEvent<HTMLButtonElement>) : void {
+   function onCopy (ev: React.MouseEvent<HTMLButtonElement>) : void {
 
       navigator.clipboard.writeText (props.joinKey.asString);
    }    
+
+   function onDelete (ev: React.MouseEvent<HTMLButtonElement>) : void {
+
+      props.onDelete();
+   }     
 
    return (
       <div className={headerRowClasses.root}>
@@ -124,7 +142,15 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
                   disabled={!(props.joinKey.isValid)} 
                   onClick={onCopy}
                />  
-            </Tooltip>                
+            </Tooltip>        
+            <Tooltip content={EUIStrings.kDeleteConversationButtonPrompt} 
+               relationship="label" positioning={'after'}>
+               <DeleteButton 
+                  aria-label={EUIStrings.kDeleteConversationButtonPrompt} 
+                  disabled={!(props.joinKey.isValid)} 
+                  onClick={onDelete}
+               />  
+            </Tooltip>                      
          </Toolbar>           
       </div>
    );
@@ -202,7 +228,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
          <div className={embeddedRowClasses.root}>      
             <div className={embeddedColumnClasses.root}>                     
 
-               <ConversationHeaderRow joinKey={props.joinKey} audience={props.audience}></ConversationHeaderRow>
+               <ConversationHeaderRow joinKey={props.joinKey} audience={props.audience} onDelete={props.onDelete}></ConversationHeaderRow>
 
                <div className={conversationContentRowClasses.root}>                
                   <div className={conversationContentColumnClasses.root}>             
