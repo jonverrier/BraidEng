@@ -1,7 +1,7 @@
 /*! Copyright Braid Technologies 2022 */
 
 // React
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, KeyboardEvent, useState } from 'react';
 
 // Fluent
 import {
@@ -71,6 +71,7 @@ export const JoinRow = (props: IJoinPageProps) => {
    const [joinKeyText, setJoinKeyText] = useState<string>("");   
    const [canJoin, setCanJoin] = useState<boolean>(false);
 
+
    function onJoinAsChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
 
       setName(data.value);
@@ -86,7 +87,7 @@ export const JoinRow = (props: IJoinPageProps) => {
       setCanJoin (validator.isJoinAttemptReady (name, asKey));
    }   
 
-   function onTryJoin(ev: React.MouseEvent<HTMLButtonElement>) : void {
+   function tryToJoin () : void {
 
       var url: string;
 
@@ -106,6 +107,18 @@ export const JoinRow = (props: IJoinPageProps) => {
             props.onConnectError(e.toString());
           }
       );
+   }
+
+   function onKeyDown(ev: KeyboardEvent<HTMLInputElement>): void {
+  
+      if (ev.key === 'Enter' && canJoin) {
+         tryToJoin();
+      }
+   };
+
+   function onTryJoin(ev: React.MouseEvent<HTMLButtonElement>) : void {
+
+      tryToJoin();
    }
 
    if (props.joinKey.isValid) {
@@ -131,6 +144,7 @@ export const JoinRow = (props: IJoinPageProps) => {
                         placeholder={EUIStrings.kJoinConversationKeyPlaceholder}
                         onChange={onKeyChange}
                         disabled={false}
+                        autoFocus={true}
                      />
                </Tooltip>  
                </div>
@@ -150,6 +164,7 @@ export const JoinRow = (props: IJoinPageProps) => {
                         />}                
                         placeholder={EUIStrings.kJoinConversationAsPlaceholder}
                         onChange={onJoinAsChange}
+                        onKeyDown={onKeyDown}                        
                         disabled={false}
                      />
                   </Tooltip>                
