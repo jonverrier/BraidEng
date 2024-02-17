@@ -7,8 +7,8 @@ import React, { ChangeEvent, useState, useRef, useEffect } from 'react';
 import {
    makeStyles, shorthands, 
    Button, ButtonProps, 
-   Toolbar, ToolbarButton, ToolbarButtonProps,
-   Tooltip, TooltipProps,
+   Toolbar, ToolbarButton, ToolbarDivider,
+   Tooltip, 
    Body1,
    Caption1,
    Text, 
@@ -67,36 +67,10 @@ const headerRowStyles = makeStyles({
    },
 });
 
-const copyButtonStyles = makeStyles({
-   root: {    
-      marginLeft: '20px' 
-   },
-});
-
-const CopyButton: React.FC<ToolbarButtonProps> = (props: any) => {
-   
-   return (
-     <ToolbarButton
-       {...props}          
-       icon={<Copy24Regular />}
-     />
-   );
- };
-
- const DeleteButton: React.FC<ToolbarButtonProps> = (props: any) => {
-   
-   return (
-     <ToolbarButton
-       {...props}          
-       icon={<Delete24Regular />}
-     />
-   );
- };
 
 export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
 
    const headerRowClasses = headerRowStyles();
-   const copyButtonClasses = copyButtonStyles();
 
    // Copy audience to an array for consumption by Fluent classes
    let audienceArray = Array.from(props.audience.values());
@@ -132,20 +106,21 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
                </AvatarGroupPopover>
             )}
          </AvatarGroup>  
-         &nbsp;  
-         <Toolbar aria-label="Default" >      
+         <ToolbarDivider />
+         <Toolbar aria-label="Conversation control toolbar" >      
             <Tooltip content={EUIStrings.kCopyJoinKeyButtonPrompt} 
-               relationship="label" positioning={'after'}>
-               <CopyButton 
-                  className={copyButtonClasses.root}
+               relationship="label" positioning={'below'}>
+               <ToolbarButton
+                  icon={<Copy24Regular />}
                   aria-label={EUIStrings.kCopyJoinKeyButtonPrompt} 
                   disabled={!(props.joinKey.isValid)} 
                   onClick={onCopy}
-               />  
+               />                 
             </Tooltip>        
             <Tooltip content={EUIStrings.kDeleteConversationButtonPrompt} 
-               relationship="label" positioning={'after'}>
-               <DeleteButton 
+               relationship="label" positioning={'below'}>
+               <ToolbarButton
+                  icon={<Delete24Regular />}
                   aria-label={EUIStrings.kDeleteConversationButtonPrompt} 
                   disabled={!(props.joinKey.isValid)} 
                   onClick={onDelete}

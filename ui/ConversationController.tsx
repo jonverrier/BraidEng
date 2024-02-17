@@ -76,15 +76,19 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       let changeObserver = new NotificationRouterFor<Message> (remoteChanged);
 
-      // Hook up a notification function for adds, removes, changes
       let changeObserverInterest = new ObserverInterest (changeObserver, CaucusOf.caucusMemberChangedInterest);
-      fluidMessagesConnection_.messageCaucus().addObserver (changeObserverInterest);
-
-      let addedObserverInterest = new ObserverInterest (changeObserver, CaucusOf.caucusMemberAddedInterest);
-      fluidMessagesConnection_.messageCaucus().addObserver (addedObserverInterest);   
-      
+      let addedObserverInterest = new ObserverInterest (changeObserver, CaucusOf.caucusMemberAddedInterest);      
       let removedObserverInterest = new ObserverInterest (changeObserver, CaucusOf.caucusMemberRemovedInterest);
-      fluidMessagesConnection_.messageCaucus().addObserver (removedObserverInterest);      
+
+      // Hook up a notification function for adds, removes, changes in the message list       
+      fluidMessagesConnection_.messageCaucus().addObserver (changeObserverInterest);
+      fluidMessagesConnection_.messageCaucus().addObserver (addedObserverInterest);   
+      fluidMessagesConnection_.messageCaucus().addObserver (removedObserverInterest);  
+      
+      // Hook up a notification function for adds, removes, changes in the participant list 
+      fluidMessagesConnection_.participantCaucus().addObserver (changeObserverInterest);
+      fluidMessagesConnection_.participantCaucus().addObserver (addedObserverInterest);   
+      fluidMessagesConnection_.participantCaucus().addObserver (removedObserverInterest);       
       
       setFullJoinKey (JoinKey.makeFromTwoParts (props.joinKey.firstPart, containerId));      
    }
