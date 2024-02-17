@@ -19,5 +19,7 @@ export enum EUIStrings {
    kSendButtonPrompt = "Send",
    kSendMessagePlaceholder = "Write a message... ",   
    kCopyJoinKeyButtonPrompt = "Copy the joining key",
-   kDeleteConversationButtonPrompt = "Delete the history of this conversation"
+   kDeleteConversationButtonPrompt = "Delete the history of this conversation",
+
+   kAiContentWarning = "AI can make mistakes. Consider checking important information."
 };
