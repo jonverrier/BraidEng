@@ -396,6 +396,7 @@ export const InputView = (props: IInputViewProps) => {
                onChange={onKeyChange}
                onKeyDown={onKeyDown}
                disabled={false}
+               autoFocus={true}               
                contentAfter={<SendButton 
                   aria-label={EUIStrings.kSendButtonPrompt} 
                   disabled={(!canSend) || (props.isBusy)} 
