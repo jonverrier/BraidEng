@@ -7,8 +7,8 @@ import React, { ChangeEvent, useState, useRef, useEffect } from 'react';
 import {
    makeStyles, shorthands, 
    Button, ButtonProps, 
-   Toolbar, ToolbarButton, ToolbarButtonProps,
-   Tooltip, TooltipProps,
+   Toolbar, ToolbarButton, ToolbarDivider,
+   Tooltip, 
    Body1,
    Caption1,
    Text, 
@@ -29,7 +29,8 @@ import {
    Laptop24Regular,
    Mail24Regular,
    Send24Regular,
-   Copy24Regular
+   Copy24Regular,
+   Delete24Regular
 } from '@fluentui/react-icons';
 
 import { EIcon } from '../core/Icons';
@@ -43,6 +44,7 @@ export interface IConversationHeaderProps {
 
    joinKey: JoinKey;
    audience: Map<string, Persona>;
+   onDelete () : void;   
 }
 
 export interface IConversationRowProps {
@@ -52,6 +54,7 @@ export interface IConversationRowProps {
    audience: Map<string, Persona>;
    conversation: Array<Message>;
    onSend (message_: string) : void;   
+   onDelete () : void;
    isBusy: boolean;
 }
 
@@ -64,26 +67,10 @@ const headerRowStyles = makeStyles({
    },
 });
 
-const copyButtonStyles = makeStyles({
-   root: {    
-      marginLeft: '20px' 
-   },
-});
-
-const CopyButton: React.FC<ToolbarButtonProps> = (props) => {
-   
-   return (
-     <ToolbarButton
-       {...props}          
-       icon={<Copy24Regular />}
-     />
-   );
- };
 
 export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
 
    const headerRowClasses = headerRowStyles();
-   const copyButtonClasses = copyButtonStyles();
 
    // Copy audience to an array for consumption by Fluent classes
    let audienceArray = Array.from(props.audience.values());
@@ -93,10 +80,15 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
     });
 
 
-    function onCopy (ev: React.MouseEvent<HTMLButtonElement>) : void {
+   function onCopy (ev: React.MouseEvent<HTMLButtonElement>) : void {
 
       navigator.clipboard.writeText (props.joinKey.asString);
    }    
+
+   function onDelete (ev: React.MouseEvent<HTMLButtonElement>) : void {
+
+      props.onDelete();
+   }     
 
    return (
       <div className={headerRowClasses.root}>
@@ -114,17 +106,26 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
                </AvatarGroupPopover>
             )}
          </AvatarGroup>  
-         &nbsp;  
-         <Toolbar aria-label="Default" >      
+         <ToolbarDivider />
+         <Toolbar aria-label="Conversation control toolbar" >      
             <Tooltip content={EUIStrings.kCopyJoinKeyButtonPrompt} 
-               relationship="label" positioning={'after'}>
-               <CopyButton 
-                  className={copyButtonClasses.root}
+               relationship="label" positioning={'below'}>
+               <ToolbarButton
+                  icon={<Copy24Regular />}
                   aria-label={EUIStrings.kCopyJoinKeyButtonPrompt} 
                   disabled={!(props.joinKey.isValid)} 
                   onClick={onCopy}
+               />                 
+            </Tooltip>        
+            <Tooltip content={EUIStrings.kDeleteConversationButtonPrompt} 
+               relationship="label" positioning={'below'}>
+               <ToolbarButton
+                  icon={<Delete24Regular />}
+                  aria-label={EUIStrings.kDeleteConversationButtonPrompt} 
+                  disabled={!(props.joinKey.isValid)} 
+                  onClick={onDelete}
                />  
-            </Tooltip>                
+            </Tooltip>                      
          </Toolbar>           
       </div>
    );
@@ -202,7 +203,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
          <div className={embeddedRowClasses.root}>      
             <div className={embeddedColumnClasses.root}>                     
 
-               <ConversationHeaderRow joinKey={props.joinKey} audience={props.audience}></ConversationHeaderRow>
+               <ConversationHeaderRow joinKey={props.joinKey} audience={props.audience} onDelete={props.onDelete}></ConversationHeaderRow>
 
                <div className={conversationContentRowClasses.root}>                
                   <div className={conversationContentColumnClasses.root}>             

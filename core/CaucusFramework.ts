@@ -51,21 +51,27 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
       kickStarted();
    }
 
-   private doNotification(hadPrevious_: boolean, hasTarget_: boolean, key_: string): void {
+   private doNotification(hadPrevious_: boolean, hasTarget_: boolean, key_: string | undefined): void {
 
       if (hadPrevious_) {
 
          if (hasTarget_) {
 
-            this.notifyObservers(CaucusOf.caucusMemberChangedInterest, new NotificationFor<string>(CaucusOf.caucusMemberChangedInterest, key_));
+            this.notifyObservers(CaucusOf.caucusMemberChangedInterest, 
+               new NotificationFor<string>(CaucusOf.caucusMemberChangedInterest, 
+                  key_ as string));
          }
          else {
 
-            this.notifyObservers(CaucusOf.caucusMemberRemovedInterest, new NotificationFor<string>(CaucusOf.caucusMemberRemovedInterest, key_));
+            this.notifyObservers(CaucusOf.caucusMemberRemovedInterest, 
+               new NotificationFor<string>(CaucusOf.caucusMemberRemovedInterest, 
+                  key_ as string));
          }
       } else {
 
-         this.notifyObservers(CaucusOf.caucusMemberAddedInterest, new NotificationFor<string>(CaucusOf.caucusMemberAddedInterest, key_));
+         this.notifyObservers(CaucusOf.caucusMemberAddedInterest, 
+            new NotificationFor<string>(CaucusOf.caucusMemberAddedInterest, 
+               key_ as string));
       }
    }
 
@@ -102,6 +108,15 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
       let object = MDynamicStreamable.resurrect(element) as AType;
 
       return object;
+   }
+
+   removeAll (): void {
+      
+      this._shared.clear();
+      this._localMap.clear();
+      this._localArray = new Array<AType>();
+
+      this.doNotification(false, false, undefined);   
    }
 
    current(): Map<string, AType> {
