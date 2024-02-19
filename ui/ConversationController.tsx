@@ -14,7 +14,7 @@ import { JoinKey } from '../core/JoinKey';
 import { ConversationRow } from './ConversationRow';
 import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
 import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } from '../core/NotificationFramework';
-import { AIConnection, AiConnector } from '../core/AIConnection';
+import { AiConnection, AiConnector } from '../core/AIConnection';
 import { EUIStrings } from './UIStrings';
 import { EConfigStrings } from '../core/ConfigStrings';
 
@@ -171,17 +171,17 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       // If AI is being invoked we make a call here 
       // ======================================================
-      if (AIConnection.isBotRequest (message, audienceMap)) {
+      if (AiConnection.isBotRequest (message, audienceMap)) {
 
          setIsBusy(true);
 
          let connectionPromise = AiConnector.connect (props.joinKey.firstPart);
 
-         connectionPromise.then ( (connection : AIConnection) => {
+         connectionPromise.then ( (connection : AiConnection) => {
 
-            let query = AIConnection.makeOpenAiQuery (messageArray, audienceMap);
+            let query = AiConnection.makeOpenAiQuery (messageArray, audienceMap);
 
-            connection.callAI (query).then ((result_: string) => {
+            connection.queryAI (query).then ((result_: string) => {
 
                console.log ("AI:" + result_);
                

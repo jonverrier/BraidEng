@@ -6,9 +6,10 @@ import { OpenAI } from "openai";
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
 
-const apiKey = process.env.OPENAI_API_KEY;
+import { KStubEnvironmentVariables } from "../core/ConfigStrings";
+import { AiConnector } from "../core/AIConnection";
 
-import { Embeddings } from "openai/resources";
+const apiKey = process.env.OPENAI_API_KEY;
 
 import embeddingsFile from '../data/transcripts/output/embedding_index_full_3m.json';
 
@@ -88,7 +89,6 @@ describe("Embedding", function () {
       let embeddings = new Array<Embedding> ();
       embeddings = embeddingsFile as Array<any>;
 
-      console.log (embeddings[0]);
       expect (embeddings[0].summary.length > 0).toBe (true);
    });
 
@@ -133,15 +133,17 @@ describe("Embedding", function () {
       let bestMatch = -1.0;
       let query = "Perceptron & Generalized Linear Model";
 
-      const client = new OpenAI();
-      const engine = "text-embedding-3-small"; 
+      //const client = new OpenAI();
+      // const engine = "text-embedding-3-small"; 
+      const client = new AiConnector();
+      let connection = await AiConnector.connect (KStubEnvironmentVariables.JoinKey);      
 
-      const queryEmbed = await client.embeddings.create ({ model: engine, input: query });
+      const embedding = await connection.createEmbedding (query);
 
       for (let i = 0; i < embeddings.length; i++) {
 
          let ithEmbed = embeddings[i];
-         let ithScore  = cosineSimilarity(ithEmbed.ada_v2, queryEmbed.data[0].embedding);  
+         let ithScore  = cosineSimilarity(ithEmbed.ada_v2, embedding);  
          if (ithScore > maxScore)   {    
             maxScore = ithScore;
             bestMatch = i;
@@ -151,7 +153,6 @@ describe("Embedding", function () {
       expect (bestMatch > 0).toBe (true);
       expect (bestMatch <= embeddings.length).toBe (true);
 
-      console.log (embeddings[bestMatch].description);
       console.log (embeddings[bestMatch].summary);
    });
 });

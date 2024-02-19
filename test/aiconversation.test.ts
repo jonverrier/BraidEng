@@ -8,7 +8,7 @@ import { EConfigStrings, KStubEnvironmentVariables} from '../core/ConfigStrings'
 import { EEnvironment, Environment } from '../core/Environment';
 import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
-import { AIConnection, AiConnector } from '../core/AIConnection';
+import { AiConnection, AiConnector } from '../core/AIConnection';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -55,16 +55,16 @@ describe("AIConnection", function () {
 
       var messageEmpty = new Message();
 
-      expect(AIConnection.isBotMessage(botMessage, authors)).toEqual(true);
-      expect(AIConnection.isBotMessage(personMessage, authors)).toEqual(false); 
-      expect(AIConnection.isBotMessage(botRequest, authors)).toEqual(false);           
+      expect(AiConnection.isBotMessage(botMessage, authors)).toEqual(true);
+      expect(AiConnection.isBotMessage(personMessage, authors)).toEqual(false); 
+      expect(AiConnection.isBotMessage(botRequest, authors)).toEqual(false);           
    });
 
    it("Needs to detect Bot request type", function () {
 
-      expect(AIConnection.isBotRequest(personMessage, authors)).toEqual(false);   
-      expect(AIConnection.isBotRequest(botMessage, authors)).toEqual(false);     
-      expect(AIConnection.isBotRequest(botRequest, authors)).toEqual(true);          
+      expect(AiConnection.isBotRequest(personMessage, authors)).toEqual(false);   
+      expect(AiConnection.isBotRequest(botMessage, authors)).toEqual(false);     
+      expect(AiConnection.isBotRequest(botRequest, authors)).toEqual(true);          
    });   
 
    it("Needs to detect reference errors", function () {
@@ -75,7 +75,7 @@ describe("AIConnection", function () {
       let caught = false;
 
       try {
-         AIConnection.isBotMessage(newMessage, authors);
+         AiConnection.isBotMessage(newMessage, authors);
       }
       catch (e) {
          caught = true;
@@ -91,7 +91,7 @@ describe("AIConnection", function () {
       messages[1] = botRequest;
       messages[2] = botMessage;
 
-      let query = AIConnection.makeOpenAiQuery (messages, authors);
+      let query = AiConnection.makeOpenAiQuery (messages, authors);
 
       expect(query.length).toEqual(3);         
    });    
@@ -104,14 +104,14 @@ describe("AIConnection", function () {
       messages[1] = botRequest;
       messages[2] = botMessage;
 
-      let query = AIConnection.makeOpenAiQuery (messages, authors);
+      let query = AiConnection.makeOpenAiQuery (messages, authors);
 
       throwIfUndefined(process);
       throwIfUndefined(process.env);
       throwIfUndefined(process.env.OPENAI_API_KEY);        
-      let caller = new AIConnection(process.env.OPENAI_API_KEY);
+      let caller = new AiConnection(process.env.OPENAI_API_KEY);
 
-      let result = await caller.callAI (query);
+      let result = await caller.queryAI (query);
 
       console.log (result);
 

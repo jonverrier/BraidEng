@@ -23,7 +23,7 @@ const logger = {
    [LogLevel.DEBUG]: (tag, msg, params) => console.log(msg, ...params),
 } as Record<LogLevel, (tag: string, msg: unknown, params: unknown[]) => void>;
 
-export class AIConnection {
+export class AiConnection {
 
    private _activeCallCount: number;
    private _key: string;   
@@ -38,7 +38,7 @@ export class AIConnection {
    }  
 
    // Makes an Axios call to call web endpoint
-   async callAI  (query: Array<Object>) : Promise<string> {
+   async queryAI  (query: Array<Object>) : Promise<string> {
       
       this._activeCallCount++;
 
@@ -72,6 +72,41 @@ export class AIConnection {
       return response.data.choices[0].message.content as string;
    }    
 
+      // Makes an Axios call to call web endpoint
+   async createEmbedding  (input: string) : Promise<Array<number>> {
+      
+      this._activeCallCount++;
+   
+      var response : any = null;
+   
+      await axios.post('https://api.openai.com/v1/embeddings', {
+         input: input,
+         model: "text-embedding-3-small",
+      },
+      {
+         headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this._key}`
+         }
+      })
+      .then((resp : any) => {
+   
+         response = resp;
+         this._activeCallCount--;         
+      })
+         .catch((error: any) => {
+   
+         this._activeCallCount--;     
+   
+         logger.ERROR (EConfigStrings.kApiLogCategory, EConfigStrings.kErrorConnectingToAiAPI, [error]);
+      });
+   
+      if (!response)
+         throw new ConnectionError(EConfigStrings.kErrorConnectingToAiAPI);      
+
+      return response.data.data[0].embedding as Array<number>;
+   } 
+
    isBusy () {
       return this._activeCallCount !== 0;
    }
@@ -85,14 +120,14 @@ export class AIConnection {
 
       for (const message of messages) {
 
-         if (AIConnection.isBotRequest(message, authors)) {
+         if (AiConnection.isBotRequest(message, authors)) {
 
             let edited = message.text.replace (EConfigStrings.kBotRequestSignature, "");
             let entry = { role: 'user', content: edited };
             builtQuery.push (entry);
          }
 
-         if (AIConnection.isBotMessage(message, authors)) {
+         if (AiConnection.isBotMessage(message, authors)) {
             let entry = { role: 'assistant', content: message.text };
             builtQuery.push (entry);
          }         
@@ -123,7 +158,7 @@ export class AIConnection {
 
 export class AiConnector {
    
-   static async connect (joinKey_: string) : Promise<AIConnection> {
+   static async connect (joinKey_: string) : Promise<AiConnection> {
 
       let retriever = new KeyRetriever ();
       var url: string;
@@ -137,6 +172,6 @@ export class AiConnector {
                                        EConfigStrings.kRequestKeyParameterName, 
                                        joinKey_);
 
-      return new AIConnection (aiKey);
+      return new AiConnection (aiKey);
    }
 }
