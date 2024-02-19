@@ -10,7 +10,7 @@ export enum EConfigStrings {
    kRequestLocalAiKeyUrl = "http://localhost:1337/api/aikey",     
    kRequestKeyParameterName = "JoinKey",
    
-   kAzureTenantId = "5dcb73bd-782d-4979-9c12-4f14106313b0",
+   kAzureTenantId = "45155576-770f-47cc-92dc-9d3328dbf837",
    kAzureProductionFluidHost = "https://eu.fluidrelay.azure.com",
    kAzureLocalFluidHost = "http://localhost:7070",
 

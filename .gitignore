@@ -19,5 +19,6 @@ test/*.js.map
 coverage/*
 .nyc_output/*
 dist/*
+data/*
 
 
