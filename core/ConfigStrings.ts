@@ -4,8 +4,8 @@ export enum EConfigStrings {
 
    kApiLogCategory = "API",
 
-   kRequestJoinKeyUrl = "https://ambitious-ground-0a343ae03.4.azurestaticapps.net/api/joinkey",
-   kRequestAiKeyUrl = "https://ambitious-ground-0a343ae03.4.azurestaticapps.net/api/aikey",   
+   kRequestJoinKeyUrl = "https://kind-bush-0a0041d03.4.azurestaticapps.net/api/joinkey",
+   kRequestAiKeyUrl = "https://kind-bush-0a0041d03.4.azurestaticapps.net/api/aikey",   
    kRequestLocalJoinKeyUrl = "http://localhost:1337/api/joinkey",
    kRequestLocalAiKeyUrl = "http://localhost:1337/api/aikey",     
    kRequestKeyParameterName = "JoinKey",
