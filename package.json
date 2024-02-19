@@ -1,7 +1,7 @@
 {
    "name": "fsbot",
    "version": "0.0.0",
-   "description": "An OpenAI assistant that likes to talk about FS, written in typescript, node.js, and the MS technology stack - Fluid Framework, Fluent UI, Azure.",
+   "description": "An OpenAI assistant that likes to talk about AI, written in typescript, node.js, and the MS technology stack - Fluid Framework, Fluent UI, Azure.",
    "main": "ui/AppEntry.tsx",
    "author": {
       "name": "Jon Verrier"
@@ -12,7 +12,7 @@
       "build": "tsc --build",
       "clean": "tsc --build --clean",
       "test": "mocha --debug-brk --require ts-node/register test/*.test.ts",
-      "test-mini": "mocha --debug-brk --require ts-node/register -g Caucus",
+      "test-mini": "mocha --debug-brk --require ts-node/register -g Embedding",
       "cover": "tsc && nyc mocha --require ts-node/register test/*.test.ts",
       "local-server": "npx @fluidframework/azure-local-service@latest"
    },
@@ -70,5 +70,8 @@
    "engines": {
       "node": ">=20.10.0",
       "npm": ">=10.x"
+   },
+   "dependencies": {
+      "openai": "^4.28.0"
    }
 }
