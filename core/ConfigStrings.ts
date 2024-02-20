@@ -14,10 +14,10 @@ export enum EConfigStrings {
    kAzureProductionFluidHost = "https://eu.fluidrelay.azure.com",
    kAzureLocalFluidHost = "http://localhost:7070",
 
-   kBotName = 'BraidBot',
+   kBotName = 'Braid',
    kBotGuid = "313aafdb-a05c-4dc7-98d0-4db7f28f122f",
-   kBotRequestSignature = '@BraidBot',
-   kOpenAiPersonaPrompt = "You are a customer service agent for a bank, skilled in explaining complex products in simple language. You limit replies to 100 words or less.",
+   kBotRequestSignature = '@Braid',
+   kOpenAiPersonaPrompt = "You are an AI assistant helping a developer understand AI. You explaining complex concepts in simple language, using Python examples if it helps. You limit replies to 100 words or less. If you don't know the answer to a question, just say 'I dont't know'.",
 
    kErrorConnectingToKeyAPI = "Error connecting to Braid server.",
    kErrorConnectingToAiAPI = "Error connecting to AI server." 

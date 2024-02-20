@@ -11,91 +11,25 @@ import { AiConnector } from "../core/AIConnection";
 
 const apiKey = process.env.OPENAI_API_KEY;
 
-import embeddingsFile from '../data/transcripts/output/embedding_index_full_3m.json';
+import { LiteYouTubeEmbedding } from "../core/EmbeddingFormats";
+import liteYouTubeEmbeddings from '../core/youtube_embeddings_lite.json';
+import { cosineSimilarity, kKnowledgeSourceCount, YouTubeRespository } from "../core/Knowledge";
 
-/**
- * Calculates the cosine similarity between two vectors.
- * @param vector1 The first vector.
- * @param vector2 The second vector.
- * @returns The cosine similarity score.
- */
-function cosineSimilarity(vector1: number[], vector2: number[]): number {
-   if (vector1.length !== vector2.length) {
-       throw new Error("Vector dimensions must match for cosine similarity calculation.");
-   }
-
-   const dotProduct = vector1.reduce((acc, val, index) => acc + val * vector2[index], 0);
-   const magnitude1 = Math.sqrt(vector1.reduce((acc, val) => acc + val ** 2, 0));
-   const magnitude2 = Math.sqrt(vector2.reduce((acc, val) => acc + val ** 2, 0));
-
-   if (magnitude1 === 0 || magnitude2 === 0) {
-       throw new Error("Magnitude of a vector must be non-zero for cosine similarity calculation.");
-   }
-
-   return dotProduct / (magnitude1 * magnitude2);
-}
-
-/**
- * Main function to execute the document similarity comparison.
- */
-/* async function compareEmbeddings() {
-
-   try {
-        
-      console.log("== Building Search Applications with OpenAI ==");
-
-      const client = new OpenAI();
-      const engine = "text-embedding-3-small"; 
-
-      const source = "Car";
-      const compareTo = "Vehicle";
-      const parrot = "A bird";
-
-      const parrotEmbedding = await client.embeddings.create ({ model: engine, input: parrot });
-      const embeddings = await client.embeddings.create ({ model: engine, input: source });
-      const embeddingsCompareTo = await client.embeddings.create ({ model: engine, input: compareTo});
-
-      const carArray = embeddings.data[0].embedding;
-      const vehicleArray = embeddingsCompareTo.data[0].embedding;
-      const parrotArray = parrotEmbedding.data[0].embedding;
-
-      const scoreCarWithVehicle  = cosineSimilarity(carArray, vehicleArray);
-      console.log("Comparing - Car vs Vehicle...: ", scoreCarWithVehicle.toFixed(7));
-
-      const scoreCarWithParrot  = cosineSimilarity(carArray, parrotArray);
-      console.log("Comparing - Car vs Parrot...: ", scoreCarWithParrot .toFixed(7));
-
-  } catch (error) {
-      console.error("The sample encountered an error:", error);
-  }
-} */
-
-interface Embedding {
-   speaker: string;
-   title: string;
-   videoId: string;
-   description: string;
-   start: string;
-   seconds: number;
-   text: string;
-   summary: string;
-   ada_v2: Array<number>;
-};
 
 describe("Embedding", function () {
 
    it("Needs to load first line", function () {
       
-      let embeddings = new Array<Embedding> ();
-      embeddings = embeddingsFile as Array<any>;
+      let embeddings = new Array<LiteYouTubeEmbedding> ();
+      embeddings = liteYouTubeEmbeddings as Array<any>;
 
       expect (embeddings[0].summary.length > 0).toBe (true);
    });
 
    it("Needs to compare first and second lines", function () {
       
-      let embeddings = new Array<Embedding>();
-      embeddings = embeddingsFile as Array<Embedding>;
+      let embeddings = new Array<LiteYouTubeEmbedding>();
+      embeddings = liteYouTubeEmbeddings as Array<LiteYouTubeEmbedding>;
 
       const scoreWithSelf  = cosineSimilarity(embeddings[0].ada_v2, embeddings[0].ada_v2);
       const scoreWithOther  = cosineSimilarity(embeddings[0].ada_v2, embeddings[1].ada_v2);
@@ -105,8 +39,8 @@ describe("Embedding", function () {
 
    it("Needs to find closest match for a row that is present", function () {
       
-      let embeddings = new Array<Embedding>();
-      embeddings = embeddingsFile as Array<Embedding>;
+      let embeddings = new Array<LiteYouTubeEmbedding>();
+      embeddings = liteYouTubeEmbeddings as Array<LiteYouTubeEmbedding>;
 
       let maxScore = 0.0;
       let bestMatch = -1;
@@ -114,46 +48,69 @@ describe("Embedding", function () {
       for (let i = 0; i < embeddings.length; i++) {
 
          let ithEmbed = embeddings[i];
-         let ithScore  = cosineSimilarity(ithEmbed.ada_v2, embeddings[0].ada_v2);  
+         let ithScore  = cosineSimilarity(ithEmbed.ada_v2, embeddings[100].ada_v2);  
          if (ithScore > maxScore)   {    
             maxScore = ithScore;
             bestMatch = i;
          }
       }
-
-      expect (bestMatch === 0).toBe (true);
-   });
+      expect (bestMatch === 100).toBe (true);
+   }).timeout (2000);
 
    it("Needs to find closest match for a query", async function () {
       
-      let embeddings = new Array<Embedding>();
-      embeddings = embeddingsFile as Array<Embedding>;
+      let embeddings = new Array<LiteYouTubeEmbedding>();
+      embeddings = liteYouTubeEmbeddings as Array<LiteYouTubeEmbedding>;
 
-      let maxScore = -1.0;
-      let bestMatch = -1.0;
-      let query = "Perceptron & Generalized Linear Model";
+      let query = embeddings[100].summary;
 
-      //const client = new OpenAI();
-      // const engine = "text-embedding-3-small"; 
       const client = new AiConnector();
       let connection = await AiConnector.connect (KStubEnvironmentVariables.JoinKey);      
 
       const embedding = await connection.createEmbedding (query);
+      let best = YouTubeRespository.lookUpMostSimilar (embedding);
 
-      for (let i = 0; i < embeddings.length; i++) {
+      expect (best.sources.length === kKnowledgeSourceCount).toBe (true);
 
-         let ithEmbed = embeddings[i];
-         let ithScore  = cosineSimilarity(ithEmbed.ada_v2, embedding);  
-         if (ithScore > maxScore)   {    
-            maxScore = ithScore;
-            bestMatch = i;
-         }
-      }
+      // Cheat is a direct look up from the old embedding code - check it is in the ranking.
+      let cheat = YouTubeRespository.lookUpMostSimilar (embeddings[100].ada_v2);
 
-      expect (bestMatch > 0).toBe (true);
-      expect (bestMatch <= embeddings.length).toBe (true);
+      expect ((best.sources[0].summary === embeddings[100].summary)
+                || (best.sources[1].summary === embeddings[100].summary)
+                || (best.sources[2].summary === embeddings[100].summary)).toBe (true);            
+   }).timeout (2000);
 
-      console.log (embeddings[bestMatch].summary);
-   });
+
+   it("Needs to find closest match for a simple query", async function () {
+      
+      let embeddings = new Array<LiteYouTubeEmbedding>();
+      embeddings = liteYouTubeEmbeddings as Array<LiteYouTubeEmbedding>;
+
+      let query = "Trolly chicken dilemma chicks"
+
+      const client = new AiConnector();
+      let connection = await AiConnector.connect (KStubEnvironmentVariables.JoinKey);      
+
+      const embedding = await connection.createEmbedding (query);
+      let best = YouTubeRespository.lookUpMostSimilar (embedding);
+
+      expect (best.sources.length === kKnowledgeSourceCount).toBe (true);       
+   }).timeout (2000);   
+
+   it("Needs to find closest match for an irrelevant query", async function () {
+      
+      let embeddings = new Array<LiteYouTubeEmbedding>();
+      embeddings = liteYouTubeEmbeddings as Array<LiteYouTubeEmbedding>;
+
+      let query = "Human baby animals cute cats dogs"
+
+      const client = new AiConnector();
+      let connection = await AiConnector.connect (KStubEnvironmentVariables.JoinKey);      
+
+      const embedding = await connection.createEmbedding (query);
+      let best = YouTubeRespository.lookUpMostSimilar (embedding);
+
+      expect (best.sources.length === kKnowledgeSourceCount).toBe (true);        
+   }).timeout (2000);     
 });
 

@@ -17,6 +17,7 @@ import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } fr
 import { AiConnection, AiConnector } from '../core/AIConnection';
 import { EUIStrings } from './UIStrings';
 import { EConfigStrings } from '../core/ConfigStrings';
+import { KnowledgeEnrichedMessage } from '../core/Knowledge';
 
 export interface IConversationControllerProps {
 
@@ -181,15 +182,16 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
             let query = AiConnection.makeOpenAiQuery (messageArray, audienceMap);
 
-            connection.queryAI (query).then ((result_: string) => {
+            connection.queryAI (messageText_, query).then ((result_: KnowledgeEnrichedMessage) => {
 
                console.log ("AI:" + result_);
                
                // set up a message to append
                let message = new Message ();
                message.authorId = EConfigStrings.kBotGuid;
-               message.text = result_;
+               message.text = result_.message;
                message.sentAt = new Date();
+               message.sources = result_.sources; // Add KnowledgeSources
 
                // Push it to shared data
                fluidMessagesConnection.messageCaucus().add (message.id, message);

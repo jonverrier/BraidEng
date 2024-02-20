@@ -13,6 +13,7 @@ import { throwIfUndefined } from './Asserts';
 import { ConnectionError } from "./Errors";
 import { KeyRetriever } from "./KeyRetriever";
 import { Environment, EEnvironment } from "./Environment";
+import { KnowledgeEnrichedMessage, YouTubeRespository } from "./Knowledge";
 
 // Logging handler
 const logger = {
@@ -38,14 +39,14 @@ export class AiConnection {
    }  
 
    // Makes an Axios call to call web endpoint
-   async queryAI  (query: Array<Object>) : Promise<string> {
+   async queryAI  (mostRecent: string, allMessages: Array<Object>) : Promise<KnowledgeEnrichedMessage> {
       
       this._activeCallCount++;
 
       var response : any = null;
 
       await axios.post('https://api.openai.com/v1/chat/completions', {
-         messages: query,
+         messages: allMessages,
          model: "gpt-3.5-turbo",
       },
       {
@@ -69,7 +70,11 @@ export class AiConnection {
       if (!response)
          throw new ConnectionError(EConfigStrings.kErrorConnectingToAiAPI);      
 
-      return response.data.choices[0].message.content as string;
+      let embedding = await this.createEmbedding (mostRecent);
+
+      let enriched = YouTubeRespository.lookUpMostSimilar (embedding);
+
+      return new KnowledgeEnrichedMessage (response.data.choices[0].message.content as string, enriched.sources);
    }    
 
       // Makes an Axios call to call web endpoint
@@ -81,7 +86,7 @@ export class AiConnection {
    
       await axios.post('https://api.openai.com/v1/embeddings', {
          input: input,
-         model: "text-embedding-3-small",
+         model: "text-embedding-ada-002",
       },
       {
          headers: {

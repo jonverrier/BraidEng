@@ -20,7 +20,8 @@
    "include": [
       "./core/**/*.ts",
       "./ui/**/*.tsx",
-      "./test/**/*.test.ts"
+      "./test/**/*.test.ts",
+      "./scripts/**/*.ts"      
    ],
    "exclude": [
       "./node_modules"

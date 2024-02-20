@@ -1,5 +1,5 @@
 'use strict';
-// Copyright Braid Technologies ltd, 2021
+// Copyright Braid Technologies ltd, 2024
 import { throwIfUndefined } from '../core/Asserts';
 import { Message} from '../core/Message';
 import { Persona} from '../core/Persona';
@@ -104,37 +104,16 @@ describe("AIConnection", function () {
       messages[1] = botRequest;
       messages[2] = botMessage;
 
-      let query = AiConnection.makeOpenAiQuery (messages, authors);
+      let fullQuery = AiConnection.makeOpenAiQuery (messages, authors);
 
       throwIfUndefined(process);
       throwIfUndefined(process.env);
       throwIfUndefined(process.env.OPENAI_API_KEY);        
       let caller = new AiConnection(process.env.OPENAI_API_KEY);
 
-      let result = await caller.queryAI (query);
+      let result = await caller.queryAI (botRequest.text, fullQuery);
 
-      console.log (result);
-
-      expect (result.length > 0).toBe(true);
-
-      /*
-      axios.post('https://api.openai.com/v1/chat/completions', {
-         messages: query,
-         model: "gpt-3.5-turbo",
-      },
-      {
-      headers: {
-         'Content-Type': 'application/json',
-         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-      }
-      })
-      .then((response : any) => {
-         console.log(response.data.choices[0].message.content);
-      })
-      .catch((error: any) => {
-         console.error(error);
-      });
-      */
+      expect (result.message.length > 0).toBe(true);
    });   
 });
 

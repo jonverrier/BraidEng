@@ -16,6 +16,8 @@ ui/*.js
 ui/*.js.map
 test/*.js
 test/*.js.map
+scripts/*.js
+scripts/*.js.map
 coverage/*
 .nyc_output/*
 dist/*
