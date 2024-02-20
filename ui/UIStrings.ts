@@ -15,11 +15,12 @@ export enum EUIStrings {
    kJoinApiError = "Sorry, we were not able to connect to the conversation.",
    kAiApiError = "Sorry, we were not able to connect to the AI.",   
 
-   kSendMessagePreamble = "Type a message here. If you want the Braid Bot to reply, put '@BraidBot' in the message. Only messages with the phrase '@BraidBot' are read by the bot, and it reads all of them to keep the overall context.",
+   kSendMessagePreamble = "Type a message here. If you want the Braid Bot to reply, put '@Braid' in the message. Only and all messages with the phrase '@Braid' are read by the bot.",
    kSendButtonPrompt = "Send",
    kSendMessagePlaceholder = "Write a message... ",   
    kCopyJoinKeyButtonPrompt = "Copy the joining key",
    kDeleteConversationButtonPrompt = "Delete the history of this conversation",
 
+   kAiNoGoodSources = "I dont have any good sources for this answer.",
    kAiContentWarning = "AI can make mistakes. Consider checking important information."
 };

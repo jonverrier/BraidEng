@@ -14,12 +14,14 @@
       "sourceMap": true,
       "jsx": "react",
       "isolatedModules": true,    
-      "moduleResolution": "Node"
+      "moduleResolution": "Node",
+      "resolveJsonModule" : true
    },
    "include": [
       "./core/**/*.ts",
       "./ui/**/*.tsx",
-      "./test/**/*.test.ts"
+      "./test/**/*.test.ts",
+      "./scripts/**/*.ts"      
    ],
    "exclude": [
       "./node_modules"

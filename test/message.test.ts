@@ -1,9 +1,10 @@
 'use strict';
-// Copyright Braid Technologies ltd, 2021
+// Copyright Braid Technologies ltd, 2024
 import { MDynamicStreamable } from '../core/StreamingFramework';
 import { Message} from '../core/Message';
 import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
+import { KnowledgeSource } from '../core/Knowledge';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -142,6 +143,23 @@ describe("Message", function () {
       expect(message1.equals(messageNew)).toEqual(true);
    });
 
+   it("Needs to convert to and from JSON() with KnowledgeSources attached", function () {
+
+      let ks1 = new KnowledgeSource(message1.id, message1.text, new Array<number>(), undefined, undefined);
+      let messageWithSources = new Message (message1);
+
+      let sources = new Array<KnowledgeSource> ();
+      sources.push (ks1);
+      messageWithSources.sources = sources;      
+      var stream: string = messageWithSources.streamOut();
+
+      var messageNew: Message = new Message(message1.id, message1.authorId, message1.responseToId, message1.text, message1.sentAt);
+
+      messageNew.streamIn(stream);
+
+      expect(messageWithSources.equals(messageNew)).toEqual(true);
+   });   
+
    it("Needs to dynamically create Message to and from JSON()", function () {
 
       var stream: string = message1.flatten();
@@ -154,5 +172,25 @@ describe("Message", function () {
 
       expect(message1.equals(messageNew)).toEqual(true);
    });
+
+   it("Needs to dynamically create Message to and from JSON() with KnowledgeSources attached", function () {
+
+      let ks1 = new KnowledgeSource(message1.id, message1.text, new Array<number>(), undefined, undefined);
+      let messageWithSources = new Message (message1);
+
+      let sources = new Array<KnowledgeSource> ();
+      sources.push (ks1);
+      messageWithSources.sources = sources;      
+     
+      var stream: string = messageWithSources.flatten();
+
+      var messageNew: Message = new Message();
+
+      expect(messageWithSources.equals(messageNew)).toEqual(false);
+
+      messageNew = MDynamicStreamable.resurrect(stream) as Message;
+
+      expect(messageWithSources.equals(messageNew)).toEqual(true);
+   });   
 
 });

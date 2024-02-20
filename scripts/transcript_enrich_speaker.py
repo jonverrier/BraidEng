@@ -22,9 +22,9 @@ from tenacity import (
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-API_KEY = os.environ["AZURE_OPENAI_API_KEY"]
-RESOURCE_ENDPOINT = os.environ["AZURE_OPENAI_ENDPOINT"]
-TRANSCRIPT_FOLDER = "transcripts"
+API_KEY = os.environ["OPENAI_API_KEY"] #AZURE VERSION WAS os.environ["AZURE_OPENAI_API_KEY"] 
+RESOURCE_ENDPOINT = "https://api.openai.com/v1" #AZURE VERSION WAS os.environ["AZURE_OPENAI_ENDPOINT"] 
+TRANSCRIPT_FOLDER = "../data/transcripts"
 PROCESSING_THREADS = 10
 SEGMENT_MIN_LENGTH_MINUTES = 3
 OPENAI_REQUEST_TIMEOUT = 60
@@ -35,10 +35,10 @@ AZURE_OPENAI_MODEL_DEPLOYMENT_NAME = os.getenv(
 )
 
 
-openai.api_type = "azure"
+openai.api_type = "open_ai" #AZURE VERSION WAS "Azure"
 openai.api_key = API_KEY
 openai.api_base = RESOURCE_ENDPOINT
-openai.api_version = "2023-07-01-preview"
+openai.api_version = "2020-11-07" #AZURE VERSION WAS "2023-07-01-preview"
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--folder")
@@ -109,7 +109,7 @@ def get_speaker_info(text):
     arguments = None
 
     response_1 = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo-0613",
+        model="gpt-3.5-turbo",
         messages=[
             {
                 "role": "system",
@@ -119,7 +119,7 @@ def get_speaker_info(text):
         ],
         functions=openai_functions,
         max_tokens=OPENAI_MAX_TOKENS,
-        engine=AZURE_OPENAI_MODEL_DEPLOYMENT_NAME,
+        #AZURE VERSION WAS engine=AZURE_OPENAI_MODEL_DEPLOYMENT_NAME,
         request_timeout=OPENAI_REQUEST_TIMEOUT,
         function_call={"name": "get_speaker_name"},
         temperature=0.0,

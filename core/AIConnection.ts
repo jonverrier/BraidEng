@@ -13,6 +13,7 @@ import { throwIfUndefined } from './Asserts';
 import { ConnectionError } from "./Errors";
 import { KeyRetriever } from "./KeyRetriever";
 import { Environment, EEnvironment } from "./Environment";
+import { KnowledgeEnrichedMessage, YouTubeRespository } from "./Knowledge";
 
 // Logging handler
 const logger = {
@@ -23,7 +24,7 @@ const logger = {
    [LogLevel.DEBUG]: (tag, msg, params) => console.log(msg, ...params),
 } as Record<LogLevel, (tag: string, msg: unknown, params: unknown[]) => void>;
 
-export class AIConnection {
+export class AiConnection {
 
    private _activeCallCount: number;
    private _key: string;   
@@ -38,14 +39,14 @@ export class AIConnection {
    }  
 
    // Makes an Axios call to call web endpoint
-   async callAI  (query: Array<Object>) : Promise<string> {
+   async queryAI  (mostRecent: string, allMessages: Array<Object>) : Promise<KnowledgeEnrichedMessage> {
       
       this._activeCallCount++;
 
       var response : any = null;
 
       await axios.post('https://api.openai.com/v1/chat/completions', {
-         messages: query,
+         messages: allMessages,
          model: "gpt-3.5-turbo",
       },
       {
@@ -69,8 +70,47 @@ export class AIConnection {
       if (!response)
          throw new ConnectionError(EConfigStrings.kErrorConnectingToAiAPI);      
 
-      return response.data.choices[0].message.content as string;
+      let embedding = await this.createEmbedding (mostRecent);
+
+      let enriched = YouTubeRespository.lookUpMostSimilar (embedding);
+
+      return new KnowledgeEnrichedMessage (response.data.choices[0].message.content as string, enriched.sources);
    }    
+
+      // Makes an Axios call to call web endpoint
+   async createEmbedding  (input: string) : Promise<Array<number>> {
+      
+      this._activeCallCount++;
+   
+      var response : any = null;
+   
+      await axios.post('https://api.openai.com/v1/embeddings', {
+         input: input,
+         model: "text-embedding-ada-002",
+      },
+      {
+         headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this._key}`
+         }
+      })
+      .then((resp : any) => {
+   
+         response = resp;
+         this._activeCallCount--;         
+      })
+         .catch((error: any) => {
+   
+         this._activeCallCount--;     
+   
+         logger.ERROR (EConfigStrings.kApiLogCategory, EConfigStrings.kErrorConnectingToAiAPI, [error]);
+      });
+   
+      if (!response)
+         throw new ConnectionError(EConfigStrings.kErrorConnectingToAiAPI);      
+
+      return response.data.data[0].embedding as Array<number>;
+   } 
 
    isBusy () {
       return this._activeCallCount !== 0;
@@ -85,14 +125,14 @@ export class AIConnection {
 
       for (const message of messages) {
 
-         if (AIConnection.isBotRequest(message, authors)) {
+         if (AiConnection.isBotRequest(message, authors)) {
 
             let edited = message.text.replace (EConfigStrings.kBotRequestSignature, "");
             let entry = { role: 'user', content: edited };
             builtQuery.push (entry);
          }
 
-         if (AIConnection.isBotMessage(message, authors)) {
+         if (AiConnection.isBotMessage(message, authors)) {
             let entry = { role: 'assistant', content: message.text };
             builtQuery.push (entry);
          }         
@@ -123,7 +163,7 @@ export class AIConnection {
 
 export class AiConnector {
    
-   static async connect (joinKey_: string) : Promise<AIConnection> {
+   static async connect (joinKey_: string) : Promise<AiConnection> {
 
       let retriever = new KeyRetriever ();
       var url: string;
@@ -137,6 +177,6 @@ export class AiConnector {
                                        EConfigStrings.kRequestKeyParameterName, 
                                        joinKey_);
 
-      return new AIConnection (aiKey);
+      return new AiConnection (aiKey);
    }
 }

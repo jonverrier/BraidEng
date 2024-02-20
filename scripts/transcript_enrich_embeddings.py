@@ -19,15 +19,15 @@ from tenacity import (
 )
 from rich.progress import Progress
 
-API_KEY = os.environ["AZURE_OPENAI_API_KEY"]
-RESOURCE_ENDPOINT = os.environ["AZURE_OPENAI_ENDPOINT"]
-PROCESSING_THREADS = 6
+API_KEY = os.environ["OPENAI_API_KEY"] #AZURE VERSION WAS os.environ["AZURE_OPENAI_API_KEY"] 
+RESOURCE_ENDPOINT = "https://api.openai.com/v1" #AZURE VERSION WAS os.environ["AZURE_OPENAI_ENDPOINT"] 
+PROCESSING_THREADS = 4
 OPENAI_REQUEST_TIMEOUT = 60
 
-openai.api_type = "azure"
+openai.api_type = "open_ai" #AZURE VERSION WAS "Azure"
 openai.api_key = API_KEY
 openai.api_base = RESOURCE_ENDPOINT
-openai.api_version = "2023-05-15"
+openai.api_version = "2020-11-07" #AZURE VERSION WAS "2023-07-01-preview"
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)

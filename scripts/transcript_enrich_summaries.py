@@ -15,19 +15,19 @@ from tenacity import (
 )
 from rich.progress import Progress
 
-API_KEY = os.environ["AZURE_OPENAI_API_KEY"]
-RESOURCE_ENDPOINT = os.environ["AZURE_OPENAI_ENDPOINT"]
+API_KEY = os.environ["OPENAI_API_KEY"] #AZURE VERSION WAS os.environ["AZURE_OPENAI_API_KEY"] 
+RESOURCE_ENDPOINT = "https://api.openai.com/v1" #AZURE VERSION WAS os.environ["AZURE_OPENAI_ENDPOINT"] 
 AZURE_OPENAI_MODEL_DEPLOYMENT_NAME = os.getenv(
     "AZURE_OPENAI_MODEL_DEPLOYMENT_NAME", "gpt-35-turbo"
 )
 MAX_TOKENS = 512
-PROCESSOR_THREADS = 10
-OPENAI_REQUEST_TIMEOUT = 30
+PROCESSOR_THREADS = 4
+OPENAI_REQUEST_TIMEOUT = 60
 
-openai.api_type = "azure"
+openai.api_type = "open_ai" #AZURE VERSION WAS "Azure"
 openai.api_key = API_KEY
 openai.api_base = RESOURCE_ENDPOINT
-openai.api_version = "2023-07-01-preview"
+openai.api_version = "2020-11-07" #AZURE VERSION WAS "2023-07-01-preview"
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -75,19 +75,21 @@ counter = Counter()
     stop=stop_after_attempt(20),
     retry=retry_if_not_exception_type(openai.InvalidRequestError),
 )
+
 def chatgpt_summary(text):
     """generate a summary using chatgpt"""
 
     messages = [
         {
             "role": "system",
-            "content": "You're an AI Assistant for video, write an authoritative 60 word summary.Avoid starting sentences with 'This video'.",
+            "content": "You're an AI Assistant for video, write an authoritative 50 word summary.Avoid starting sentences with 'This video' or 'The video'.",
         },
         {"role": "user", "content": text},
     ]
 
     response = openai.ChatCompletion.create(
-        engine=AZURE_OPENAI_MODEL_DEPLOYMENT_NAME,
+        #AZURE VERSION WAS engine=AZURE_OPENAI_MODEL_DEPLOYMENT_NAME,
+        model="gpt-3.5-turbo",
         messages=messages,
         temperature=0.7,
         max_tokens=MAX_TOKENS,
@@ -104,7 +106,7 @@ def chatgpt_summary(text):
     finish_reason = response.get("choices", [])[0].get("finish_reason", "")
 
     # print(finish_reason)
-    if finish_reason != "stop":
+    if finish_reason != "stop" and finish_reason != 'length' and finish_reason != "":
         logger.warning("Stop reason: %s", finish_reason)
         logger.warning("Text: %s", text)
         logger.warning("Increase Max Tokens and try again")

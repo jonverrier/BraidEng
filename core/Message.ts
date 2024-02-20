@@ -6,6 +6,8 @@ import { throwIfUndefined } from './Asserts';
 import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 import { MDynamicStreamable, DynamicStreamableFactory } from "./StreamingFramework";
+import { areSameDate, areSameDeepArray } from './Utilities';
+import { KnowledgeSource } from './Knowledge';
 
 var keyGenerator: IKeyGenerator = new UuidKeyGenerator();
 
@@ -18,6 +20,7 @@ export class Message extends MDynamicStreamable {
    private _responseToId: string | undefined;   
    private _text: string;
    private _sentAt: Date;
+   private _sources: Array<KnowledgeSource>;
 
    /**
     * Create an empty Message object - required for particiation in serialisation framework
@@ -36,6 +39,18 @@ export class Message extends MDynamicStreamable {
 
    /**
     * Create a Message object
+    * @param id_ - id to use to generate uniqueness 
+    * @param authorId_ - Id of the person who sent it
+    * @param responseToId_ - id of the message to which it is a response, can be undefined
+    * @param text_ - the message body
+    * @param sentAt - timestamp for last interaction seen by the framework
+    * @param sources_ - relevent knowledge sources that help understand / provide context for the message. 
+    */
+   public constructor(id_: string | undefined, authorId_: string | undefined, responseToId_: string | undefined, text_: string, sentAt: Date,
+                      sources_: Array<KnowledgeSource>);
+
+   /**
+    * Create a Message object
     * @param message - object to copy from - should work for JSON format and for real constructed objects
     */
    public constructor(message: Message);
@@ -51,6 +66,7 @@ export class Message extends MDynamicStreamable {
          this._responseToId = undefined;
          this._text = "";         
          this._sentAt = new Date();
+         this._sources = new Array<KnowledgeSource> ();
          return;
       }
 
@@ -59,6 +75,7 @@ export class Message extends MDynamicStreamable {
       var localResponseToId: string;
       var localText: string;
       var localSentAt: Date;
+      var localSources: Array<KnowledgeSource>;
 
       if (arr.length === 1) {
          localId = arr[0]._id
@@ -66,13 +83,23 @@ export class Message extends MDynamicStreamable {
          localResponseToId = arr[0]._responseToId;
          localText = arr[0]._text;         
          localSentAt = new Date(arr[0]._sentAt);
+         localSources = arr[0]._sources;
+      }
+      else if (arr.length === 5) {
+         localId = arr[0];
+         localAuthorId = arr[1];      
+         localResponseToId = arr[2];
+         localText = arr[3];           
+         localSentAt = new Date (arr[4]); 
+         localSources = new Array<KnowledgeSource>();         
       }
       else { 
          localId = arr[0];
          localAuthorId = arr[1];      
          localResponseToId = arr[2];
          localText = arr[3];           
-         localSentAt = new Date (arr[4]);
+         localSentAt = new Date (arr[4]);         
+         localSources = arr[5];
       }
 
       if (!Message.isValidId(localId)) {
@@ -84,6 +111,7 @@ export class Message extends MDynamicStreamable {
       this._responseToId = localResponseToId;      
       this._text = localText;
       this._sentAt = localSentAt;
+      this._sources = localSources;
    }
 
    /**
@@ -101,14 +129,22 @@ export class Message extends MDynamicStreamable {
    static _dynamicStreamableFactory: DynamicStreamableFactory = new DynamicStreamableFactory(className, Message.createDynamicInstance);
    streamOut(): string {
 
-      return JSON.stringify({ id: this._id, authorId: this._authorId, responseToId: this._responseToId, text: this._text, sentAt: this._sentAt });
+      return JSON.stringify({ id: this._id, authorId: this._authorId, responseToId: this._responseToId, text: this._text, sentAt: this._sentAt,
+                              sources: this._sources});
    }
 
    streamIn(stream: string): void {
 
       const obj = JSON.parse(stream);
 
-      this.assign(new Message (obj.id, obj.authorId, obj.responseToId, obj.text, new Date(obj.sentAt)));
+      let sources = new Array<KnowledgeSource> (); 
+
+      for (let i = 0; i < obj.sources.length; i++) {
+         let newSource = new KnowledgeSource (obj.sources[i]);
+         sources.push (newSource);
+      }      
+
+      this.assign(new Message (obj.id, obj.authorId, obj.responseToId, obj.text, new Date(obj.sentAt), sources));
    }
 
    /**
@@ -128,6 +164,9 @@ export class Message extends MDynamicStreamable {
    }
    get sentAt(): Date {
       return this._sentAt;
+   }
+   get sources(): Array<KnowledgeSource> {
+      return this._sources;
    }
    get checkedResponseToId(): string {
       throwIfUndefined (this._responseToId);        
@@ -165,6 +204,10 @@ export class Message extends MDynamicStreamable {
       this._sentAt = new Date(sentAt_);
    }
 
+   set sources (sources_: Array<KnowledgeSource>) {
+      this._sources = sources_;
+   }
+
    /**
     * test for equality - checks all fields are the same. 
     * Uses field values, not identity bcs if objects are streamed to/from JSON, field identities will be different. 
@@ -176,14 +219,8 @@ export class Message extends MDynamicStreamable {
          (this._authorId === rhs._authorId) &&
          ((this._responseToId === undefined && rhs._responseToId === undefined) || (this._responseToId === rhs._responseToId)) &&         
          (this._text === rhs._text) &&         
-         (this.areSameDate (this._sentAt, rhs._sentAt)));
-   }
-
-   areSameDate (lhs: Date, rhs : Date) : boolean {
-      if (lhs.getTime() === rhs.getTime()) {
-         return true;
-      }
-      return false;
+         (areSameDate (this._sentAt, rhs._sentAt)) &&
+         areSameDeepArray (this._sources, rhs._sources));
    }
 
    /**
@@ -196,6 +233,7 @@ export class Message extends MDynamicStreamable {
       this._responseToId = rhs._responseToId;      
       this._text = rhs._text;
       this._sentAt = new Date (rhs._sentAt);
+      this._sources = rhs._sources;
 
       return this;
    }

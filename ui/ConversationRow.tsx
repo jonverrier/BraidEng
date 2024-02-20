@@ -11,6 +11,7 @@ import {
    Tooltip, 
    Body1,
    Caption1,
+   Link,
    Text, 
    Input, 
    InputOnChangeData,
@@ -36,6 +37,7 @@ import { EConfigStrings }  from '../core/ConfigStrings';
 import { JoinKey } from '../core/JoinKey';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
+import { KnowledgeSource } from '../core/Knowledge';
 import { EUIStrings } from './UIStrings';
 import { innerColumnFooterStyles, innerColumnStyles, textFieldStyles } from './ColumnStyles';
 
@@ -292,19 +294,92 @@ const singleMessageTextColumn = makeStyles({
    },
 });
 
+const sourcesRow = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'left'
+   },
+});
+
+const sourcesHeader = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'left'
+   },
+});
+
 const padAfterMessage = makeStyles({
    root: {    
       marginBottom: '10px'    
    },
 });
 
+const padAfterLink = makeStyles({
+   root: {    
+      marginRight: '10px'    
+   },
+});
+
+const green = makeStyles({
+   root: {    
+      color: 'green'    
+   },
+});
+
+const amber = makeStyles({
+   root: {    
+      color: 'orange'    
+   },
+});
 
 export const SingleMessageView = (props: ISingleMessageViewProps) => {
 
    const singleMessageRowClasses = singleMessageRow();
    const singleMessageIconColumnClasses = singleMessageIconColumn();
    const singleMessageTextColumnClasses = singleMessageTextColumn();
+   const sourcesClasses = sourcesRow();
+   const sourcesHeaderClasses = sourcesHeader();   
    const padAfterMessageClasses = padAfterMessage();  
+   const padAfterLinkClasses = padAfterLink();
+   const greenClasses = green();
+   const amberClasses = amber();
+
+   var aiSources;
+   var aiFooter;   
+
+   if (props.showAiWarning) {
+      
+      if (props.message.sources.length > 0) { 
+
+         aiSources = props.message.sources.map ((knowledgeSource : KnowledgeSource) => {
+   
+            let relevanceText = knowledgeSource.relevance ? (knowledgeSource.relevance * 100).toPrecision(2) + '%': "";
+            let relevanceClasses = knowledgeSource.relevance ? knowledgeSource.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
+   
+            return (<div className={sourcesClasses.root}>
+               <div className={sourcesHeaderClasses.root}>
+                  <Link target='_blank' className={padAfterLinkClasses.root} 
+                     href={knowledgeSource.url}>{knowledgeSource.url}
+                  </Link>
+                  <Body1 className={relevanceClasses.root}> {relevanceText} </Body1>
+               </div>
+               <Body1 className={sourcesHeaderClasses.root}> {knowledgeSource.summary} </Body1>
+            </div>      
+   
+         )})      
+      }
+      else {
+         aiSources = <Text size={100}> {EUIStrings.kAiNoGoodSources} </Text>;  
+      }
+
+      aiFooter = <Text size={100}> {EUIStrings.kAiContentWarning} </Text>;
+   } 
+   else {
+      aiFooter = <div/>;
+      aiSources = <div/>;
+   }
 
    return (
       <div className={singleMessageRowClasses.root}>
@@ -312,13 +387,13 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
             <AuthorIcon author={props.author}/>            
          </div>   
          <div className={singleMessageTextColumnClasses.root}>
-            <Body1><b>{props.author.name}</b></Body1>     
-            <Caption1 className={padAfterMessageClasses.root}>{props.message.text}</Caption1>             
-            {props.showAiWarning  
-               ? <Text size={100}> {EUIStrings.kAiContentWarning} </Text>
-               : <div/>
-            }
-         </div>                
+            <Caption1><b>{props.author.name}</b></Caption1>     
+            <Body1 className={padAfterMessageClasses.root}>{props.message.text}</Body1>   
+            {aiSources}  
+            <div className={padAfterMessageClasses.root}></div>                     
+            {aiFooter}
+            <div className={padAfterMessageClasses.root}></div> 
+         </div>              
       </div>);    
 }
 
