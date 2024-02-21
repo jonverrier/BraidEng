@@ -371,7 +371,7 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
          )})      
       }
       else {
-         aiSources = <Text size={100}> {EUIStrings.kAiNoGoodSources} </Text>;  
+         aiSources = <Text size={100} className={amberClasses.root}> {EUIStrings.kAiNoGoodSources} </Text>;  
       }
 
       aiFooter = <Text size={100}> {EUIStrings.kAiContentWarning} </Text>;

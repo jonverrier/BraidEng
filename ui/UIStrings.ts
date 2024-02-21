@@ -21,6 +21,6 @@ export enum EUIStrings {
    kCopyJoinKeyButtonPrompt = "Copy the joining key",
    kDeleteConversationButtonPrompt = "Delete the history of this conversation",
 
-   kAiNoGoodSources = "I dont have any good sources for this answer.",
+   kAiNoGoodSources = "I don't have any good sources for this answer.",
    kAiContentWarning = "AI can make mistakes. Consider checking important information."
 };
