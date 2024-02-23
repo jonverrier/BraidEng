@@ -8,11 +8,12 @@
 # 5. Enrich the transcripts with embeddings
 # 6. Enrich the transcripts with lite embeddings - removes the text property
 
-
+export MARKDOWN_FOLDER=../data/markdown
 export TRANSCRIPT_FOLDER=../data/transcripts
 export TRANSCRIPT_BUCKET_MINUTES=3
 
 mkdir -p $TRANSCRIPT_FOLDER/output
+mkdir -p $MARKDOWN_FOLDER/output
 
 #python3 transcript_download.py -f $TRANSCRIPT_FOLDER -p PLoROMvodv4rMiGQp3WXShtMGgzqpfVfbU
 ##python3 transcript_download.py -f $TRANSCRIPT_FOLDER -p PLoROMvodv4rOSH4v6133s9LFPRHjEmbmJ
@@ -30,5 +31,15 @@ fi
 
 # bash test ./output/master_enriched_lite.json file exists then rename it to include segment minutes
 if [ -f "./$TRANSCRIPT_FOLDER/output/master_enriched_lite.json" ]; then
-    mv ./$TRANSCRIPT_FOLDER/output/master_enriched_lite.json ./$TRANSCRIPT_FOLDER/output/embedding_index_${TRANSCRIPT_BUCKET_MINUTES}m.json
+    mv ./$TRANSCRIPT_FOLDER/output/master_enriched_lite.json ./$TRANSCRIPT_FOLDER/output/embedding_index${TRANSCRIPT_BUCKET_MINUTES}m.json
+fi
+
+# bash test ./output/master_enriched.json file exists then rename it to include segment minutes
+if [ -f "./$MARKDOWN_FOLDER/output/master_enriched.json" ]; then
+    mv ./$MARKDOWN_FOLDER/output/master_enriched.json ./$MARKDOWN_FOLDER/output/embedding_index_full.json
+fi
+
+# bash test ./output/master_enriched_lite.json file exists then rename it to include segment minutes
+if [ -f "./$MARKDOWN_FOLDER/output/master_enriched_lite.json" ]; then
+    mv ./$MARKDOWN_FOLDER/output/master_enriched_lite.json ./$MARKDOWN_FOLDER/output/embedding_index_lite.json
 fi

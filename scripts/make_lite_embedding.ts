@@ -5,23 +5,21 @@ import { expect } from 'expect';
 import { describe, it } from 'mocha';
 import fs from 'node:fs/promises';
 
-import embeddingsFile from '../data/transcripts/output/embedding_index_full_3m.json';
-import { FullYouTubeEmbedding, LiteYouTubeEmbedding } from '../core/EmbeddingFormats';
+import youTubeEmbeddingsFile from '../data/transcripts/output/embedding_index_full_3m.json';
+import markdownEmbeddingsFile from '../data/markdown/output/embedding_index.json';
+import { FullEmbedding, LiteEmbedding } from '../core/EmbeddingFormats';
 
 
 describe("Embedding", function () {
  
-   it("Needs to build lite embeddings file", async function () {
-      
-      let embeddings = new Array<FullYouTubeEmbedding>();
-      embeddings = embeddingsFile as Array<FullYouTubeEmbedding>;
+   async function makeLite (embeddingsFull : Array<FullEmbedding>, embeddingsLiteFile : string) {
 
-      let embeddingsLite = new Array<LiteYouTubeEmbedding> ();
+      let embeddingsLite = new Array<LiteEmbedding> ();
 
-      for (let i = 0; i < embeddings.length; i++) {
+      for (let i = 0; i < embeddingsFull.length; i++) {
 
-         embeddingsLite.push ({videoId: embeddings[i].videoId, start: embeddings[i].start, seconds: embeddings[i].seconds, 
-                               summary: embeddings[i].summary, ada_v2: embeddings[i].ada_v2})
+         embeddingsLite.push ({sourceId: embeddingsFull[i].sourceId, start: embeddingsFull[i].start, seconds: embeddingsFull[i].seconds, 
+                               summary: embeddingsFull[i].summary, ada_v2: embeddingsFull[i].ada_v2})
       }
 
       var jsonContent = JSON.stringify(embeddingsLite);
@@ -29,14 +27,36 @@ describe("Embedding", function () {
       let caught = false;
 
       try {
-         let result = await fs.writeFile('core/youtube_embeddings_lite.json', jsonContent, 'utf8');
+         let result = await fs.writeFile(embeddingsLiteFile, jsonContent, 'utf8');
       }
       catch (e: any) {
          caught = true;
          console.log (e);
       }
 
-      expect (caught).toBe (false);
+      return !caught;
+   }
+
+   it("Needs to build lite YouTube embeddings file", async function () {
+      
+      let embeddings = new Array<FullEmbedding>();
+      embeddings = youTubeEmbeddingsFile as Array<FullEmbedding>;
+
+      let result = await makeLite (embeddings, 'core/youtube_embeddings_lite.json');
+
+
+      expect (result).toBe (true);
    });
+
+   it("Needs to build lite Markdown embeddings file", async function () {
+      
+      let embeddings = new Array<FullEmbedding>();
+      embeddings = markdownEmbeddingsFile as Array<FullEmbedding>;
+
+      let result = await makeLite (embeddings, 'core/markdown_embeddings_lite.json');
+
+
+      expect (result).toBe (true);
+   });   
 });
 

@@ -189,7 +189,7 @@ def parse_json_vtt_transcript(vtt, metadata):
 def get_transcript(metadata):
     """get the transcript from the .vtt file"""
     global total_files
-    vtt = os.path.join(TRANSCRIPT_FOLDER, metadata["videoId"] + ".json.vtt")
+    vtt = os.path.join(TRANSCRIPT_FOLDER, metadata["sourceId"] + ".json.vtt")
 
     # check that the .vtt file exists
     if not os.path.exists(vtt):
