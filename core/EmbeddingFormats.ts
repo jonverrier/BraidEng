@@ -30,3 +30,7 @@ export function makeYouTubeUrl (sourceId: string, startHms: string, seconds: num
    return 'https://www.youtube.com/watch?v=' + sourceId + '&t=' + h + 'h' + m + 'm' + s +'s';
 } 
 
+export function makeGithubUrl (sourceId: string) : string {
+
+   return 'https://github.com/' + sourceId;
+} 

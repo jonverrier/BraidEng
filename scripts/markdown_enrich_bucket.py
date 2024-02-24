@@ -185,7 +185,7 @@ def get_transcript(metadata):
     """get the transcript from the .mdd file"""
 
     global total_files
-    mdd = os.path.join(MARKDOWN_FOLDER, metadata["sourceId"] + ".json.mdd")
+    mdd = os.path.join(MARKDOWN_FOLDER, metadata["filename"])
 
     # check that the .mdd file exists
     if not os.path.exists(mdd):

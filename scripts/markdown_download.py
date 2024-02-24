@@ -16,8 +16,9 @@ from bs4 import BeautifulSoup
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-MARKDOWN_DEFAULT = "data\\markdown"
-REPO_DEFAULT = "..\\msintro"
+MARKDOWN_DEFAULT = "data/markdown"
+REPO_DEFAULT = "../msintro"
+REPO_PATH_START="microsoft/generative-ai-for-beginners/blob/main"
 
 MAX_RESULTS = 100
 PROCESSING_THREADS = 1
@@ -60,8 +61,11 @@ class Counter:
 
 counter = Counter()
 
-
-
+def makeSourceId(repoPath, filePath):
+   relPath = os.path.relpath(filePath, repoPath)
+   composite = REPO_PATH_START + '/' + relPath
+   unix = composite.replace("\\", "/")
+   return unix
 
 def md_to_plain_text(md):
     #    """Convert MD contents into plain text"""
@@ -74,9 +78,10 @@ def md_to_plain_text(md):
 def get_markdown(fileName, counter_id):
     """Read in Markdown content from a file and write out as plain text """
 
-    falseName = fileName.replace("\\", "_")
-    contentOutputFileName = os.path.join(MARKDOWN_FOLDER, falseName + ".json.mdd")
-    metaOutputFilename = os.path.join(MARKDOWN_FOLDER, falseName + ".json")
+    sourceId = makeSourceId (REPO_FOLDER, fileName)
+    fakeName = fileName.replace("\\", "_")
+    contentOutputFileName = os.path.join(MARKDOWN_FOLDER, fakeName + ".json.mdd")
+    metaOutputFilename = os.path.join(MARKDOWN_FOLDER, fakeName + ".json")
 
     # if markdown file already exists, skip it
     if os.path.exists(contentOutputFileName):
@@ -100,7 +105,8 @@ def get_markdown(fileName, counter_id):
     metadata = {}
     metadata["speaker"] = ""
     metadata["title"] = Path(fileName).name
-    metadata["sourceId"] = falseName
+    metadata["sourceId"] = sourceId
+    metadata["filename"] = os.path.basename(contentOutputFileName)   
     metadata["description"] = Path(fileName).name
 
     # save the metadata as a .json file
@@ -136,7 +142,6 @@ markdown_files = list(searchPath)
 # Build a queue of Markdown filenames
 for file in markdown_files:
     q.put (str(file))
-    print (str(file))
 
 logger.info("Total markdown files to be download: %s", q.qsize())
 

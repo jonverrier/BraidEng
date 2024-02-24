@@ -2,7 +2,7 @@
  
 import { MStreamable } from "./StreamingFramework";
 import { areSameDate, areSameShallowArray, areSameDeepArray} from './Utilities';
-import { LiteEmbedding, makeYouTubeUrl } from "../core/EmbeddingFormats";
+import { LiteEmbedding, makeYouTubeUrl, makeGithubUrl } from "../core/EmbeddingFormats";
 import liteYouTubeEmbeddings from '../core/youtube_embeddings_lite.json';
 import liteMarkdownEmbeddings from '../core/markdown_embeddings_lite.json';
 import { InvalidParameterError } from "./Errors";
@@ -324,8 +324,7 @@ export class KnowledgeRepository  {
       let bestSources = new KnowledgeSourceBuilder(similarityThresholdLo, howMany);
 
       YouTubeRespository.lookUpMostSimilar (embedding, bestSources);
-      MarkdownRespository.lookUpMostSimilar (embedding, bestSources);
-  
+      MarkdownRespository.lookUpMostSimilar (embedding, bestSources);  
 
       return bestSources;
    }   
@@ -367,7 +366,7 @@ class MarkdownRespository  {
 
       for (let i = 0; i < embeddings.length; i++) {
 
-         let url = makeYouTubeUrl (embeddings[i].sourceId, embeddings[i].start, embeddings[i].seconds);
+         let url = makeGithubUrl (embeddings[i].sourceId);
          let relevance = Number (cosineSimilarity (embedding, embeddings[i].ada_v2).toPrecision(2));
 
          let candidate = new KnowledgeSource (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, relevance);
