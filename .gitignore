@@ -18,6 +18,7 @@ test/*.js
 test/*.js.map
 scripts/*.js
 scripts/*.js.map
+scripts/__pycache__/*
 coverage/*
 .nyc_output/*
 dist/*

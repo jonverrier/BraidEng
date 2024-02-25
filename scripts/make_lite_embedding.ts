@@ -5,7 +5,7 @@ import { expect } from 'expect';
 import { describe, it } from 'mocha';
 import fs from 'node:fs/promises';
 
-import youTubeEmbeddingsFile from '../data/transcripts/output/embedding_index_full_3m.json';
+import youTubeEmbeddingsFile from '../data/transcripts/output/master_enriched.json';
 import markdownEmbeddingsFile from '../data/markdown/output/master_enriched.json';
 import { FullEmbedding, LiteEmbedding } from '../core/EmbeddingFormats';
 
