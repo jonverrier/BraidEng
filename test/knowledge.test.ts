@@ -1,6 +1,7 @@
 'use strict';
 // Copyright Braid Technologies ltd, 2024
-import { KnowledgeSource, KnowledgeSourceBuilder, KnowledgeEnrichedMessage} from '../core/Knowledge';
+import { KnowledgeSource, KnowledgeSourceBuilder, KnowledgeEnrichedMessage, 
+   kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSourceCount} from '../core/Knowledge';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -91,67 +92,28 @@ describe("KnowledgeSource", function () {
 
 describe("KnowledgeSourceBuilder", function () {
 
-   let ks1 = new KnowledgeSource(myUrl, mySummary, myAda, myTimeStamp, myRelevance);
-   let sources1 = new Array<KnowledgeSource> ();
-   sources1.push (ks1);
-   let matches1 = new KnowledgeSourceBuilder(sources1);
-
-   let ks2 = new KnowledgeSource(someoneElsesUrl, someoneElsesSummary, someoneElseAda, someoneElsesTimeStamp, someoneElsesRelevance);
-   let sources2 = new Array<KnowledgeSource> ();
-   sources2.push (ks2);
-   let matches2 = new KnowledgeSourceBuilder(sources2);   
-
    it("Needs to construct an empty object", function () {
 
-      var ksEmpty = new KnowledgeSourceBuilder();
+      let ksEmpty = new KnowledgeSourceBuilder(kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSourceCount);
 
       expect(ksEmpty.sources.length).toEqual(0);     
    });
 
    it("Needs to compare for equality and inequality", function () {
 
-      let matchesNew = new KnowledgeSourceBuilder(sources1);        
+      let ksEmpty = new KnowledgeSourceBuilder(kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSourceCount);      
+      let matchesNew = new KnowledgeSourceBuilder(-1, 3);        
 
-      expect(matches1.equals(matches1)).toEqual(true);     
-      expect(matches1.equals(matchesNew)).toEqual(true);
-      expect(matches1.equals(matches2)).toEqual(false);
-   });
-      
-   it("Needs to detect inequality on date", function () {
-
-      var ksNew: KnowledgeSource = new KnowledgeSource(ks1.url, ks1.summary, ks1.ada_v2, new Date(), ks1.relevance);
-      let sourcesNew = new Array<KnowledgeSource> ();
-      sourcesNew.push (ksNew);
-      let matchesNew = new KnowledgeSourceBuilder(sources2);
-
-      expect(matches1.equals(matchesNew)).toEqual(false);
+      expect(ksEmpty.equals(ksEmpty)).toEqual(true);     
+      expect(ksEmpty.equals(matchesNew)).toEqual(false);
    });
 
    it("Needs to correctly store attributes", function () {
          
-      expect(matches1.sources[0].summary === mySummary).toEqual(true);
-      throwIfUndefined (matches1.sources[0].timeStamp);
-      expect(matches1.sources[0].timeStamp.getTime() === myTimeStamp.getTime()).toEqual(true);
+      let ksEmpty = new KnowledgeSourceBuilder(kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSourceCount);          
+      expect(ksEmpty.similarityThreshold === kDefaultMinimumCosineSimilarity).toEqual(true);
+      expect(ksEmpty.howMany === kDefaultKnowledgeSourceCount).toEqual(true);
    });
-
-   it("Needs to copy construct", function () {
-
-      let matches2: KnowledgeSourceBuilder = new KnowledgeSourceBuilder(sources1);
-
-      expect(matches1.equals(matches2) === true).toEqual(true);
-   });
-
-   it("Needs to correctly change attributes", function () {
-
-      var matchesNew: KnowledgeSourceBuilder = new KnowledgeSourceBuilder(sources1);
-
-      expect(matches1.equals (matchesNew)).toEqual(true);      
-
-      matchesNew.sources = sources2;
-     
-      expect(matches1.equals (matchesNew)).toEqual(false);
-   });
-
 });
 
 describe("KnowledgeEnrichedMessage", function () {

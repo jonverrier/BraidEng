@@ -82,7 +82,7 @@ def chatgpt_summary(text):
     messages = [
         {
             "role": "system",
-            "content": "You're an AI Assistant for video, write an authoritative 50 word summary.Avoid starting sentences with 'This video' or 'The video'.",
+            "content": "You're an AI Assistant for video, write an authoritative 50 word summary.Avoid starting sentences with 'This document' or 'The document'.",
         },
         {"role": "user", "content": text},
     ]
@@ -199,8 +199,8 @@ def convert_time_to_seconds(value):
         return 0
 
 
-# sort the output segments by videoId and start
-output_segments.sort(key=lambda x: (x["videoId"], convert_time_to_seconds(x["start"])))
+# sort the output segments by sourceId and start
+output_segments.sort(key=lambda x: (x["sourceId"], convert_time_to_seconds(x["start"])))
 
 logger.debug("Total segments processed: %s", len(output_segments))
 

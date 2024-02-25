@@ -150,8 +150,8 @@ def convert_time_to_seconds(value):
         return 0
 
 
-# sort the output segments by videoId and start
-output_segments.sort(key=lambda x: (x["videoId"], convert_time_to_seconds(x["start"])))
+# sort the output segments by sourceId and start
+output_segments.sort(key=lambda x: (x["sourceId"], convert_time_to_seconds(x["start"])))
 
 logger.debug("Total segments processed: %s", len(output_segments))
 

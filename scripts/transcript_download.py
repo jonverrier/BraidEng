@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 GOOGLE_DEVELOPER_API_KEY = os.environ["GOOGLE_DEVELOPER_API_KEY"]
-TRANSCRIPT_FOLDER = "../data/transcripts"
+TRANSCRIPT_DEFAULT = "../data/transcripts"
 
 # Initialize the Google developer API client
 GOOGLE_API_SERVICE_NAME = "youtube"
@@ -37,7 +37,7 @@ args = parser.parse_args()
 if args.verbose:
     logger.setLevel(logging.DEBUG)
 
-TRANSCRIPT_FOLDER = args.folder if args.folder else None
+TRANSCRIPT_FOLDER = args.folder if args.folder else TRANSCRIPT_DEFAULT
 PLAYLIST_ID = args.playlist if args.playlist else None
 
 if not TRANSCRIPT_FOLDER:
@@ -75,7 +75,7 @@ def gen_metadata(playlist_item):
     metadata = {}
     metadata["speaker"] = ""
     metadata["title"] = playlist_item["snippet"]["title"]
-    metadata["videoId"] = playlist_item["snippet"]["resourceId"]["videoId"]
+    metadata["sourceId"] = playlist_item["snippet"]["resourceId"]["videoId"]
     metadata["description"] = playlist_item["snippet"]["description"]
 
     # save the metadata as a .json file

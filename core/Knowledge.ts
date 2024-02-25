@@ -2,9 +2,10 @@
  
 import { MStreamable } from "./StreamingFramework";
 import { areSameDate, areSameShallowArray, areSameDeepArray} from './Utilities';
-
-import { LiteYouTubeEmbedding, makeYouTubeUrl } from "../core/EmbeddingFormats";
+import { LiteEmbedding, makeYouTubeUrl, makeGithubUrl } from "../core/EmbeddingFormats";
 import liteYouTubeEmbeddings from '../core/youtube_embeddings_lite.json';
+import liteMarkdownEmbeddings from '../core/markdown_embeddings_lite.json';
+import { InvalidParameterError } from "./Errors";
 
 function copyTimeStamp (stamp: Date | undefined) : Date | undefined {
    return (typeof stamp === 'undefined') ? undefined : new Date(stamp);
@@ -182,8 +183,8 @@ export class KnowledgeSource extends MStreamable {
    }
 }
 
-export const kKnowledgeSourceCount: number = 3;
-export const kMinimumCosineSimilarity = 0.8;
+export const kDefaultKnowledgeSourceCount: number = 3;
+export const kDefaultMinimumCosineSimilarity = 0.8;
 
 /**
  * KnowledgeSources object
@@ -194,41 +195,35 @@ export const kMinimumCosineSimilarity = 0.8;
 export class KnowledgeSourceBuilder {
 
    private _sources: Array<KnowledgeSource>;
+   private _similarityThresholdLo: number;
+   private _howMany : number;
 
    /**
-    * Create an empty KnowledgeSources object - required for particiation in serialisation framework
+    * Create a KnowledgeSourceBuilder object
+    * @param similarityThresholdLo_ - lowest bar for similarity
+    * @param howMany_ - how many items to retrieve 
     */
-   public constructor();
+   public constructor(similarityThresholdLo_: number, howMany_: number) {
 
-   /**
-    * Create a KnowledgeSources object
-    * @param sources_: array of source objects
-    */
-   public constructor(sources_: Array<KnowledgeSource>);
+      if (similarityThresholdLo_ < -1 || similarityThresholdLo_ > 1)
+         throw new InvalidParameterError ("Cosine similarity must be between -1 and 1.");
 
-   public constructor(...arr: any[])
-   {
-      if (arr.length === 0) {   
-         this._sources = new Array<KnowledgeSource> ();                          
-         return;
-      }
-
-      this._sources = arr[0].slice(0);       
+      this._sources = new Array<KnowledgeSource> ();  
+      this._similarityThresholdLo = similarityThresholdLo_;
+      this._howMany = howMany_;            
    }
 
    /**
    * set of 'getters' for private variables
    */
+   get similarityThreshold (): number {
+      return this._similarityThresholdLo;
+   }   
+   get howMany (): number {
+      return this._howMany;
+   }        
    get sources (): Array<KnowledgeSource> {
       return this._sources;
-   }   
-
-   /**
-   * set of 'setters' for private variables
-   */
-   set sources(sources_: Array<KnowledgeSource>) {
-
-      this._sources = sources_;
    }   
 
    /**
@@ -238,25 +233,16 @@ export class KnowledgeSourceBuilder {
     */
    equals(rhs: KnowledgeSourceBuilder): boolean {
 
-      return (areSameDeepArray (this._sources, rhs._sources));
-   }
-
-   /**
-    * assignment operator 
-    * @param rhs - the object to assign this one from.  
-    */
-   assign(rhs: KnowledgeSourceBuilder): KnowledgeSourceBuilder {
-
-      this._sources = rhs._sources.slice(0);
-
-      return this;
+      return (this._howMany == rhs._howMany 
+         && this._similarityThresholdLo == rhs._similarityThresholdLo 
+         && areSameDeepArray (this._sources, rhs._sources));
    }
 
    /**
     * searches current most relevant results to see if the new one should be included.  
     * @param rhs - the object to assign this one from.  
     */
-   lowestOfCurrent (): number {
+   private lowestOfCurrent (): number {
 
       if (this._sources.length === 0)
          return -1;
@@ -287,8 +273,8 @@ export class KnowledgeSourceBuilder {
    replaceIfBeatsCurrent (candidate: KnowledgeSource): boolean {
 
       // If the array can grow we just add the new candidate
-      if (this._sources.length < kKnowledgeSourceCount) {
-         if (typeof candidate.relevance !== 'undefined' && candidate.relevance >= kMinimumCosineSimilarity) {
+      if (this._sources.length < this._howMany) {
+         if (typeof candidate.relevance !== 'undefined' && candidate.relevance >= this._similarityThresholdLo) {
             this._sources.push (candidate);
          }
          return true;
@@ -300,7 +286,7 @@ export class KnowledgeSourceBuilder {
 
       if (typeof currentLowest.relevance !== 'undefined' 
       && typeof candidate.relevance !== 'undefined') {
-         if (currentLowest.relevance < candidate.relevance && candidate.relevance >= kMinimumCosineSimilarity) {
+         if (currentLowest.relevance < candidate.relevance && candidate.relevance >= this._similarityThresholdLo) {
             this._sources[lowestIndex] = candidate;
             return true;
          }
@@ -332,29 +318,60 @@ export function cosineSimilarity(vector1: number[], vector2: number[]): number {
    return dotProduct / (magnitude1 * magnitude2);
 }
 
+export class KnowledgeRepository  {
+   static lookUpMostSimilar (embedding: Array<number>, similarityThresholdLo: number, howMany: number) : KnowledgeSourceBuilder {
+
+      let bestSources = new KnowledgeSourceBuilder(similarityThresholdLo, howMany);
+
+      YouTubeRespository.lookUpMostSimilar (embedding, bestSources);
+      MarkdownRespository.lookUpMostSimilar (embedding, bestSources);  
+
+      return bestSources;
+   }   
+}
+
 /**
  * YouTubeRespository 
  * Facade over imported JSON - at some point move to vector DB blah blah
  */
-export class YouTubeRespository  {
+class YouTubeRespository  {
    
-   static lookUpMostSimilar (embedding: Array<number>) : KnowledgeSourceBuilder {
+   static lookUpMostSimilar (embedding: Array<number>, builder: KnowledgeSourceBuilder): void {
 
-      let embeddings = new Array<LiteYouTubeEmbedding>();
-      embeddings = liteYouTubeEmbeddings as Array<LiteYouTubeEmbedding>;
-
-      let bestSources = new KnowledgeSourceBuilder();
+      let embeddings = new Array<LiteEmbedding>();
+      embeddings = liteYouTubeEmbeddings as Array<LiteEmbedding>;
 
       for (let i = 0; i < embeddings.length; i++) {
 
-         let url = makeYouTubeUrl (embeddings[i].videoId, embeddings[i].start, embeddings[i].seconds);
+         let url = makeYouTubeUrl (embeddings[i].sourceId, embeddings[i].start, embeddings[i].seconds);
          let relevance = Number (cosineSimilarity (embedding, embeddings[i].ada_v2).toPrecision(2));
 
          let candidate = new KnowledgeSource (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, relevance);
-         let changed = bestSources.replaceIfBeatsCurrent (candidate);
+         let changed = builder.replaceIfBeatsCurrent (candidate);
       }      
+   }
+   
+}
 
-      return bestSources;
+/**
+ * MarkdownRespository 
+ * Facade over imported JSON - at some point move to vector DB blah blah
+ */
+class MarkdownRespository  {
+   
+   static lookUpMostSimilar (embedding: Array<number>, builder: KnowledgeSourceBuilder): void {
+
+      let embeddings = new Array<LiteEmbedding>();
+      embeddings = liteMarkdownEmbeddings as Array<LiteEmbedding>;
+
+      for (let i = 0; i < embeddings.length; i++) {
+
+         let url = makeGithubUrl (embeddings[i].sourceId);
+         let relevance = Number (cosineSimilarity (embedding, embeddings[i].ada_v2).toPrecision(2));
+
+         let candidate = new KnowledgeSource (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, relevance);
+         let changed = builder.replaceIfBeatsCurrent (candidate);
+      }      
    }
    
 }
