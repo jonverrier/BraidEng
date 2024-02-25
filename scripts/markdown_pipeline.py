@@ -14,7 +14,7 @@ download_markdown (REPO_SOURCE_DIR, REPO_NAME, MARKDOWN_DESTINATION_DIR)
 
 MARKDOWN_DESTINATION_DIR = "data/markdown"
 REPO_SOURCE_DIR = "../sotaosai"
-REPO_NAME="premAI-io/state-of-open-source-ai"
+REPO_NAME="premAI-io/state-of-open-source-ai/blob/main"
 
 download_markdown (REPO_SOURCE_DIR, REPO_NAME, MARKDOWN_DESTINATION_DIR)
 enrich_buckets_markdown(MARKDOWN_DESTINATION_DIR, 5, 50)
