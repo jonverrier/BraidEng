@@ -4,11 +4,11 @@
 module.exports = {
    devtool: 'source-map',
    entry: "./ui/AppEntry.tsx",
-   mode: "production",
+   mode: "development",
    target: 'web', 
    externals: [],
    output: {
-      filename: "fsbot.min.js",
+      filename: "fsbot.pack.js",
       devtoolModuleFilenameTemplate: '[resource-path]',  // removes the webpack:/// prefix
       libraryTarget: 'window'
    },
