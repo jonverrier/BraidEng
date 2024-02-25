@@ -7,43 +7,16 @@ from datetime import datetime, timedelta
 import glob
 import os
 import json
-import argparse
 import tiktoken
 import logging
 from rich.progress import Progress
 from pathlib import Path
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-SEGMENT_LENGTH_MINUTES = 5
 PERCENTAGE_OVERLAP = 0.05
 MAX_TOKENS = 2048
 MIN_TEXT_LENGTH=50
 
-segments = []
 total_files = 0
-
-parser = argparse.ArgumentParser()
-parser.add_argument("-f", "--folder")
-parser.add_argument("-m", "--minutes")
-parser.add_argument("--verbose", action="store_true")
-args = parser.parse_args()
-if args.verbose:
-    logger.setLevel(logging.DEBUG)
-
-MARKDOWN_DEFAULT = "data\\markdown"
-SEGMENT_LENGTH_MINUTES_DEFAULT=5
-MARKDOWN_FOLDER = args.folder if args.folder else MARKDOWN_DEFAULT
-SEGMENT_LENGTH_MINUTES = int(args.minutes) if args.minutes else SEGMENT_LENGTH_MINUTES_DEFAULT
-
-if not MARKDOWN_FOLDER:
-    logger.error("Markdown folder not provided")
-    exit(1)
-
-# https://stackoverflow.com/questions/75804599/openai-api-how-do-i-count-tokens-before-i-send-an-api-request
-ENCODING_MODEL = "gpt-3.5-turbo"
-tokenizer = tiktoken.encoding_for_model(ENCODING_MODEL)
 
 class MddSegment:
     def __init__(self, segment: dict[str, str | float]) -> None:
@@ -82,7 +55,7 @@ def clean_text(text):
     return text
 
 
-def append_text_to_previous_segment(text):
+def append_text_to_previous_segment(text, segments):
     """
     append PERCENTAGE_OVERLAP text to the previous segment to smooth context transition
     """
@@ -94,7 +67,7 @@ def append_text_to_previous_segment(text):
             segments[-1]["text"] += append_text
 
 
-def add_new_segment(metadata, text, segment_begin_tokens):
+def add_new_segment(metadata, text, segment_begin_tokens, segments):
     """add a new segment to the segments list"""
     metadata["start"] = str (segment_begin_tokens)
     metadata["seconds"] = 0
@@ -102,7 +75,7 @@ def add_new_segment(metadata, text, segment_begin_tokens):
     segments.append(metadata.copy())
 
 
-def parse_json_mdd_transcript(mdd, metadata):
+def parse_json_mdd_transcript(mdd, metadata, tokenizer, segments, segmentLengthMinutes, minimumSegmentTokenCount):
     """parse the json mdd file and return the transcript"""
     text = ""
     current_tokens = None
@@ -134,13 +107,20 @@ def parse_json_mdd_transcript(mdd, metadata):
             if seg_begin_tokens is None:
                 seg_begin_tokens = current_tokens
                 # calculate the finish time from the segment_begin_time
-                seg_finish_tokens = seg_begin_tokens + SEGMENT_LENGTH_MINUTES * 60
+                seg_finish_tokens = seg_begin_tokens + segmentLengthMinutes * 60
 
             # Get the number of tokens in the text.
             # Need to calc to allow for 1024 tokens for 
             # summary request in next pipeline step
             total_tokens = len(tokenizer.encode(current_text)) + current_token_length
 
+            # Deal with case of a single segment that is already over the limit - in which case we just add it
+            # then return.
+            if first_segment and last_segment and total_tokens >= seg_finish_tokens:
+               if total_tokens > minimumSegmentTokenCount:
+                  add_new_segment(metadata, current_text, seg_begin_tokens, segments)
+               return
+        
             if current_tokens < seg_finish_tokens and total_tokens < MAX_TOKENS:
                 # add the text to the transcript
                 text += current_text + " "
@@ -151,7 +131,7 @@ def parse_json_mdd_transcript(mdd, metadata):
                     # to smooth context transition
                     append_text_to_previous_segment(text)
                 first_segment = False
-                add_new_segment(metadata, text, seg_begin_tokens)
+                add_new_segment(metadata, text, seg_begin_tokens, segments)
 
                 text = current_text + " "
 
@@ -163,7 +143,7 @@ def parse_json_mdd_transcript(mdd, metadata):
 
         # Deal with case where there is only one segment
         if first_segment and last_segment:
-           add_new_segment(metadata, text, seg_begin_tokens)
+           add_new_segment(metadata, text, seg_begin_tokens, segments)
         else:
             # Append the last text segment to the last segment in segments dictionary
             if seg_begin_tokens and text != "":
@@ -178,14 +158,14 @@ def parse_json_mdd_transcript(mdd, metadata):
                      # to smooth context transition
                      append_text_to_previous_segment(text)
                      first_segment = False
-                     add_new_segment(metadata, text, seg_begin_tokens)
+                     add_new_segment(metadata, text, seg_begin_tokens, segments)
 
 
-def get_transcript(metadata):
+def get_transcript(metadata, markdownDestinationDir, segmentLengthMinutes, logger, tokenizer, segments, minimumSegmentTokenCount):
     """get the transcript from the .mdd file"""
 
     global total_files
-    mdd = os.path.join(MARKDOWN_FOLDER, metadata["filename"])
+    mdd = os.path.join(markdownDestinationDir, metadata["filename"])
 
     # check that the .mdd file exists
     if not os.path.exists(mdd):
@@ -195,44 +175,60 @@ def get_transcript(metadata):
         logger.debug("Processing file: %s", mdd)
         total_files += 1
 
-    parse_json_mdd_transcript(mdd, metadata)
+    parse_json_mdd_transcript(mdd, metadata, tokenizer, segments, segmentLengthMinutes, minimumSegmentTokenCount)
 
-cwd = os.getcwd()
-logger.debug("Current directory : %s", cwd)
-logger.debug("Markdown folder: %s", MARKDOWN_FOLDER)
-logger.debug("Segment length %d minutes", SEGMENT_LENGTH_MINUTES)
+def enrich_buckets_markdown(markdownDestinationDir, segmentLengthMinutes, minimumSegmentTokenCount): 
 
-folder = os.path.join(MARKDOWN_FOLDER, "*.json")
-logger.debug("Search spec: %s", str(folder))
+   logging.basicConfig(level=logging.DEBUG)
+   logger = logging.getLogger(__name__)
+   segments = []
+   
+   if not markdownDestinationDir:
+      logger.error("Markdown folder not provided")
+      exit(1)
 
-directory_path = Path(MARKDOWN_FOLDER)
+   # https://stackoverflow.com/questions/75804599/openai-api-how-do-i-count-tokens-before-i-send-an-api-request
+   ENCODING_MODEL = "gpt-3.5-turbo"
+   tokenizer = tiktoken.encoding_for_model(ENCODING_MODEL)
 
-# Use rglob() to recursively search for all files
-searchPath = directory_path.glob("*.json")
-jsonFiles = list(searchPath)
+   cwd = os.getcwd()
+   logger.debug("Current directory : %s", cwd)
+   logger.debug("Markdown folder: %s", markdownDestinationDir)
+   logger.debug("Segment length %d minutes", segmentLengthMinutes)
 
-with Progress() as progress:
-    task1 = progress.add_task("[green]Enriching Buckets...", total=total_files)
+   folder = os.path.join(markdownDestinationDir, "*.json")
+   logger.debug("Search spec: %s", str(folder))
 
-    for file in jsonFiles:
-        # load the json file
-        meta = json.load(open(file, encoding="utf-8"))
+   directory_path = Path(markdownDestinationDir)
 
-        get_transcript(meta)
-        progress.update(task1, advance=1)
+   # Use rglob() to recursively search for all files
+   searchPath = directory_path.glob("*.json")
+   jsonFiles = list(searchPath)
+
+   global total_files
+   total_files = 0
+
+   with Progress() as progress:
+      task1 = progress.add_task("[green]Enriching Buckets...", total=total_files)
+
+      for file in jsonFiles:
+         # load the json file
+         meta = json.load(open(file, encoding="utf-8"))
+
+         get_transcript(meta, markdownDestinationDir, segmentLengthMinutes, logger, tokenizer, segments, minimumSegmentTokenCount)
+         progress.update(task1, advance=1)
 
 
-logger.debug("Total files: %s", total_files)
-logger.debug("Total segments: %s", len(segments))
+   logger.debug("Total files: %s", total_files)
+   logger.debug("Total segments: %s", len(segments))
 
-#Filter out short segments
-filteredSegments = [];
+   #Filter out short segments
+   filteredSegments = [];
+   for segment in segments:
+      if len (segment["text"]) >= minimumSegmentTokenCount:
+         filteredSegments.append (segment)
 
-for segment in segments:
-    if len (segment["text"]) >= MIN_TEXT_LENGTH:
-        filteredSegments.append (segment)
-
-# save segments to a json file
-output_file = os.path.join(MARKDOWN_FOLDER, "output", "master_markdown.json")
-with open(output_file, "w", encoding="utf-8") as f:
-    json.dump(filteredSegments, f, ensure_ascii=False, indent=4)
+   # save segments to a json file
+   output_file = os.path.join(markdownDestinationDir, "output", "master_markdown.json")
+   with open(output_file, "w", encoding="utf-8") as f:
+      json.dump(filteredSegments, f, ensure_ascii=False, indent=4)

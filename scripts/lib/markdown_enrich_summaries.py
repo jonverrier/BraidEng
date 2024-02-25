@@ -5,7 +5,6 @@ import os
 import queue
 import threading
 import logging
-import argparse
 import openai
 from tenacity import (
     retry,
@@ -21,37 +20,13 @@ AZURE_OPENAI_MODEL_DEPLOYMENT_NAME = os.getenv(
     "AZURE_OPENAI_MODEL_DEPLOYMENT_NAME", "gpt-35-turbo"
 )
 MAX_TOKENS = 512
-PROCESSOR_THREADS = 4
+PROCESSOR_THREADS = 1
 OPENAI_REQUEST_TIMEOUT = 60
 
 openai.api_type = "open_ai" #AZURE VERSION WAS "Azure"
 openai.api_key = API_KEY
 openai.api_base = RESOURCE_ENDPOINT
 openai.api_version = "2020-11-07" #AZURE VERSION WAS "2023-07-01-preview"
-
-logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger(__name__)
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--verbose", action="store_true")
-parser.add_argument("-f", "--folder")
-args = parser.parse_args()
-
-MARKDOWN_DEFAULT = "data\\markdown"
-MARKDOWN_FOLDER = args.folder if args.folder else MARKDOWN_DEFAULT
-if not MARKDOWN_FOLDER:
-    logger.error("Markdown folder not provided")
-    exit(1)
-
-if args.verbose:
-    logger.setLevel(logging.DEBUG)
-
-segments = []
-output_segments = []
-total_segments = 0
-
-errors = 0
-
 
 class Counter:
     """thread safe counter"""
@@ -76,13 +51,13 @@ counter = Counter()
     retry=retry_if_not_exception_type(openai.InvalidRequestError),
 )
 
-def chatgpt_summary(text):
+def chatgpt_summary(text, wordCount, logger):
     """generate a summary using chatgpt"""
 
     messages = [
         {
             "role": "system",
-            "content": "You're an AI Assistant for blogs, write an authoritative 50 word summary. Avoid starting sentences with 'This document' or 'The document'.",
+            "content": "You're an AI Assistant for summarising useful blogs, write an authoritative " + str(wordCount) + "  word summary. Avoid starting sentences with 'This document' or 'The document'.",
         },
         {"role": "user", "content": text},
     ]
@@ -115,12 +90,10 @@ def chatgpt_summary(text):
     return text
 
 
-def process_queue(progress, task):
+def process_queue(progress, task, q, total_segments, output_segments, wordCount, logger):
     """process the queue"""
+    
     while not q.empty():
-        if errors > 100:
-            logger.exit("Too many errors. Exiting...")
-            exit(1)
 
         segment = q.get()
 
@@ -138,7 +111,7 @@ def process_queue(progress, task):
 
         # get a summary of the text using chatgpt
         try:
-            summary = chatgpt_summary(text)
+            summary = chatgpt_summary(text, wordCount, logger)
         except openai.InvalidRequestError as invalid_request_error:
             logger.warning("Error: %s", invalid_request_error)
             summary = text
@@ -154,61 +127,62 @@ def process_queue(progress, task):
         segment["summary"] = summary
 
         output_segments.append(segment.copy())
+
         q.task_done()
 
 
-logger.debug("Starting OpenAI summarization")
+def enrich_summaries_markdown(markdownDestinationDir, wordCount): 
 
-# load the segments from a json file
-input_file = os.path.join(MARKDOWN_FOLDER, "output", "master_markdown.json")
-with open(input_file, "r", encoding="utf-8") as f:
-    segments = json.load(f)
+   logging.basicConfig(level=logging.INFO)
+   logger = logging.getLogger(__name__)
 
-total_segments = len(segments)
+   if not markdownDestinationDir:
+    logger.error("Markdown folder not provided")
+    exit(1)
 
-logger.debug("Total segments to be processed: %s", len(segments))
+   segments = []
+   output_segments = []
+   total_segments = 0
 
-# add segment list to a queue
-q = queue.Queue()
-for segment in segments:
-    q.put(segment)
+   logger.debug("Starting OpenAI summarization")
 
-with Progress() as progress:
-    task1 = progress.add_task("[purple]Enriching Summaries...", total=total_segments)
+   # load the segments from a json file
+   input_file = os.path.join(markdownDestinationDir, "output", "master_markdown.json")
+   with open(input_file, "r", encoding="utf-8") as f:
+      segments = json.load(f)
 
-    # create multiple threads to process the queue
-    threads = []
-    for i in range(PROCESSOR_THREADS):
-        t = threading.Thread(target=process_queue, args=(progress, task1))
-        t.start()
-        threads.append(t)
+   total_segments = len(segments)
 
-    # wait for all threads to finish
-    for t in threads:
-        t.join()
+   logger.info("Total segments to be processed: %s", len(segments))
+
+   # add segment list to a queue
+   q = queue.Queue()
+   for segment in segments:
+      q.put(segment)
+
+   with Progress() as progress:
+      task1 = progress.add_task("[purple]Enriching Summaries...", total=total_segments)
+
+      # create multiple threads to process the queue
+      threads = []
+      for i in range(PROCESSOR_THREADS):
+         t = threading.Thread(target=process_queue, args=(progress, task1, q, total_segments, output_segments, wordCount, logger))
+         t.start()
+         threads.append(t)
+
+      # wait for all threads to finish
+      for t in threads:
+         t.join()
+
+   # sort the output segments by sourceId 
+   output_segments.sort(key=lambda x: (x["sourceId"]))
+
+   logger.info("Total segments processed: %s", len(output_segments))
+   for segment in output_segments:
+      logger.info(segment.get('sourceId'))
 
 
-# convert time '00:01:20' to seconds
-def convert_time_to_seconds(value):    
-    """convert time to seconds"""
-
-    if str(value).isdigit():
-        return str (value)
-    
-    time_value = value.split(":")
-    if len(time_value) == 3:
-        h, m, s = time_value
-        return int(h) * 3600 + int(m) * 60 + int(s)
-    else:
-        return 0
-
-
-# sort the output segments by sourceId and start
-output_segments.sort(key=lambda x: (x["sourceId"], convert_time_to_seconds(x["start"])))
-
-logger.debug("Total segments processed: %s", len(output_segments))
-
-# save the output segments to a json file
-output_file = os.path.join(MARKDOWN_FOLDER, "output", "master_enriched.json")
-with open(output_file, "w", encoding="utf-8") as f:
-    json.dump(output_segments, f, ensure_ascii=False, indent=4)
+   # save the output segments to a json file
+   output_file = os.path.join(markdownDestinationDir, "output", "master_enriched.json")
+   with open(output_file, "w", encoding="utf-8") as f:
+      json.dump(output_segments, f, ensure_ascii=False, indent=4)

@@ -6,7 +6,7 @@ import { describe, it } from 'mocha';
 import fs from 'node:fs/promises';
 
 import youTubeEmbeddingsFile from '../data/transcripts/output/embedding_index_full_3m.json';
-import markdownEmbeddingsFile from '../data/markdown/output/embedding_index.json';
+import markdownEmbeddingsFile from '../data/markdown/output/master_enriched.json';
 import { FullEmbedding, LiteEmbedding } from '../core/EmbeddingFormats';
 
 
