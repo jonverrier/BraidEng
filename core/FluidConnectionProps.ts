@@ -27,7 +27,7 @@ export class ConnectionConfig implements AzureRemoteConnectionConfig {
 
    async makeTokenProvider(joinKey_: string): Promise<ITokenProvider> {
 
-      var user: any = { id: documentUuid, name: "BraidBot Chat" };
+      var user: any = { id: documentUuid, name: "@Braid Chat" };
 
       if (Environment.environment() == EEnvironment.kLocal) {
 
