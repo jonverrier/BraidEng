@@ -88,7 +88,7 @@ def process_queue(progress, task, q, tokenizer, logger, output_segments):
 
 def enrich_embeddings_markdown(markdownDestinationDir): 
 
-   logging.basicConfig(level=logging.INFO)
+   logging.basicConfig(level=logging.WARNING)
    logger = logging.getLogger(__name__)
 
    if not markdownDestinationDir:
@@ -131,9 +131,9 @@ def enrich_embeddings_markdown(markdownDestinationDir):
    # sort the output segments by sourceId 
    output_segments.sort(key=lambda x: (x["sourceId"]))
 
-   logger.info("Total segments processed: %s", len(output_segments))
+   logger.warning("Total segments processed: %s", len(output_segments))
    for segment in output_segments:
-      logger.info(segment.get('sourceId'))
+      logger.warning(segment.get('sourceId'))
 
    # save the embeddings to a json file
    output_file = os.path.join(markdownDestinationDir, "output", "master_enriched.json")

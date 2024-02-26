@@ -133,7 +133,7 @@ def process_queue(progress, task, q, total_segments, output_segments, wordCount,
 
 def enrich_summaries_markdown(markdownDestinationDir, wordCount): 
 
-   logging.basicConfig(level=logging.INFO)
+   logging.basicConfig(level=logging.WARNING)
    logger = logging.getLogger(__name__)
 
    if not markdownDestinationDir:
@@ -153,7 +153,7 @@ def enrich_summaries_markdown(markdownDestinationDir, wordCount):
 
    total_segments = len(segments)
 
-   logger.info("Total segments to be processed: %s", len(segments))
+   logger.debug("Total segments to be processed: %s", len(segments))
 
    # add segment list to a queue
    q = queue.Queue()
@@ -177,9 +177,9 @@ def enrich_summaries_markdown(markdownDestinationDir, wordCount):
    # sort the output segments by sourceId 
    output_segments.sort(key=lambda x: (x["sourceId"]))
 
-   logger.info("Total segments processed: %s", len(output_segments))
-   for segment in output_segments:
-      logger.info(segment.get('sourceId'))
+   logger.warning("Total segments processed: %s", len(output_segments))
+   for segment in segments:
+      logger.warning(segment.get('sourceId'))
 
 
    # save the output segments to a json file
