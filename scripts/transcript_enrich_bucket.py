@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-SEGMENT_LENGTH_MINUTES = 6
+SEGMENT_LENGTH_MINUTES = 10
 PERCENTAGE_OVERLAP = 0.05
 TRANSCRIPT_FOLDER = "transcripts"
 MAX_TOKENS = 2048
