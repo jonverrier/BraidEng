@@ -1,10 +1,8 @@
 """ This script generates a master csv file from the transcript files."""
 
-# from the markdown files, generate a master csv file
+# from the markdown files, generate a master json file
 # from the makdown folder read all the .json files then load the associated .mdd file
 
-from datetime import datetime, timedelta
-import glob
 import os
 import json
 import tiktoken
@@ -14,7 +12,8 @@ from pathlib import Path
 
 PERCENTAGE_OVERLAP = 0.05
 MAX_TOKENS = 2048
-MIN_TEXT_LENGTH=50
+AVERAGE_CHARACTERS_PER_TOKEN = 6
+AVERAGE_WORDS_PER_MINUTE = 150
 
 total_files = 0
 
@@ -27,7 +26,6 @@ class MddSegment:
     text: str
     start: float
     duration: float
-
 
 def gen_metadata_master(metadata):
     """generate the metadata master csv file"""
@@ -67,10 +65,17 @@ def append_text_to_previous_segment(text, segments):
             segments[-1]["text"] += append_text
 
 
-def add_new_segment(metadata, text, segment_begin_tokens, segments):
+def add_new_segment(metadata, text, segment_begin_tokens, segments, minimumSegmentTokenCount):
     """add a new segment to the segments list"""
+
+    # dont add very short segments
+    if len(text) < minimumSegmentTokenCount * AVERAGE_CHARACTERS_PER_TOKEN:
+       return
+    
+    charactersPerSecond = AVERAGE_WORDS_PER_MINUTE * AVERAGE_CHARACTERS_PER_TOKEN / 60
+
     metadata["start"] = str (segment_begin_tokens)
-    metadata["seconds"] = 0
+    metadata["seconds"] = str (int (len (text) / charactersPerSecond))
     metadata["text"] = text
     segments.append(metadata.copy())
 
@@ -114,11 +119,25 @@ def parse_json_mdd_transcript(mdd, metadata, tokenizer, segments, segmentLengthM
             # summary request in next pipeline step
             total_tokens = len(tokenizer.encode(current_text)) + current_token_length
 
-            # Deal with case of a single segment that is already over the limit - in which case we just add it
-            # then return.
-            if first_segment and last_segment and total_tokens >= seg_finish_tokens:
-               if total_tokens > minimumSegmentTokenCount:
-                  add_new_segment(metadata, current_text, seg_begin_tokens, segments)
+            # Deal with case of a segment that is already over the limit - in which case we add it
+            # in chunks # then return.
+            if total_tokens >= seg_finish_tokens:
+               
+               currentWordCount = 0
+               words = current_text.split(" ")
+               word_count = len(words)
+                  
+               while currentWordCount < word_count:
+                  thisTextWordCount = min(seg_finish_tokens, word_count - currentWordCount);
+                  thisText = " ".join(words[currentWordCount : thisTextWordCount])
+                  add_new_segment(metadata, thisText, seg_begin_tokens, segments, minimumSegmentTokenCount)
+
+                  #if we are not at the end, we overlap segments by moving back a bit
+                  if currentWordCount + thisTextWordCount < word_count:
+                     currentWordCount += int (thisTextWordCount * (1- PERCENTAGE_OVERLAP))
+                  else:
+                     currentWordCount += thisTextWordCount
+
                return
         
             if current_tokens < seg_finish_tokens and total_tokens < MAX_TOKENS:
@@ -131,7 +150,7 @@ def parse_json_mdd_transcript(mdd, metadata, tokenizer, segments, segmentLengthM
                     # to smooth context transition
                     append_text_to_previous_segment(text)
                 first_segment = False
-                add_new_segment(metadata, text, seg_begin_tokens, segments)
+                add_new_segment(metadata, text, seg_begin_tokens, segments, minimumSegmentTokenCount)
 
                 text = current_text + " "
 
@@ -143,7 +162,7 @@ def parse_json_mdd_transcript(mdd, metadata, tokenizer, segments, segmentLengthM
 
         # Deal with case where there is only one segment
         if first_segment and last_segment:
-           add_new_segment(metadata, text, seg_begin_tokens, segments)
+           add_new_segment(metadata, text, seg_begin_tokens, segments, minimumSegmentTokenCount)
         else:
             # Append the last text segment to the last segment in segments dictionary
             if seg_begin_tokens and text != "":
@@ -158,7 +177,7 @@ def parse_json_mdd_transcript(mdd, metadata, tokenizer, segments, segmentLengthM
                      # to smooth context transition
                      append_text_to_previous_segment(text)
                      first_segment = False
-                     add_new_segment(metadata, text, seg_begin_tokens, segments)
+                     add_new_segment(metadata, text, seg_begin_tokens, segments, minimumSegmentTokenCount)
 
 
 def get_transcript(metadata, markdownDestinationDir, segmentLengthMinutes, logger, tokenizer, segments, minimumSegmentTokenCount):
