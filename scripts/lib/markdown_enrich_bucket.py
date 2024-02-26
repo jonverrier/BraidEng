@@ -75,7 +75,7 @@ def add_new_segment(metadata, text, segment_begin_tokens, segments, minimumSegme
     charactersPerSecond = AVERAGE_WORDS_PER_MINUTE * AVERAGE_CHARACTERS_PER_TOKEN / 60
 
     metadata["start"] = str (segment_begin_tokens)
-    metadata["seconds"] = str (int (len (text) / charactersPerSecond))
+    metadata["seconds"] = int (len (text) / charactersPerSecond)
     metadata["text"] = text
     segments.append(metadata.copy())
 
@@ -241,13 +241,10 @@ def enrich_buckets_markdown(markdownDestinationDir, segmentLengthMinutes, minimu
    logger.debug("Total files: %s", total_files)
    logger.debug("Total segments: %s", len(segments))
 
-   #Filter out short segments
-   filteredSegments = [];
    for segment in segments:
-      if len (segment["text"]) >= minimumSegmentTokenCount:
-         filteredSegments.append (segment)
+       print (segment.get("sourceId"))
 
    # save segments to a json file
    output_file = os.path.join(markdownDestinationDir, "output", "master_markdown.json")
    with open(output_file, "w", encoding="utf-8") as f:
-      json.dump(filteredSegments, f, ensure_ascii=False, indent=4)
+      json.dump(segments, f, ensure_ascii=False, indent=4)
