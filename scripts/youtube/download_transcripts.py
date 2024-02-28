@@ -5,7 +5,6 @@ import json
 import logging
 import time
 import threading
-import argparse
 import queue
 import googleapiclient.discovery
 import googleapiclient.errors
