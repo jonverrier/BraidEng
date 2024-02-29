@@ -2,9 +2,10 @@
  
 import { MStreamable } from "./StreamingFramework";
 import { areSameDate, areSameShallowArray, areSameDeepArray} from './Utilities';
-import { LiteEmbedding, makeYouTubeUrl, makeGithubUrl } from "../core/EmbeddingFormats";
+import { LiteEmbedding, makeYouTubeUrl, makeGithubUrl, makeWebUrl } from "../core/EmbeddingFormats";
 import liteYouTubeEmbeddings from '../core/youtube_embeddings_lite.json';
 import liteMarkdownEmbeddings from '../core/markdown_embeddings_lite.json';
+import liteHtmlEmbeddings from '../core/html_embeddings_lite.json';
 import { InvalidParameterError } from "./Errors";
 
 function copyTimeStamp (stamp: Date | undefined) : Date | undefined {
@@ -325,6 +326,7 @@ export class KnowledgeRepository  {
 
       YouTubeRespository.lookUpMostSimilar (embedding, bestSources);
       MarkdownRespository.lookUpMostSimilar (embedding, bestSources);  
+      HtmlRespository.lookUpMostSimilar (embedding, bestSources); 
 
       return bestSources;
    }   
@@ -367,6 +369,25 @@ class MarkdownRespository  {
       for (let i = 0; i < embeddings.length; i++) {
 
          let url = makeGithubUrl (embeddings[i].sourceId);
+         let relevance = Number (cosineSimilarity (embedding, embeddings[i].ada_v2).toPrecision(2));
+
+         let candidate = new KnowledgeSource (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, relevance);
+         let changed = builder.replaceIfBeatsCurrent (candidate);
+      }      
+   }
+   
+}
+
+class HtmlRespository  {
+   
+   static lookUpMostSimilar (embedding: Array<number>, builder: KnowledgeSourceBuilder): void {
+
+      let embeddings = new Array<LiteEmbedding>();
+      embeddings = liteHtmlEmbeddings as Array<LiteEmbedding>;
+
+      for (let i = 0; i < embeddings.length; i++) {
+
+         let url = makeWebUrl (embeddings[i].sourceId);
          let relevance = Number (cosineSimilarity (embedding, embeddings[i].ada_v2).toPrecision(2));
 
          let candidate = new KnowledgeSource (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, relevance);

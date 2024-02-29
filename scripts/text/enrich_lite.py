@@ -4,24 +4,24 @@ import json
 import os
 import logging
 
-def remove_text(video_segments):
+def remove_text(segments):
     """This function removes the text from each dictionary in the list."""
     return [
         {k: v for k, v in seg.items() if k != "text" and k != "description"}
-        for seg in video_segments
+        for seg in segments
     ]
 
-def enrich_markdown_lite(markdownDestinationDir): 
+def enrich_lite(destinationDir): 
 
    logging.basicConfig(level=logging.WARNING)
    logger = logging.getLogger(__name__)
 
-   if not markdownDestinationDir:
-      logger.error("Transcript folder not provided")
+   if not destinationDir:
+      logger.error("Output folder not provided")
       exit(1)
 
-   # load video list from json file
-   input_file = os.path.join(markdownDestinationDir, "output", "master_enriched.json")
+   # load source list from json file
+   input_file = os.path.join(destinationDir, "output", "master_enriched.json")
    with open(input_file, "r", encoding="utf-8") as f:
       segments = json.load(f)
 
@@ -31,7 +31,7 @@ def enrich_markdown_lite(markdownDestinationDir):
    lite = remove_text(segments)
 
    # save the embeddings to a json file
-   output_file = os.path.join(markdownDestinationDir, "output", "master_enriched_lite.json")
+   output_file = os.path.join(destinationDir, "output", "master_enriched_lite.json")
    with open(output_file, "w", encoding="utf-8") as f:
       json.dump(lite, f)
 

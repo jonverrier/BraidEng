@@ -7,6 +7,7 @@
 .vs/* 
 *.log
 */obj/*
+*/__pycache__/*
 node_modules/*
 core/.vs/*
 core/*.js
@@ -18,8 +19,9 @@ test/*.js
 test/*.js.map
 scripts/*.js
 scripts/*.js.map
-scripts/lib/__pycache__/*
-*/__pycache__/*
+scripts/web/__pycache__/*
+scripts/text/__pycache__/*
+scripts/github/__pycache__/*
 coverage/*
 .nyc_output/*
 dist/*
