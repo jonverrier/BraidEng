@@ -131,7 +131,7 @@ def process_queue(progress, task, q, total_segments, output_segments, wordCount,
         q.task_done()
 
 
-def enrich_markdown_summaries(markdownDestinationDir, wordCount): 
+def enrich_text_summaries(markdownDestinationDir, wordCount): 
 
    logging.basicConfig(level=logging.WARNING)
    logger = logging.getLogger(__name__)

@@ -86,7 +86,7 @@ def process_queue(progress, task, q, tokenizer, logger, output_segments):
         time.sleep(0.2)
 
 
-def enrich_markdown_embeddings(markdownDestinationDir): 
+def enrich_text_embeddings(markdownDestinationDir): 
 
    logging.basicConfig(level=logging.WARNING)
    logger = logging.getLogger(__name__)

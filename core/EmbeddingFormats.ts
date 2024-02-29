@@ -34,3 +34,8 @@ export function makeGithubUrl (sourceId: string) : string {
 
    return 'https://github.com/' + sourceId;
 } 
+
+export function makeWebUrl (sourceId: string) : string {
+
+   return 'https://' + sourceId;
+} 

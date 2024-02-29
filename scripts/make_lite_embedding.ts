@@ -7,6 +7,7 @@ import fs from 'node:fs/promises';
 
 import youTubeEmbeddingsFile from '../data/transcripts/output/master_enriched.json';
 import markdownEmbeddingsFile from '../data/markdown/output/master_enriched.json';
+import htmlEmbeddingsFile from '../data/html/output/master_enriched.json';
 import { FullEmbedding, LiteEmbedding } from '../core/EmbeddingFormats';
 
 
@@ -58,5 +59,16 @@ describe("Embedding", function () {
 
       expect (result).toBe (true);
    });   
+
+   it("Needs to build lite Html embeddings file", async function () {
+      
+      let embeddings = new Array<FullEmbedding>();
+      embeddings = htmlEmbeddingsFile as Array<FullEmbedding>;
+
+      let result = await makeLite (embeddings, 'core/html_embeddings_lite.json');
+
+
+      expect (result).toBe (true);
+   });      
 });
 

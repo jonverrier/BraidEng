@@ -196,7 +196,7 @@ def get_transcript(metadata, markdownDestinationDir, segmentLengthMinutes, logge
 
     parse_json_mdd_transcript(mdd, metadata, tokenizer, segments, segmentLengthMinutes, minimumSegmentTokenCount)
 
-def enrich_markdown_buckets(markdownDestinationDir, segmentLengthMinutes, minimumSegmentTokenCount): 
+def enrich_text_buckets(markdownDestinationDir, segmentLengthMinutes, minimumSegmentTokenCount): 
 
    logging.basicConfig(level=logging.WARNING)
    logger = logging.getLogger(__name__)
