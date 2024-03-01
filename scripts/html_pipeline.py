@@ -13,7 +13,7 @@ download_html (SITE_URL, SITE_NAME, HTML_DESTINATION_DIR, 100)
 
 SITE_URL = "https://book.premai.io/state-of-open-source-ai/"
 SITE_NAME="State of Open Source AI - 2023 Edition"
-#download_html (SITE_URL, SITE_NAME, HTML_DESTINATION_DIR, 100)
+download_html (SITE_URL, SITE_NAME, HTML_DESTINATION_DIR, 100)
 
 enrich_text_buckets(HTML_DESTINATION_DIR, 20, 100) # 20 minutes long (at average speaking rate), dont add if < 100 words
 enrich_text_summaries(HTML_DESTINATION_DIR, 50)
