@@ -95,7 +95,7 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
       <div className={headerRowClasses.root}>
          <AvatarGroup>
             {inlineItems.map((persona) => (
-               <Tooltip content={persona.name} relationship="label" positioning={'below'}>
+               <Tooltip content={persona.name} relationship="label" positioning={'below'} key={persona.id}>
                   <AvatarGroupItem name={persona.name} key={persona.id} />
                </Tooltip>
             ))}
@@ -214,6 +214,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
                         return (         
                            <SingleMessageView 
                               message={message} 
+                              key={message.id}
                               author={(audience.get (message.authorId) as Persona)}
                               showAiWarning={message.authorId === EConfigStrings.kBotGuid}
                            />
@@ -358,7 +359,7 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
             let relevanceText = knowledgeSource.relevance ? (knowledgeSource.relevance * 100).toPrecision(2) + '%': "";
             let relevanceClasses = knowledgeSource.relevance ? knowledgeSource.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
    
-            return (<div className={sourcesClasses.root}>
+            return (<div className={sourcesClasses.root} key={knowledgeSource.url}>
                <div className={sourcesHeaderClasses.root}>
                   <Link target='_blank' className={padAfterLinkClasses.root} 
                      href={knowledgeSource.url}>{knowledgeSource.url}
