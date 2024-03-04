@@ -11,7 +11,7 @@ from markdown import markdown
 from bs4 import BeautifulSoup
 import requests
 import time
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urlsplit, urljoin
 
 MAX_LINKS_PERPAGE=256 #Max number of links we keep from a single page
 MAX_PAGE_DEPTH=1     #Max depth we search in a website
@@ -43,6 +43,8 @@ def makePathOnly (url):
     clean_path = str(split_url.netloc) + path[0]
     return clean_path
 
+def makeFullyQualified (base, rel):
+    return urljoin(base,rel)
     
 def get_html(url, counter_id, siteName, htmlDesitinationDir, logger, minimumPageTokenCount):
     """Read in HTML content and write out as plain text """
@@ -57,7 +59,12 @@ def get_html(url, counter_id, siteName, htmlDesitinationDir, logger, minimumPage
         logger.debug("Skipping : %s", url)
         return False    
     
-    page = requests.get(url)
+    # In case the web site expect cookies and/or javascript
+    session = requests.Session()    
+    headers = {
+       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299'
+    }    
+    page = session.get(url, headers=headers)
     soup = BeautifulSoup(page.content, "html.parser") 
     fullText = soup.get_text()
     nolineFeeds = fullText.replace("\n", " ")
@@ -113,14 +120,12 @@ def deduplicate(currentLinks, newLinks): # remove duplicates
     return deduped
 
 def remove_exits(sourceUrl, links): # remove links that point outside the main site being searched
+                                    # we also remove links starting with #as they are just the same page
     trimmed = []
 
     for item in links:
         match = (item.startswith(sourceUrl) 
-                 or (not item.startswith('https') 
-                     and not item.startswith('http') 
-                     and not item.startswith('#')
-                     and not item.startswith('..')))
+                 and (not '#' in item))
         if match :
             trimmed .append(item)        
 
@@ -130,16 +135,12 @@ def add_prefix(sourceUrl, links): # add prefixes if we have relative URLs
     full = []
 
     for item in links:
-        match = (not item.startswith('https') and not item.startswith('http'))
-        if match :
-            newUrl = sourceUrl + item
-        else:
-            newUrl = item
+        newUrl = makeFullyQualified (sourceUrl, item)
         full.append(newUrl)
 
     return full
 
-def recurse_page_list (startUrl, processedLinks, depth, logger):
+def recurse_page_list (startUrl, processedLinks, depth, logger, recurse):
    
    # Bail we we hit maximum depth
    # TODO ADD LOGGING
@@ -153,6 +154,9 @@ def recurse_page_list (startUrl, processedLinks, depth, logger):
    logger.debug("Processing : %s", startUrl)     
    processedLinks.append (startUrl)
 
+   if not recurse:
+       return
+
    subLinks = soup.find_all('a', href=True)
    subUrls = []
 
@@ -160,28 +164,27 @@ def recurse_page_list (startUrl, processedLinks, depth, logger):
       url = str(link.get('href'))
       subUrls.append(url)
 
-   deduped = deduplicate(processedLinks, subUrls)
-   trimmed = remove_exits (startUrl, deduped)
-   full = add_prefix (startUrl, trimmed)
+   full = add_prefix (startUrl, subUrls)
    deduped = deduplicate(processedLinks, full)
+   trimmed = remove_exits (startUrl, deduped)
 
-   for link in deduped:
+   for link in trimmed:
       if not link in processedLinks:       
-         recurse_page_list (link, processedLinks, depth + 1, logger)
+         recurse_page_list (link, processedLinks, depth + 1, logger, recurse)
 
    return
 
          
-def build_page_list (sourceUrl, q, minimumPageTokenCount, logger):
+def build_page_list (sourceUrl, q, minimumPageTokenCount, logger, recurse):
    links = []
 
-   recurse_page_list (sourceUrl, links, 0, logger)
+   recurse_page_list (sourceUrl, links, 0, logger, recurse)
 
    for url in links:
       print(url)
       q.put(url)
     
-def download_html (sourceUrl, siteName, htmlDesitinationDir, minimumPageTokenCount): 
+def download_html (sourceUrl, siteName, recurse, htmlDesitinationDir, minimumPageTokenCount): 
    
    logging.basicConfig(level=logging.DEBUG)
    logger = logging.getLogger(__name__)
@@ -202,7 +205,7 @@ def download_html (sourceUrl, siteName, htmlDesitinationDir, minimumPageTokenCou
    logger.debug("Html folder: %s", htmlDesitinationDir)
 
    # Recursively search for all html files  
-   build_page_list (sourceUrl, q, minimumPageTokenCount, logger)
+   build_page_list (sourceUrl, q, minimumPageTokenCount, logger, recurse)
    
    logger.info("Total HTML files to be downloaded: %s", q.qsize())
 
