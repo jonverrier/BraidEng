@@ -11,6 +11,7 @@ import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { CaucusOf } from '../core/CaucusFramework';
 import { JoinKey } from '../core/JoinKey';
+import { JoinPageValidator } from '../core/JoinPageValidator';
 import { ConversationRow } from './ConversationRow';
 import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
 import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } from '../core/NotificationFramework';
@@ -41,7 +42,6 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    const [fluidConnection, setFluidConnection] = useState<MessageBotFluidConnection | undefined>(undefined);
    const [joining, setJoining] = useState<boolean> (false);
    const [fullJoinKey, setFullJoinKey] = useState<JoinKey> (props.joinKey);
-   const [aiKey, setAiKey] = useState<string> ("");
    const [isBusy, setIsBusy] = useState<boolean>(false);
 
    function initialiseConnectionState (fluidMessagesConnection_: MessageBotFluidConnection, 
@@ -94,7 +94,11 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       setFullJoinKey (JoinKey.makeFromTwoParts (props.joinKey.firstPart, containerId));      
    }
 
-   if (props.joinKey.isValid && fluidConnection === undefined && !joining) {
+   let validater = new JoinPageValidator();
+
+   if (validater.isJoinAttemptReady (props.localPersona.name, props.joinKey) && 
+      fluidConnection === undefined 
+      && !joining) {
 
       setJoining(true);
 
@@ -183,8 +187,6 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
             let query = AiConnection.makeOpenAiQuery (messageArray, audienceMap);
 
             connection.queryAI (messageText_, query).then ((result_: KnowledgeEnrichedMessage) => {
-
-               console.log ("AI:" + result_);
                
                // set up a message to append
                let message = new Message ();
@@ -217,7 +219,13 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       forceUpdate ();      
    }
 
-   return (
+   let joinValidator = new JoinPageValidator ();
+
+   if (! joinValidator.isJoinAttemptReady (props.localPersona.name, props.joinKey)) {
+      return (<div></div>);
+   }
+   else
+      return (
          <ConversationRow 
              isConnected={fullJoinKey.isValid && fullJoinKey.isTwoPart}
              isBusy = {isBusy}

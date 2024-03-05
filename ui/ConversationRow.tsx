@@ -83,7 +83,14 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
 
    function onCopy (ev: React.MouseEvent<HTMLButtonElement>) : void {
 
-      navigator.clipboard.writeText (props.joinKey.asString);
+      // https://stackoverflow.com/questions/10783322/window-location-url-javascript
+
+      let newUrl = window.location.protocol + // => "http:"
+      window.location.host +                  // => "example.com:3000"
+      window.location.pathname +              // => "/pathname/
+      '#' + props.joinKey.asString;
+
+      navigator.clipboard.writeText (newUrl);
    }    
 
    function onDelete (ev: React.MouseEvent<HTMLButtonElement>) : void {

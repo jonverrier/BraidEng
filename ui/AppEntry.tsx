@@ -57,6 +57,12 @@ const pageOuterStyles = makeStyles({
    },
 });
 
+// create a forceUpdate hook
+// https://stackoverflow.com/questions/46240647/how-to-force-a-functional-react-component-to-render
+function useForceUpdate() {
+   const [value, setValue] = useState(0); // simple integer state
+   return () => setValue(value => value + 1); // update state to force render
+}
 export const App = (props: IAppProps) => {
 
    let localPersona = new Persona ();
@@ -75,13 +81,27 @@ export const App = (props: IAppProps) => {
       logger[level as keyof typeof logger](tag, msg, params);
    });
 
+   // This little block attempts to pick up a joinkey from the URL after the #value
+   // If it looks valid, we pre-populate the joining form
+   var hashValue: string = "";
+   if (window.location.hash)
+      hashValue = window.location.hash.substring(1);
+   let joinAttempt = new JoinKey (hashValue);
+   if (joinAttempt.isValid && !(joinKey.asString === hashValue))
+      setJoinKey (joinAttempt);
+
+         // call the force update hook 
+   const forceUpdate = useForceUpdate(); 
+
    function onConnect (joinKey: JoinKey, name_: string) : void  {
       
       setLastMessage ("");
       setLastMessageType (EMainPageMessageTypes.kNothing);      
 
       setJoinKey (joinKey);
-      setJoinAsPersona(new Persona (joinAsPersona.id, name_, joinAsPersona.icon, joinAsPersona.thumbnailB64, joinAsPersona.lastSeenAt));
+      joinAsPersona.name = name_;
+      setJoinAsPersona(joinAsPersona);
+      forceUpdate(); // Because we have only changed an attribute on the joinPersona, react wont detect it so we force it
    }
 
    function onConnectError (hint_: string) : void  {
@@ -148,6 +168,7 @@ export const App = (props: IAppProps) => {
 
                   <JoinRow 
                      joinKey={joinKey} 
+                     joinPersona={joinAsPersona}                     
                      onConnect={onConnect} 
                      onConnectError={onConnectError}>                     
                   </JoinRow>   

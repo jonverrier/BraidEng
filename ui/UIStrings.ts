@@ -18,7 +18,7 @@ export enum EUIStrings {
    kSendMessagePreamble = "Type a message here. If you want @Braid to reply, put '@Braid' in the message. All messages with the phrase '@Braid' are read by the bot, and no others.",
    kSendButtonPrompt = "Send",
    kSendMessagePlaceholder = "Write a message... ",   
-   kCopyJoinKeyButtonPrompt = "Copy the joining key",
+   kCopyJoinKeyButtonPrompt = "Copy the joining URL for this conversation to the clipboard",
    kDeleteConversationButtonPrompt = "Delete the history of this conversation",
 
    kAiNoGoodSources = "I don't have any good sources for this answer.",
