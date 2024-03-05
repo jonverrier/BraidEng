@@ -53,7 +53,8 @@ const pageOuterStyles = makeStyles({
       paddingLeft: '20px',
       paddingRight: '20px',
       paddingTop: '20px',
-      paddingBottom: '20px'         
+      paddingBottom: '20px',
+      webkitTextSizeAdjust: '100%'
    },
 });
 

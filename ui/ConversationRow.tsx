@@ -473,7 +473,7 @@ export const InputView = (props: IInputViewProps) => {
                className={messageInputClasses.root}                  
                required={true}                  
                value={message}
-               maxLength={512}
+               maxLength={256}
                contentBefore={<Mail24Regular />}
                placeholder={EUIStrings.kSendMessagePlaceholder}
                onChange={onKeyChange}
