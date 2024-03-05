@@ -17,6 +17,7 @@ import {
 } from '@fluentui/react-icons';
 
 import { JoinKey } from '../core/JoinKey';
+import { Persona } from '../core/Persona';
 import { JoinPageValidator } from '../core/JoinPageValidator';
 import { KeyRetriever } from '../core/KeyRetriever';
 import { EUIStrings } from './UIStrings';
@@ -26,6 +27,7 @@ import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
 
 export interface IJoinPageProps {
    joinKey: JoinKey;  
+   joinPersona: Persona;
    onConnect (joinKey: JoinKey, name: string) : void;
    onConnectError (hint_: string) : void;    
 }
@@ -67,10 +69,9 @@ export const JoinRow = (props: IJoinPageProps) => {
    const retriever = new KeyRetriever();
 
    const [name, setName] = useState<string>("");
-   const [joinKey, setJoinKey] = useState<JoinKey>(new JoinKey(""));
-   const [joinKeyText, setJoinKeyText] = useState<string>("");   
+   const [joinKey, setJoinKey] = useState<JoinKey>(props.joinKey);
+   const [joinKeyText, setJoinKeyText] = useState<string>(props.joinKey.asString);   
    const [canJoin, setCanJoin] = useState<boolean>(false);
-
 
    function onJoinAsChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
 
@@ -121,7 +122,9 @@ export const JoinRow = (props: IJoinPageProps) => {
       tryToJoin();
    }
 
-   if (props.joinKey.isValid) {
+   let joinValidator = new JoinPageValidator ();
+
+   if (joinValidator.isJoinAttemptReady (props.joinPersona.name, props.joinKey)) {
       return (<div></div>);
    }
    else {

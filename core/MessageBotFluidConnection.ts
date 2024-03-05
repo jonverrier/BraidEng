@@ -4,6 +4,7 @@ import { SharedMap } from "fluid-framework";import { Persona } from './Persona';
 import { Message } from './Message';
 import { IConnectionProps, FluidConnection } from './FluidConnection';
 import { CaucusOf } from './CaucusFramework';
+import { MDynamicStreamable } from "./StreamingFramework";
 import { throwIfUndefined } from './Asserts'; 
 import { EConfigStrings } from "./ConfigStrings";
 import { EIcon } from "./Icons";
@@ -53,12 +54,13 @@ export class MessageBotFluidConnection extends FluidConnection {
       this._participantCaucus = new CaucusOf<Persona>(initialObjects_.participantMap as SharedMap);
       this._messageCaucus = new CaucusOf<Message>(initialObjects_.messageMap as SharedMap, this.compareFn);  
       
-      this.setInitialValues(initialObjects_.participantMap as SharedMap);
+      this.setInitialValues(this._participantCaucus);
 
       let self = this;
 
       setInterval(() => {
-         self.checkAddAddSelfToAudience(initialObjects_.participantMap as SharedMap);
+         throwIfUndefined(self._participantCaucus);
+         self.checkAddAddSelfToAudience(self._participantCaucus);
        }, 10000);
    }
 
@@ -80,29 +82,38 @@ export class MessageBotFluidConnection extends FluidConnection {
       throwIfUndefined (this._messageCaucus);
       this._messageCaucus.removeAll ();      
       
-      this.setInitialValues (this._initialObjects.participantMap as SharedMap)
+      this.setInitialValues (this._participantCaucus)
    }
 
-   private setInitialValues (participantMap: SharedMap): void {
+   private setInitialValues (participantCaucus: CaucusOf<Persona>): void {
     
-      this.checkAddAddSelfToAudience (participantMap);
+      this.checkAddAddSelfToAudience (participantCaucus);
 
       // Add the Bot persona if its not already there
-      if (! participantMap.get(EConfigStrings.kBotGuid)) {
+      let isStored = participantCaucus.has(EConfigStrings.kBotGuid);
+
+      if (! isStored ) {
 
          let botPersona = new Persona (EConfigStrings.kBotGuid, EConfigStrings.kBotName, EIcon.kBotPersona, undefined, new Date());
-         let storedBot = botPersona.flatten();
-         participantMap.set(botPersona.id, storedBot);            
+         participantCaucus.add (botPersona.id, botPersona);            
       }
    }
 
-   private checkAddAddSelfToAudience (participantMap: SharedMap): void {
+   private checkAddAddSelfToAudience (participantCaucus: CaucusOf<Persona>): void {
 
-      if (! participantMap.get(this._localUser.id)) {
+      let isStored = participantCaucus.has(this._localUser.id);
+
+      if (! isStored ) {
 
          // Connect our own user ID to the participant caucus      
-         let storedMe = this._localUser.flatten();
-         participantMap.set(this._localUser.id, storedMe);            
+         participantCaucus.add (this._localUser.id, this._localUser);            
+      } 
+      else {
+         // Check the right name is stored - name changes as the user types it in the joining form
+         let stored = participantCaucus.get(this._localUser.id);         
+         if (stored.name !== this._localUser.name) {
+            participantCaucus.add (this._localUser.id, this._localUser);                 
+         }      
       }
    }   
 }

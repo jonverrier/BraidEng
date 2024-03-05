@@ -156,7 +156,8 @@ export class AiConnection {
 
       throwIfUndefined (author);
 
-      return (author.icon === EIcon.kPersonPersona) && (message.text.includes (EConfigStrings.kBotRequestSignature));
+      return (author.icon === EIcon.kPersonPersona) && 
+      (message.text.includes (EConfigStrings.kBotRequestSignature) || message.text.includes (EConfigStrings.kBotRequestSignatureLowerCase));
    }
 
 }
