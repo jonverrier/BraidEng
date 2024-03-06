@@ -140,18 +140,25 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    // call the force update hook 
    const forceUpdate = useForceUpdate();   
    
-   function onDelete () : void {
+   function refreshAfterTrim () : void {
 
       throwIfUndefined (fluidConnection);
-      let fluidMessagesConnection : MessageBotFluidConnection = fluidConnection;      
-      fluidMessagesConnection.resetAll ();
+      let fluidMessagesConnection : MessageBotFluidConnection = fluidConnection;    
 
       // Save state and force a refresh
       let messageArray = fluidMessagesConnection.messageCaucus().currentAsArray();      
       let audienceMap = fluidMessagesConnection.participantCaucus().current();
       setAudience (audienceMap);      
       setConversation (messageArray);                
-      forceUpdate ();        
+      forceUpdate ();       
+   }
+
+   function onTrimConversation () : void {
+
+      throwIfUndefined (fluidConnection);
+      let fluidMessagesConnection : MessageBotFluidConnection = fluidConnection;      
+      fluidMessagesConnection.resetMessages ();  
+      refreshAfterTrim ();        
    }
 
    function onSend (messageText_: string) : void {
@@ -233,7 +240,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
              conversation={conversation}
              audience={audience} 
              onSend={onSend} 
-             onDelete={onDelete}>
+             onTrimConversation={onTrimConversation}>
          </ConversationRow>
       );
 }

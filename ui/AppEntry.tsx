@@ -84,12 +84,15 @@ export const App = (props: IAppProps) => {
 
    // This little block attempts to pick up a joinkey from the URL after the #value
    // If it looks valid, we pre-populate the joining form
+   // *** BE CAREFUL HERE - CAN GENERATE INFINITE RE_RENDERING ***
    var hashValue: string = "";
    if (window.location.hash)
       hashValue = window.location.hash.substring(1);
    let joinAttempt = new JoinKey (hashValue);
-   if (joinAttempt.isValid && !(joinKey.asString === hashValue))
+   if (joinAttempt.isValid && !(joinKey.asString === hashValue)) {
+      window.location.hash = joinAttempt.asString;
       setJoinKey (joinAttempt);
+   }
 
          // call the force update hook 
    const forceUpdate = useForceUpdate(); 
