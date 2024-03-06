@@ -73,16 +73,16 @@ export class MessageBotFluidConnection extends FluidConnection {
       throwIfUndefined (this._messageCaucus);
       return this._messageCaucus;
    }    
-   
-   resetAll () : void {
 
-      throwIfUndefined (this._participantCaucus);      
+   resetMessages () : void {
+
+      throwIfUndefined (this._messageCaucus);      
+      this._messageCaucus.removeAll ();    
+      
+      throwIfUndefined (this._participantCaucus);  
       this._participantCaucus.removeAll ();
 
-      throwIfUndefined (this._messageCaucus);
-      this._messageCaucus.removeAll ();      
-      
-      this.setInitialValues (this._participantCaucus)
+      this.setInitialValues (this._participantCaucus);
    }
 
    private setInitialValues (participantCaucus: CaucusOf<Persona>): void {

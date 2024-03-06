@@ -39,13 +39,13 @@ import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { KnowledgeSource } from '../core/Knowledge';
 import { EUIStrings } from './UIStrings';
-import { innerColumnFooterStyles, innerColumnStyles, textFieldStyles } from './ColumnStyles';
+import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
 
 export interface IConversationHeaderProps {
 
    joinKey: JoinKey;
    audience: Map<string, Persona>;
-   onDelete () : void;   
+   onTrimConversation () : void;    
 }
 
 export interface IConversationRowProps {
@@ -55,7 +55,7 @@ export interface IConversationRowProps {
    audience: Map<string, Persona>;
    conversation: Array<Message>;
    onSend (message_: string) : void;   
-   onDelete () : void;
+   onTrimConversation () : void;   
    isBusy: boolean;
 }
 
@@ -86,17 +86,18 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
       // https://stackoverflow.com/questions/10783322/window-location-url-javascript
 
       let newUrl = window.location.protocol + // => "http:"
+      '//' +
       window.location.host +                  // => "example.com:3000"
       window.location.pathname +              // => "/pathname/
       '#' + props.joinKey.asString;
 
       navigator.clipboard.writeText (newUrl);
-   }    
+   }       
 
-   function onDelete (ev: React.MouseEvent<HTMLButtonElement>) : void {
+   function onTrimConversation (ev: React.MouseEvent<HTMLButtonElement>) : void {
 
-      props.onDelete();
-   }     
+      props.onTrimConversation();
+   }       
 
    return (
       <div className={headerRowClasses.root}>
@@ -124,16 +125,16 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
                   disabled={!(props.joinKey.isValid)} 
                   onClick={onCopy}
                />                 
-            </Tooltip>        
-            <Tooltip content={EUIStrings.kDeleteConversationButtonPrompt} 
+            </Tooltip>           
+            <Tooltip content={EUIStrings.kTrimConversationButtonPrompt} 
                relationship="label" positioning={'below'}>
                <ToolbarButton
                   icon={<Delete24Regular />}
-                  aria-label={EUIStrings.kDeleteConversationButtonPrompt} 
+                  aria-label={EUIStrings.kTrimConversationButtonPrompt} 
                   disabled={!(props.joinKey.isValid)} 
-                  onClick={onDelete}
+                  onClick={onTrimConversation}
                />  
-            </Tooltip>                      
+            </Tooltip>                              
          </Toolbar>           
       </div>
    );
@@ -211,7 +212,10 @@ export const ConversationRow = (props: IConversationRowProps) => {
          <div className={embeddedRowClasses.root}>      
             <div className={embeddedColumnClasses.root}>                     
 
-               <ConversationHeaderRow joinKey={props.joinKey} audience={props.audience} onDelete={props.onDelete}></ConversationHeaderRow>
+               <ConversationHeaderRow joinKey={props.joinKey} 
+                  audience={props.audience} 
+                  onTrimConversation={props.onTrimConversation}>                    
+                  </ConversationHeaderRow>
                
                &nbsp;
 
