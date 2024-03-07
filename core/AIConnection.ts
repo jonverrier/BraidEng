@@ -133,8 +133,6 @@ export class AIConnection {
 
          tokenAccumulator += messages[i].tokens;
 
-         console.log ("i is" + i +", tokens are " + tokenAccumulator);
-
          if (tokenAccumulator < kMaxTokens)
             iLowest = i;
       }      
