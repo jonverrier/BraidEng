@@ -73,6 +73,7 @@
       "npm": ">=10.x"
    },
    "dependencies": {
+      "gpt4-tokenizer": "^1.3.0",
       "openai": "^4.28.0"
    }
 }

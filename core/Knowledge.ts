@@ -24,7 +24,7 @@ function copyRelevance (relevance: number | undefined) : number | undefined {
  * @param timeStamp - when the item is dated from - can be undefined if not known
  * @param relevance - cosine relevance score to a query - can be undefined if the source reference has not been compared yet
  */
-export class KnowledgeSource extends MStreamable {
+export class KnowledgeSegment extends MStreamable {
    private _url: string;
    private _summary: string;
    private _ada_v2: Array<number>;
@@ -51,7 +51,7 @@ export class KnowledgeSource extends MStreamable {
     * Create a KnowledgeSource object
     * @param source - object to copy from - should work for JSON format and for real constructed objects
     */
-   public constructor(source: KnowledgeSource);
+   public constructor(source: KnowledgeSegment);
 
    public constructor(...arr: any[])
    {
@@ -104,7 +104,7 @@ export class KnowledgeSource extends MStreamable {
 
       const obj = JSON.parse(stream);
 
-      this.assign(new KnowledgeSource (obj.url, obj.summary, obj.ada_v2, obj.timeStamp, obj.relevance));   
+      this.assign(new KnowledgeSegment (obj.url, obj.summary, obj.ada_v2, obj.timeStamp, obj.relevance));   
    }
 
    /**
@@ -159,7 +159,7 @@ export class KnowledgeSource extends MStreamable {
     * Uses field values, not identity bcs if objects are streamed to/from JSON, field identities will be different. 
     * @param rhs - the object to compare this one to.  
     */
-   equals(rhs: KnowledgeSource): boolean {
+   equals(rhs: KnowledgeSegment): boolean {
 
       return ((this._url === rhs._url) &&
          (this._summary === rhs._summary) &&
@@ -172,7 +172,7 @@ export class KnowledgeSource extends MStreamable {
     * assignment operator 
     * @param rhs - the object to assign this one from.  
     */
-   assign(rhs: KnowledgeSource): KnowledgeSource {
+   assign(rhs: KnowledgeSegment): KnowledgeSegment {
 
       this._url = rhs._url;
       this._summary = rhs._summary;
@@ -184,18 +184,19 @@ export class KnowledgeSource extends MStreamable {
    }
 }
 
-export const kDefaultKnowledgeSourceCount: number = 3;
+export const kDefaultKnowledgeSegmentCount: number = 3;
 export const kDefaultMinimumCosineSimilarity = 0.8;
 
 /**
- * KnowledgeSources object
- * @param sources: Array of sources - can be zero length when created. 
+ * KnowledgeSegmentFinder object
+ * @param similarityThresholdLo_: Lowest cosine similarity to allow
+ * @param howMany_: how many segments to collect
  * Conceptually this class acts a 'bag' - keeps the top N sources in an unordererd array, only sorts them when requested at the end,
  * which avoids lots of re-sorting while searching for the top N. Should be OK performance wise as the loest value will climb up quite quickly. 
  */
-export class KnowledgeSourceBuilder {
+export class KnowledgeSegmentFinder {
 
-   private _sources: Array<KnowledgeSource>;
+   private _segments: Array<KnowledgeSegment>;
    private _similarityThresholdLo: number;
    private _howMany : number;
 
@@ -209,7 +210,7 @@ export class KnowledgeSourceBuilder {
       if (similarityThresholdLo_ < -1 || similarityThresholdLo_ > 1)
          throw new InvalidParameterError ("Cosine similarity must be between -1 and 1.");
 
-      this._sources = new Array<KnowledgeSource> ();  
+      this._segments = new Array<KnowledgeSegment> ();  
       this._similarityThresholdLo = similarityThresholdLo_;
       this._howMany = howMany_;            
    }
@@ -223,8 +224,8 @@ export class KnowledgeSourceBuilder {
    get howMany (): number {
       return this._howMany;
    }        
-   get sources (): Array<KnowledgeSource> {
-      return this._sources;
+   get sources (): Array<KnowledgeSegment> {
+      return this._segments;
    }   
 
    /**
@@ -232,11 +233,11 @@ export class KnowledgeSourceBuilder {
     * Uses field values, not identity bcs if objects are streamed to/from JSON, field identities will be different. 
     * @param rhs - the object to compare this one to.  
     */
-   equals(rhs: KnowledgeSourceBuilder): boolean {
+   equals(rhs: KnowledgeSegmentFinder): boolean {
 
       return (this._howMany == rhs._howMany 
          && this._similarityThresholdLo == rhs._similarityThresholdLo 
-         && areSameDeepArray (this._sources, rhs._sources));
+         && areSameDeepArray (this._segments, rhs._segments));
    }
 
    /**
@@ -245,15 +246,15 @@ export class KnowledgeSourceBuilder {
     */
    private lowestOfCurrent (): number {
 
-      if (this._sources.length === 0)
+      if (this._segments.length === 0)
          return -1;
 
-      let lowestRelevance = this._sources[0].relevance;
+      let lowestRelevance = this._segments[0].relevance;
       let lowestIndex = 0;
 
-      for (let i = 1; i < this._sources.length; i++) {
+      for (let i = 1; i < this._segments.length; i++) {
 
-         let comp = this._sources[i].relevance;
+         let comp = this._segments[i].relevance;
 
          if (typeof comp !== 'undefined' && typeof lowestRelevance !== 'undefined') {
           
@@ -271,24 +272,24 @@ export class KnowledgeSourceBuilder {
     * searches current most relevant results to see if the new one should be included.  
     * @param candidate - the object to test  
     */
-   replaceIfBeatsCurrent (candidate: KnowledgeSource): boolean {
+   replaceIfBeatsCurrent (candidate: KnowledgeSegment): boolean {
 
       // If the array can grow we just add the new candidate
-      if (this._sources.length < this._howMany) {
+      if (this._segments.length < this._howMany) {
          if (typeof candidate.relevance !== 'undefined' && candidate.relevance >= this._similarityThresholdLo) {
-            this._sources.push (candidate);
+            this._segments.push (candidate);
          }
          return true;
       }
 
       // Else we do a search an insert new if it is below current
       let lowestIndex = this.lowestOfCurrent();
-      let currentLowest = this._sources[lowestIndex];
+      let currentLowest = this._segments[lowestIndex];
 
       if (typeof currentLowest.relevance !== 'undefined' 
       && typeof candidate.relevance !== 'undefined') {
          if (currentLowest.relevance < candidate.relevance && candidate.relevance >= this._similarityThresholdLo) {
-            this._sources[lowestIndex] = candidate;
+            this._segments[lowestIndex] = candidate;
             return true;
          }
       }
@@ -320,9 +321,9 @@ export function cosineSimilarity(vector1: number[], vector2: number[]): number {
 }
 
 export class KnowledgeRepository  {
-   static lookUpMostSimilar (embedding: Array<number>, similarityThresholdLo: number, howMany: number) : KnowledgeSourceBuilder {
+   static lookUpMostSimilar (embedding: Array<number>, similarityThresholdLo: number, howMany: number) : KnowledgeSegmentFinder {
 
-      let bestSources = new KnowledgeSourceBuilder(similarityThresholdLo, howMany);
+      let bestSources = new KnowledgeSegmentFinder(similarityThresholdLo, howMany);
 
       YouTubeRespository.lookUpMostSimilar (embedding, bestSources);
       MarkdownRespository.lookUpMostSimilar (embedding, bestSources);  
@@ -338,7 +339,7 @@ export class KnowledgeRepository  {
  */
 class YouTubeRespository  {
    
-   static lookUpMostSimilar (embedding: Array<number>, builder: KnowledgeSourceBuilder): void {
+   static lookUpMostSimilar (embedding: Array<number>, builder: KnowledgeSegmentFinder): void {
 
       let embeddings = new Array<LiteEmbedding>();
       embeddings = liteYouTubeEmbeddings as Array<LiteEmbedding>;
@@ -348,7 +349,7 @@ class YouTubeRespository  {
          let url = makeYouTubeUrl (embeddings[i].sourceId, embeddings[i].start, embeddings[i].seconds);
          let relevance = Number (cosineSimilarity (embedding, embeddings[i].ada_v2).toPrecision(2));
 
-         let candidate = new KnowledgeSource (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, relevance);
+         let candidate = new KnowledgeSegment (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, relevance);
          let changed = builder.replaceIfBeatsCurrent (candidate);
       }      
    }
@@ -361,7 +362,7 @@ class YouTubeRespository  {
  */
 class MarkdownRespository  {
    
-   static lookUpMostSimilar (embedding: Array<number>, builder: KnowledgeSourceBuilder): void {
+   static lookUpMostSimilar (embedding: Array<number>, builder: KnowledgeSegmentFinder): void {
 
       let embeddings = new Array<LiteEmbedding>();
       embeddings = liteMarkdownEmbeddings as Array<LiteEmbedding>;
@@ -371,7 +372,7 @@ class MarkdownRespository  {
          let url = makeGithubUrl (embeddings[i].sourceId);
          let relevance = Number (cosineSimilarity (embedding, embeddings[i].ada_v2).toPrecision(2));
 
-         let candidate = new KnowledgeSource (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, relevance);
+         let candidate = new KnowledgeSegment (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, relevance);
          let changed = builder.replaceIfBeatsCurrent (candidate);
       }      
    }
@@ -380,7 +381,7 @@ class MarkdownRespository  {
 
 class HtmlRespository  {
    
-   static lookUpMostSimilar (embedding: Array<number>, builder: KnowledgeSourceBuilder): void {
+   static lookUpMostSimilar (embedding: Array<number>, builder: KnowledgeSegmentFinder): void {
 
       let embeddings = new Array<LiteEmbedding>();
       embeddings = liteHtmlEmbeddings as Array<LiteEmbedding>;
@@ -390,7 +391,7 @@ class HtmlRespository  {
          let url = makeWebUrl (embeddings[i].sourceId);
          let relevance = Number (cosineSimilarity (embedding, embeddings[i].ada_v2).toPrecision(2));
 
-         let candidate = new KnowledgeSource (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, relevance);
+         let candidate = new KnowledgeSegment (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, relevance);
          let changed = builder.replaceIfBeatsCurrent (candidate);
       }      
    }
@@ -400,7 +401,7 @@ class HtmlRespository  {
 export class KnowledgeEnrichedMessage extends MStreamable {
 
    private _message: string;
-   private _sources: Array<KnowledgeSource>;
+   private _sources: Array<KnowledgeSegment>;
 
    /**
     * Create an empty KnowledgeEnrichedMessage object - required for particiation in serialisation framework
@@ -412,7 +413,7 @@ export class KnowledgeEnrichedMessage extends MStreamable {
     * @param message_: the message back from the AI 
     * @param sources_: array of the best source objects
     */
-   public constructor(message_: string, sources_: Array<KnowledgeSource>);
+   public constructor(message_: string, sources_: Array<KnowledgeSegment>);
 
    /**
     * Create a KnowledgeEnrichedMessage object
@@ -428,7 +429,7 @@ export class KnowledgeEnrichedMessage extends MStreamable {
       if (arr.length === 0) {   
 
          this._message = "";         
-         this._sources = new Array<KnowledgeSource> ();                          
+         this._sources = new Array<KnowledgeSegment> ();                          
          return;
       }
 
@@ -453,10 +454,10 @@ export class KnowledgeEnrichedMessage extends MStreamable {
 
       this._message = obj.message;
 
-      this._sources = new Array<KnowledgeSource> (); 
+      this._sources = new Array<KnowledgeSegment> (); 
 
       for (let i = 0; i < obj.sources.length; i++) {
-         let newSource = new KnowledgeSource (obj.sources[i]);
+         let newSource = new KnowledgeSegment (obj.sources[i]);
          this._sources.push (newSource);
       }
    }
@@ -467,7 +468,7 @@ export class KnowledgeEnrichedMessage extends MStreamable {
    get message (): string {
       return this._message;
    }     
-   get sources (): Array<KnowledgeSource> {
+   get sources (): Array<KnowledgeSegment> {
       return this._sources;
    }   
 
@@ -478,7 +479,7 @@ export class KnowledgeEnrichedMessage extends MStreamable {
 
       this._message = message_;
    }   
-   set sources(sources_: Array<KnowledgeSource>) {
+   set sources(sources_: Array<KnowledgeSegment>) {
 
       this._sources = sources_;
    }   

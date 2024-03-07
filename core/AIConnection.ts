@@ -13,7 +13,7 @@ import { throwIfUndefined } from './Asserts';
 import { ConnectionError } from "./Errors";
 import { KeyRetriever } from "./KeyRetriever";
 import { Environment, EEnvironment } from "./Environment";
-import { KnowledgeEnrichedMessage, KnowledgeRepository, kDefaultKnowledgeSourceCount, kDefaultMinimumCosineSimilarity} from "./Knowledge";
+import { KnowledgeEnrichedMessage, KnowledgeRepository, kDefaultKnowledgeSegmentCount, kDefaultMinimumCosineSimilarity} from "./Knowledge";
 
 // Logging handler
 const logger = {
@@ -72,7 +72,7 @@ export class AiConnection {
 
       let embedding = await this.createEmbedding (mostRecent);
 
-      let enriched = KnowledgeRepository.lookUpMostSimilar (embedding, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSourceCount);
+      let enriched = KnowledgeRepository.lookUpMostSimilar (embedding, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);
 
       return new KnowledgeEnrichedMessage (response.data.choices[0].message.content as string, enriched.sources);
    }    

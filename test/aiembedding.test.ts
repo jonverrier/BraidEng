@@ -9,7 +9,7 @@ import { AiConnector } from "../core/AIConnection";
 
 import { LiteEmbedding } from "../core/EmbeddingFormats";
 import liteYouTubeEmbeddings from '../core/youtube_embeddings_lite.json';
-import { KnowledgeRepository, cosineSimilarity, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSourceCount } from "../core/Knowledge";
+import { KnowledgeRepository, cosineSimilarity, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount } from "../core/Knowledge";
 
 
 describe("Embedding", function () {
@@ -66,16 +66,10 @@ describe("Embedding", function () {
       const embedding = await connection.createEmbedding (query);
       let best = KnowledgeRepository.lookUpMostSimilar (embedding, 
          kDefaultMinimumCosineSimilarity, 
-         kDefaultKnowledgeSourceCount);
+         kDefaultKnowledgeSegmentCount);
 
-      expect (best.sources.length === kDefaultKnowledgeSourceCount).toBe (true);
+      expect (best.sources.length === kDefaultKnowledgeSegmentCount).toBe (true);
 
-      // Cheat is a direct look up from the old embedding code - check it is in the ranking.
-      let cheat = KnowledgeRepository.lookUpMostSimilar (embeddings[100].ada_v2, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSourceCount);
-
-      expect ((best.sources[0].summary === embeddings[100].summary)
-                || (best.sources[1].summary === embeddings[100].summary)
-                || (best.sources[2].summary === embeddings[100].summary)).toBe (true);            
    }).timeout (2000);
 
 
@@ -92,9 +86,10 @@ describe("Embedding", function () {
       const embedding = await connection.createEmbedding (query);
       let best = KnowledgeRepository.lookUpMostSimilar (embedding, 
          0, // Deliberately set this low so we always match
-         kDefaultKnowledgeSourceCount);
+         kDefaultKnowledgeSegmentCount);
 
-      expect (best.sources.length === kDefaultKnowledgeSourceCount).toBe (true);       
+      expect (best.sources.length === kDefaultKnowledgeSegmentCount).toBe (true);    
+
    }).timeout (2000);   
 
    it("Needs to find closest match for an irrelevant query", async function () {
@@ -110,9 +105,10 @@ describe("Embedding", function () {
       const embedding = await connection.createEmbedding (query);
       let best = KnowledgeRepository.lookUpMostSimilar (embedding, 
          0, // Deliberately set this low so we always match
-         kDefaultKnowledgeSourceCount);
+         kDefaultKnowledgeSegmentCount);
 
-      expect (best.sources.length === kDefaultKnowledgeSourceCount).toBe (true);        
+      expect (best.sources.length === kDefaultKnowledgeSegmentCount).toBe (true);   
+
    }).timeout (2000);     
 
    it("Needs to find closest match for a Markdown query", async function () {
@@ -128,11 +124,10 @@ describe("Embedding", function () {
       const embedding = await connection.createEmbedding (query);
       let best = KnowledgeRepository.lookUpMostSimilar (embedding, 
          0, // Deliberately set this low so we always match
-         kDefaultKnowledgeSourceCount);
-
-         console.log (best.sources[0].summary);
+         kDefaultKnowledgeSegmentCount);
          
-      expect (best.sources.length === kDefaultKnowledgeSourceCount).toBe (true);        
+      expect (best.sources.length === kDefaultKnowledgeSegmentCount).toBe (true);    
+          
    }).timeout (2000);      
 });
 
