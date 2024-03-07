@@ -15,7 +15,7 @@ import { JoinPageValidator } from '../core/JoinPageValidator';
 import { ConversationRow } from './ConversationRow';
 import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
 import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } from '../core/NotificationFramework';
-import { AiConnection, AiConnector } from '../core/AIConnection';
+import { AIConnection, AIConnector } from '../core/AIConnection';
 import { EUIStrings } from './UIStrings';
 import { EConfigStrings } from '../core/ConfigStrings';
 import { KnowledgeEnrichedMessage } from '../core/Knowledge';
@@ -183,15 +183,15 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       // If AI is being invoked we make a call here 
       // ======================================================
-      if (AiConnection.isBotRequest (message, audienceMap)) {
+      if (AIConnection.isBotRequest (message, audienceMap)) {
 
          setIsBusy(true);
 
-         let connectionPromise = AiConnector.connect (props.joinKey.firstPart);
+         let connectionPromise = AIConnector.connect (props.joinKey.firstPart);
 
-         connectionPromise.then ( (connection : AiConnection) => {
+         connectionPromise.then ( (connection : AIConnection) => {
 
-            let query = AiConnection.makeOpenAiQuery (messageArray, audienceMap);
+            let query = AIConnection.makeOpenAIQuery (messageArray, audienceMap);
 
             connection.queryAI (messageText_, query).then ((result_: KnowledgeEnrichedMessage) => {
                
@@ -200,7 +200,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
                message.authorId = EConfigStrings.kBotGuid;
                message.text = result_.message;
                message.sentAt = new Date();
-               message.sources = result_.sources; // Add KnowledgeSources
+               message.segments = result_.sources; // Add KnowledgeSources
 
                // Push it to shared data
                fluidMessagesConnection.messageCaucus().add (message.id, message);

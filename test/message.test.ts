@@ -150,7 +150,7 @@ describe("Message", function () {
 
       let sources = new Array<KnowledgeSegment> ();
       sources.push (ks1);
-      messageWithSources.sources = sources;      
+      messageWithSources.segments = sources;      
       var stream: string = messageWithSources.streamOut();
 
       var messageNew: Message = new Message(message1.id, message1.authorId, message1.responseToId, message1.text, message1.sentAt);
@@ -180,7 +180,7 @@ describe("Message", function () {
 
       let sources = new Array<KnowledgeSegment> ();
       sources.push (ks1);
-      messageWithSources.sources = sources;      
+      messageWithSources.segments = sources;      
      
       var stream: string = messageWithSources.flatten();
 
@@ -213,7 +213,7 @@ describe("Message", function () {
 
       let sources = new Array<KnowledgeSegment> ();
       sources.push (ks1);
-      messageWithSources.sources = sources;      
+      messageWithSources.segments = sources;      
       expect(messageWithSources.isDirty).toEqual(true);         
       expect(messageWithSources.tokens > 2).toEqual(true);
       expect(messageWithSources.isDirty).toEqual(false);       

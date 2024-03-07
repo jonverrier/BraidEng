@@ -10,7 +10,7 @@ import { Persona } from './Persona';
 import { EIcon } from './Icons';
 import { EConfigStrings } from './ConfigStrings';
 import { throwIfUndefined } from './Asserts';
-import { ConnectionError } from "./Errors";
+import { ConnectionError, AssertionFailedError } from "./Errors";
 import { KeyRetriever } from "./KeyRetriever";
 import { Environment, EEnvironment } from "./Environment";
 import { KnowledgeEnrichedMessage, KnowledgeRepository, kDefaultKnowledgeSegmentCount, kDefaultMinimumCosineSimilarity} from "./Knowledge";
@@ -24,7 +24,10 @@ const logger = {
    [LogLevel.DEBUG]: (tag, msg, params) => console.log(msg, ...params),
 } as Record<LogLevel, (tag: string, msg: unknown, params: unknown[]) => void>;
 
-export class AiConnection {
+// Actual is 2048, but leave some headroom
+const kMaxTokens : number= 1536;
+
+export class AIConnection {
 
    private _activeCallCount: number;
    private _key: string;   
@@ -116,25 +119,57 @@ export class AiConnection {
       return this._activeCallCount !== 0;
    }
 
-   static makeOpenAiQuery (messages: Array<Message>, authors: Map<string, Persona>): Array<Object> {
+   static findEarliestMessageIndexWithinTokenLimit (messages: Array<Message>, authors: Map<string, Persona>) : number {
+
+      if (messages.length == 0)      
+         throw new AssertionFailedError ("Message array is zero length.");
+      if (messages.length == 1)
+         return 0;
+
+      let tokenAccumulator = 0;
+      let iLowest = 0;
+
+      for (let i = messages.length - 1; i >= 0 && tokenAccumulator < kMaxTokens; i--) {
+
+         tokenAccumulator += messages[i].tokens;
+
+         console.log ("i is" + i +", tokens are " + tokenAccumulator);
+
+         if (tokenAccumulator < kMaxTokens)
+            iLowest = i;
+      }      
+      return iLowest;
+   }
+
+   static makeOpenAIQuery (messages: Array<Message>, authors: Map<string, Persona>): Array<Object> {
 
       let builtQuery = new Array<Object> ();
 
       let prompt = { role: 'system', content: EConfigStrings.kOpenAiPersonaPrompt };
       builtQuery.push (prompt);      
 
-      for (const message of messages) {
+      var start = AIConnection.findEarliestMessageIndexWithinTokenLimit(messages, authors);
 
-         if (AiConnection.isBotRequest(message, authors)) {
+      for (let i = start; i < messages.length; i++) {
+
+         let message = messages[i];
+
+         if (AIConnection.isBotRequest(message, authors)) {
 
             let edited = message.text.replace (EConfigStrings.kBotRequestSignature, "");
             let entry = { role: 'user', content: edited };
             builtQuery.push (entry);
          }
 
-         if (AiConnection.isBotMessage(message, authors)) {
+         if (AIConnection.isBotMessage(message, authors)) {
+            
             let entry = { role: 'assistant', content: message.text };
-            builtQuery.push (entry);
+            builtQuery.push (entry);     
+
+            for (let j = 0; j < message.segments.length; j++) {
+               let entry = { role: 'assistant', content: message.segments[j].summary };
+               builtQuery.push (entry);
+            }                   
          }         
 
       }
@@ -162,9 +197,9 @@ export class AiConnection {
 
 }
 
-export class AiConnector {
+export class AIConnector {
    
-   static async connect (joinKey_: string) : Promise<AiConnection> {
+   static async connect (joinKey_: string) : Promise<AIConnection> {
 
       let retriever = new KeyRetriever ();
       var url: string;
@@ -178,6 +213,6 @@ export class AiConnector {
                                        EConfigStrings.kRequestKeyParameterName, 
                                        joinKey_);
 
-      return new AiConnection (aiKey);
+      return new AIConnection (aiKey);
    }
 }

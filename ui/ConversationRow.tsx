@@ -363,9 +363,9 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
 
    if (props.showAiWarning) {
       
-      if (props.message.sources.length > 0) { 
+      if (props.message.segments.length > 0) { 
 
-         aiSources = props.message.sources.map ((knowledgeSource : KnowledgeSegment) => {
+         aiSources = props.message.segments.map ((knowledgeSource : KnowledgeSegment) => {
    
             let relevanceText = knowledgeSource.relevance ? (knowledgeSource.relevance * 100).toPrecision(2) + '%': "";
             let relevanceClasses = knowledgeSource.relevance ? knowledgeSource.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
