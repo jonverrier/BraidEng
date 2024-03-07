@@ -4,7 +4,7 @@ import { MDynamicStreamable } from '../core/StreamingFramework';
 import { Message} from '../core/Message';
 import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
-import { KnowledgeSource } from '../core/Knowledge';
+import { KnowledgeSegment } from '../core/Knowledge';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -145,12 +145,12 @@ describe("Message", function () {
 
    it("Needs to convert to and from JSON() with KnowledgeSources attached", function () {
 
-      let ks1 = new KnowledgeSource(message1.id, message1.text, new Array<number>(), undefined, undefined);
+      let ks1 = new KnowledgeSegment(message1.id, message1.text, new Array<number>(), undefined, undefined);
       let messageWithSources = new Message (message1);
 
-      let sources = new Array<KnowledgeSource> ();
+      let sources = new Array<KnowledgeSegment> ();
       sources.push (ks1);
-      messageWithSources.sources = sources;      
+      messageWithSources.segments = sources;      
       var stream: string = messageWithSources.streamOut();
 
       var messageNew: Message = new Message(message1.id, message1.authorId, message1.responseToId, message1.text, message1.sentAt);
@@ -175,12 +175,12 @@ describe("Message", function () {
 
    it("Needs to dynamically create Message to and from JSON() with KnowledgeSources attached", function () {
 
-      let ks1 = new KnowledgeSource(message1.id, message1.text, new Array<number>(), undefined, undefined);
+      let ks1 = new KnowledgeSegment(message1.id, message1.text, new Array<number>(), undefined, undefined);
       let messageWithSources = new Message (message1);
 
-      let sources = new Array<KnowledgeSource> ();
+      let sources = new Array<KnowledgeSegment> ();
       sources.push (ks1);
-      messageWithSources.sources = sources;      
+      messageWithSources.segments = sources;      
      
       var stream: string = messageWithSources.flatten();
 
@@ -192,5 +192,31 @@ describe("Message", function () {
 
       expect(messageWithSources.equals(messageNew)).toEqual(true);
    });   
+
+   it("Needs to count with tokens KnowledgeSources attached", function () {
+
+      let ks1 = new KnowledgeSegment(message1.id, message1.text, new Array<number>(), undefined, undefined);
+
+      var messageNew: Message = new Message();  
+      expect(messageNew.isDirty).toEqual(true);          
+      expect(messageNew.tokens > 1).toEqual(false);
+      expect(messageNew.isDirty).toEqual(false);   
+
+      messageNew.text = "Some text and a bit more x y x help this needs to be longer than 2 tokens";
+      ks1.summary = messageNew.text;
+
+      expect(messageNew.tokens > 1).toEqual(true);
+      expect(messageNew.isDirty).toEqual(false); 
+
+      let messageWithSources = new Message (messageNew);
+      expect(messageWithSources.isDirty).toEqual(true); 
+
+      let sources = new Array<KnowledgeSegment> ();
+      sources.push (ks1);
+      messageWithSources.segments = sources;      
+      expect(messageWithSources.isDirty).toEqual(true);         
+      expect(messageWithSources.tokens > 2).toEqual(true);
+      expect(messageWithSources.isDirty).toEqual(false);       
+   });    
 
 });

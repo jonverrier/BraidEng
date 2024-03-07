@@ -37,7 +37,7 @@ import { EConfigStrings }  from '../core/ConfigStrings';
 import { JoinKey } from '../core/JoinKey';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
-import { KnowledgeSource } from '../core/Knowledge';
+import { KnowledgeSegment } from '../core/Knowledge';
 import { EUIStrings } from './UIStrings';
 import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
 
@@ -363,9 +363,9 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
 
    if (props.showAiWarning) {
       
-      if (props.message.sources.length > 0) { 
+      if (props.message.segments.length > 0) { 
 
-         aiSources = props.message.sources.map ((knowledgeSource : KnowledgeSource) => {
+         aiSources = props.message.segments.map ((knowledgeSource : KnowledgeSegment) => {
    
             let relevanceText = knowledgeSource.relevance ? (knowledgeSource.relevance * 100).toPrecision(2) + '%': "";
             let relevanceClasses = knowledgeSource.relevance ? knowledgeSource.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 

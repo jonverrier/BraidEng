@@ -1,13 +1,14 @@
 // Copyright (c) 2024 Braid Technologies Ltd
 
+import GPT4Tokenizer from 'gpt4-tokenizer';
+
 import { InvalidParameterError } from './Errors';
-import { EIcon } from './Icons';
 import { throwIfUndefined } from './Asserts'; 
 import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 import { MDynamicStreamable, DynamicStreamableFactory } from "./StreamingFramework";
 import { areSameDate, areSameDeepArray } from './Utilities';
-import { KnowledgeSource } from './Knowledge';
+import { KnowledgeSegment } from './Knowledge';
 
 var keyGenerator: IKeyGenerator = new UuidKeyGenerator();
 
@@ -20,7 +21,9 @@ export class Message extends MDynamicStreamable {
    private _responseToId: string | undefined;   
    private _text: string;
    private _sentAt: Date;
-   private _sources: Array<KnowledgeSource>;
+   private _segments: Array<KnowledgeSegment>;
+   private _tokens: number;
+   private _isDirty: boolean;
 
    /**
     * Create an empty Message object - required for particiation in serialisation framework
@@ -47,7 +50,7 @@ export class Message extends MDynamicStreamable {
     * @param sources_ - relevent knowledge sources that help understand / provide context for the message. 
     */
    public constructor(id_: string | undefined, authorId_: string | undefined, responseToId_: string | undefined, text_: string, sentAt: Date,
-                      sources_: Array<KnowledgeSource>);
+                      sources_: Array<KnowledgeSegment>);
 
    /**
     * Create a Message object
@@ -66,7 +69,9 @@ export class Message extends MDynamicStreamable {
          this._responseToId = undefined;
          this._text = "";         
          this._sentAt = new Date();
-         this._sources = new Array<KnowledgeSource> ();
+         this._segments = new Array<KnowledgeSegment> ();
+         this._tokens = 0;
+         this._isDirty = true;
          return;
       }
 
@@ -75,7 +80,7 @@ export class Message extends MDynamicStreamable {
       var localResponseToId: string;
       var localText: string;
       var localSentAt: Date;
-      var localSources: Array<KnowledgeSource>;
+      var localSegments: Array<KnowledgeSegment>;
 
       if (arr.length === 1) {
          localId = arr[0]._id
@@ -83,7 +88,7 @@ export class Message extends MDynamicStreamable {
          localResponseToId = arr[0]._responseToId;
          localText = arr[0]._text;         
          localSentAt = new Date(arr[0]._sentAt);
-         localSources = arr[0]._sources;
+         localSegments = arr[0]._segments;
       }
       else if (arr.length === 5) {
          localId = arr[0];
@@ -91,7 +96,7 @@ export class Message extends MDynamicStreamable {
          localResponseToId = arr[2];
          localText = arr[3];           
          localSentAt = new Date (arr[4]); 
-         localSources = new Array<KnowledgeSource>();         
+         localSegments = new Array<KnowledgeSegment>();         
       }
       else { 
          localId = arr[0];
@@ -99,7 +104,7 @@ export class Message extends MDynamicStreamable {
          localResponseToId = arr[2];
          localText = arr[3];           
          localSentAt = new Date (arr[4]);         
-         localSources = arr[5];
+         localSegments = arr[5];
       }
 
       if (!Message.isValidId(localId)) {
@@ -111,7 +116,9 @@ export class Message extends MDynamicStreamable {
       this._responseToId = localResponseToId;      
       this._text = localText;
       this._sentAt = localSentAt;
-      this._sources = localSources;
+      this._segments = localSegments;
+      this._tokens = 0;
+      this._isDirty = true;      
    }
 
    /**
@@ -129,22 +136,24 @@ export class Message extends MDynamicStreamable {
    static _dynamicStreamableFactory: DynamicStreamableFactory = new DynamicStreamableFactory(className, Message.createDynamicInstance);
    streamOut(): string {
 
-      return JSON.stringify({ id: this._id, authorId: this._authorId, responseToId: this._responseToId, text: this._text, sentAt: this._sentAt,
-                              sources: this._sources});
+      return JSON.stringify({ id: this._id, authorId: this._authorId, 
+                            responseToId: this._responseToId, 
+                            text: this._text, sentAt: this._sentAt,
+                            segments: this._segments});
    }
 
    streamIn(stream: string): void {
 
       const obj = JSON.parse(stream);
 
-      let sources = new Array<KnowledgeSource> (); 
+      let segments = new Array<KnowledgeSegment> (); 
 
-      for (let i = 0; i < obj.sources.length; i++) {
-         let newSource = new KnowledgeSource (obj.sources[i]);
-         sources.push (newSource);
+      for (let i = 0; i < obj.segments.length; i++) {
+         let newSource = new KnowledgeSegment (obj.segments[i]);
+         segments.push (newSource);
       }      
 
-      this.assign(new Message (obj.id, obj.authorId, obj.responseToId, obj.text, new Date(obj.sentAt), sources));
+      this.assign(new Message (obj.id, obj.authorId, obj.responseToId, obj.text, new Date(obj.sentAt), segments));
    }
 
    /**
@@ -165,9 +174,28 @@ export class Message extends MDynamicStreamable {
    get sentAt(): Date {
       return this._sentAt;
    }
-   get sources(): Array<KnowledgeSource> {
-      return this._sources;
+   get segments(): Array<KnowledgeSegment> {
+      return this._segments;
    }
+   get isDirty(): boolean {
+      return this._isDirty;
+   }   
+   get tokens(): number {
+      if (this._isDirty) {
+         const tokenizer = new GPT4Tokenizer({ type: 'gpt3' }); 
+
+         let estimatedTokens = tokenizer.estimateTokenCount(this._text);
+
+         if (this._segments) {
+            for (let i = 0; i < this._segments.length; i++) {
+               estimatedTokens += tokenizer.estimateTokenCount(this._segments[i].summary);
+            }
+         }
+         this._tokens = estimatedTokens;
+         this._isDirty = false;
+      }
+      return this._tokens;
+   }    
    get checkedResponseToId(): string {
       throwIfUndefined (this._responseToId);        
       return this._responseToId;
@@ -192,6 +220,7 @@ export class Message extends MDynamicStreamable {
    set text (text_: string) {
 
       this._text = text_;
+      this._isDirty = true;
    }
 
    set responseToId(responseToId_: string) {
@@ -204,8 +233,9 @@ export class Message extends MDynamicStreamable {
       this._sentAt = new Date(sentAt_);
    }
 
-   set sources (sources_: Array<KnowledgeSource>) {
-      this._sources = sources_;
+   set segments (segments_: Array<KnowledgeSegment>) {
+      this._segments = segments_;
+      this._isDirty = true;      
    }
 
    /**
@@ -220,7 +250,7 @@ export class Message extends MDynamicStreamable {
          ((this._responseToId === undefined && rhs._responseToId === undefined) || (this._responseToId === rhs._responseToId)) &&         
          (this._text === rhs._text) &&         
          (areSameDate (this._sentAt, rhs._sentAt)) &&
-         areSameDeepArray (this._sources, rhs._sources));
+         areSameDeepArray (this._segments, rhs._segments));
    }
 
    /**
@@ -233,7 +263,9 @@ export class Message extends MDynamicStreamable {
       this._responseToId = rhs._responseToId;      
       this._text = rhs._text;
       this._sentAt = new Date (rhs._sentAt);
-      this._sources = rhs._sources;
+      this._segments = rhs._segments;
+      this._tokens = 0;
+      this._isDirty = true;      
 
       return this;
    }

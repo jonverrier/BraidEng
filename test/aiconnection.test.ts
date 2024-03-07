@@ -2,20 +2,15 @@
 // Copyright Braid Technologies ltd, 2024
 import { throwIfUndefined } from '../core/Asserts';
 import { Message} from '../core/Message';
+import { KnowledgeSegment } from '../core/Knowledge';
 import { Persona} from '../core/Persona';
 import { EIcon } from '../core/Icons';
-import { EConfigStrings, KStubEnvironmentVariables} from '../core/ConfigStrings'; 
+import { KStubEnvironmentVariables} from '../core/ConfigStrings'; 
 import { EEnvironment, Environment } from '../core/Environment';
-import { IKeyGenerator } from '../core/KeyGenerator';
-import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
-import { AiConnection, AiConnector } from '../core/AIConnection';
+import { AIConnection, AIConnector } from '../core/AIConnection';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
-
-import axios from "axios";
-
-let keyGenerator: IKeyGenerator = new UuidKeyGenerator();
 
 let myMessageId: string = "1234";
 let myAuthorId: string = "Jon";
@@ -28,7 +23,7 @@ let botText = "Bye";
 var botSentAt = new Date(0);
 
 let myBotRequestId: string = "12345";
-let myBotRequestText = "Hello @BraidBot Please help me understand the difference between investing in a unit trust and investing in an equity in less than 50 words.";
+let myBotRequestText = "Hello @Braid Please help me understand the difference between investing in a unit trust and investing in an equity in less than 50 words.";
 
 describe("AIConnection", function () {
 
@@ -55,16 +50,16 @@ describe("AIConnection", function () {
 
       var messageEmpty = new Message();
 
-      expect(AiConnection.isBotMessage(botMessage, authors)).toEqual(true);
-      expect(AiConnection.isBotMessage(personMessage, authors)).toEqual(false); 
-      expect(AiConnection.isBotMessage(botRequest, authors)).toEqual(false);           
+      expect(AIConnection.isBotMessage(botMessage, authors)).toEqual(true);
+      expect(AIConnection.isBotMessage(personMessage, authors)).toEqual(false); 
+      expect(AIConnection.isBotMessage(botRequest, authors)).toEqual(false);           
    });
 
    it("Needs to detect Bot request type", function () {
 
-      expect(AiConnection.isBotRequest(personMessage, authors)).toEqual(false);   
-      expect(AiConnection.isBotRequest(botMessage, authors)).toEqual(false);     
-      expect(AiConnection.isBotRequest(botRequest, authors)).toEqual(true);          
+      expect(AIConnection.isBotRequest(personMessage, authors)).toEqual(false);   
+      expect(AIConnection.isBotRequest(botMessage, authors)).toEqual(false);     
+      expect(AIConnection.isBotRequest(botRequest, authors)).toEqual(true);          
    });   
 
    it("Needs to detect reference errors", function () {
@@ -75,7 +70,7 @@ describe("AIConnection", function () {
       let caught = false;
 
       try {
-         AiConnection.isBotMessage(newMessage, authors);
+         AIConnection.isBotMessage(newMessage, authors);
       }
       catch (e) {
          caught = true;
@@ -91,7 +86,7 @@ describe("AIConnection", function () {
       messages[1] = botRequest;
       messages[2] = botMessage;
 
-      let query = AiConnection.makeOpenAiQuery (messages, authors);
+      let query = AIConnection.makeOpenAIQuery (messages, authors);
 
       expect(query.length).toEqual(3);         
    });    
@@ -104,17 +99,65 @@ describe("AIConnection", function () {
       messages[1] = botRequest;
       messages[2] = botMessage;
 
-      let fullQuery = AiConnection.makeOpenAiQuery (messages, authors);
+      let fullQuery = AIConnection.makeOpenAIQuery (messages, authors);
 
       throwIfUndefined(process);
       throwIfUndefined(process.env);
       throwIfUndefined(process.env.OPENAI_API_KEY);        
-      let caller = new AiConnection(process.env.OPENAI_API_KEY);
+      let caller = new AIConnection(process.env.OPENAI_API_KEY);
 
       let result = await caller.queryAI (botRequest.text, fullQuery);
 
       expect (result.message.length > 0).toBe(true);
    });   
+
+   function makeLongMessage (startingMessage: Message, segmentCount: number) : Message {
+
+      let segments = new Array<KnowledgeSegment>();      
+
+      // Make a list of knowledge sources, each with 500 tokens
+      for (var i = 0; i < segmentCount; i++) {
+         
+         let accumulatedText = "Hi";
+
+         for (var j = 0; j < 500; j++) {
+            accumulatedText = accumulatedText.concat (" token");
+         }
+         let ks1 = new KnowledgeSegment("makeUpUrl", accumulatedText, new Array<number>(), undefined, undefined);
+         segments.push (ks1);
+      }
+      
+      let newBotRequest = new Message (startingMessage);
+      newBotRequest.segments = segments;
+
+      return newBotRequest;
+   }
+   it("Needs to detect when token limit is OK", function () {
+
+      let messages = new Array<Message>();
+
+      messages.length = 3;
+      messages[0] = personMessage;
+      messages[1] = botRequest;
+      messages[2] = makeLongMessage (botMessage, 2);
+
+      let query = AIConnection.makeOpenAIQuery (messages, authors);
+      expect(query.length).toEqual(5);         
+   });    
+
+   it("Needs to detect when token limit overflows", function () {
+
+      let messages = new Array<Message>();
+
+      messages.length = 4;
+      messages[0] = personMessage;
+      messages[1] = botRequest;
+      messages[2] = makeLongMessage (botMessage, 4);
+      messages[3] = botRequest;      
+
+      let query = AIConnection.makeOpenAIQuery (messages, authors);
+      expect(query.length).toEqual(2);         
+   });      
 });
 
 
@@ -124,7 +167,7 @@ describe("AIConnector", function () {
 
       let caught = false;
       try {
-         let connection = await AiConnector.connect (KStubEnvironmentVariables.JoinKey);
+         let connection = await AIConnector.connect (KStubEnvironmentVariables.JoinKey);
       }
       catch (e) {
          caught = true;
@@ -140,7 +183,7 @@ describe("AIConnector", function () {
       let oldEnv = Environment.override (EEnvironment.kProduction);
 
       try {
-         let connection = await AiConnector.connect (KStubEnvironmentVariables.JoinKey);
+         let connection = await AIConnector.connect (KStubEnvironmentVariables.JoinKey);
       }
       catch (err) {
          caught = true;
@@ -159,7 +202,7 @@ describe("AIConnector", function () {
       let oldEnv = Environment.override (EEnvironment.kProduction);
 
       try {
-         let connection = await AiConnector.connect ("thiswillfail");
+         let connection = await AIConnector.connect ("thiswillfail");
       }
       catch (err) {
          caught = true;
