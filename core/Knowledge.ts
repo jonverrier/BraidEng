@@ -435,7 +435,7 @@ export class KnowledgeEnrichedMessage extends MStreamable {
 
       if (arr.length === 1) {
          this._message = arr[0]._message;
-         this._segments = arr[0]._sources; 
+         this._segments = arr[0]._segments; 
       }
       else {
          this._message = arr[0];
@@ -457,7 +457,7 @@ export class KnowledgeEnrichedMessage extends MStreamable {
       this._segments = new Array<KnowledgeSegment> (); 
 
       for (let i = 0; i < obj.segments.length; i++) {
-         let newSource = new KnowledgeSegment (obj.sources[i]);
+         let newSource = new KnowledgeSegment (obj.segments[i]);
          this._segments.push (newSource);
       }
    }

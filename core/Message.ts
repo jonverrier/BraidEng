@@ -148,9 +148,12 @@ export class Message extends MDynamicStreamable {
 
       let segments = new Array<KnowledgeSegment> (); 
 
-      if (obj.segments) {
-         for (let i = 0; i < obj.segments.length; i++) {
-            let newSource = new KnowledgeSegment (obj.segments[i]);
+      // Backwards compaitility for some public conversations
+      let objSegments = obj.segments? obj.segments : obj.sources;
+
+      if (objSegments) {
+         for (let i = 0; i < objSegments.length; i++) {
+            let newSource = new KnowledgeSegment (objSegments[i]);
             segments.push (newSource);
          }      
       }
