@@ -183,7 +183,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       // If AI is being invoked we make a call here 
       // ======================================================
-      if (AIConnection.isBotRequest (message, audienceMap)) {
+      if (AIConnection.isRequestForLLM (message, audienceMap)) {
 
          setIsBusy(true);
 

@@ -152,7 +152,7 @@ export class AIConnection {
 
          let message = messages[i];
 
-         if (AIConnection.isBotRequest(message, authors)) {
+         if (AIConnection.isRequestForLLM(message, authors)) {
 
             let edited = message.text.replace (EConfigStrings.kBotRequestSignature, "");
             let entry = { role: 'user', content: edited };
@@ -183,7 +183,7 @@ export class AIConnection {
       return (author.icon === EIcon.kLLMPersona);
    }
 
-   static isBotRequest (message: Message, authors: Map<string, Persona>) : boolean {
+   static isRequestForLLM (message: Message, authors: Map<string, Persona>) : boolean {
 
       let author = authors.get (message.authorId);
 

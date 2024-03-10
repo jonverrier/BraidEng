@@ -127,7 +127,11 @@ export class Persona extends MDynamicStreamable {
 
       const obj = JSON.parse(stream);
 
-      const icon: EIcon = ((EIcon as any)[obj.icon]);
+      let icon: EIcon = ((EIcon as any)[obj.icon]);
+
+      if (icon === EIcon.kBotPersona) // Backwards compatibility
+         icon = EIcon.kLLMPersona;
+
       if (icon === undefined)
          throw new InvalidParameterError("Icon:" + obj.icon + '.');
 
