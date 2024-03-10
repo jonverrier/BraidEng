@@ -196,14 +196,15 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
             connection.queryAI (messageText_, query).then ((result_: KnowledgeEnrichedMessage) => {
                
                // set up a message to append
-               let message = new Message ();
-               message.authorId = EConfigStrings.kBotGuid;
-               message.text = result_.message;
-               message.sentAt = new Date();
-               message.segments = result_.sources; // Add KnowledgeSources
+               let response = new Message ();
+               response.authorId = EConfigStrings.kBotGuid;
+               response.text = result_.message;
+               response.sentAt = new Date();
+               response.responseToId = message.id;
+               response.segments = result_.segments; // Add KnowledgeSegments
 
                // Push it to shared data
-               fluidMessagesConnection.messageCaucus().add (message.id, message);
+               fluidMessagesConnection.messageCaucus().add (response.id, response);
 
                // Save state and force a refresh
                let messageArray = fluidMessagesConnection.messageCaucus().currentAsArray();      

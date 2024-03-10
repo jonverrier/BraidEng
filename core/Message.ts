@@ -148,11 +148,12 @@ export class Message extends MDynamicStreamable {
 
       let segments = new Array<KnowledgeSegment> (); 
 
-      for (let i = 0; i < obj.segments.length; i++) {
-         let newSource = new KnowledgeSegment (obj.segments[i]);
-         segments.push (newSource);
-      }      
-
+      if (obj.segments) {
+         for (let i = 0; i < obj.segments.length; i++) {
+            let newSource = new KnowledgeSegment (obj.segments[i]);
+            segments.push (newSource);
+         }      
+      }
       this.assign(new Message (obj.id, obj.authorId, obj.responseToId, obj.text, new Date(obj.sentAt), segments));
    }
 

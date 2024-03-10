@@ -132,7 +132,7 @@ describe("KnowledgeEnrichedMessage", function () {
 
       var enrichedMsgEmpty = new KnowledgeEnrichedMessage();
 
-      expect(enrichedMsgEmpty.sources.length).toEqual(0);     
+      expect(enrichedMsgEmpty.segments.length).toEqual(0);     
    });
 
    it("Needs to compare for equality and inequality", function () {
@@ -147,9 +147,9 @@ describe("KnowledgeEnrichedMessage", function () {
 
    it("Needs to correctly store attributes", function () {
          
-      expect(enriched1.sources[0].summary === mySummary).toEqual(true);
-      throwIfUndefined (enriched1.sources[0].timeStamp);
-      expect(enriched1.sources[0].timeStamp.getTime() === myTimeStamp.getTime()).toEqual(true);
+      expect(enriched1.segments[0].summary === mySummary).toEqual(true);
+      throwIfUndefined (enriched1.segments[0].timeStamp);
+      expect(enriched1.segments[0].timeStamp.getTime() === myTimeStamp.getTime()).toEqual(true);
    });
 
    it("Needs to copy construct", function () {
@@ -165,7 +165,7 @@ describe("KnowledgeEnrichedMessage", function () {
 
       expect(enriched1.equals (enrichedNew)).toEqual(true);      
 
-      enrichedNew.sources = sources2;
+      enrichedNew.segments = sources2;
      
       expect(enriched1.equals (enrichedNew)).toEqual(false);
    });
