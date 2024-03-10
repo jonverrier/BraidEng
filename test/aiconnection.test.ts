@@ -57,9 +57,9 @@ describe("AIConnection", function () {
 
    it("Needs to detect Bot request type", function () {
 
-      expect(AIConnection.isBotRequest(personMessage, authors)).toEqual(false);   
-      expect(AIConnection.isBotRequest(botMessage, authors)).toEqual(false);     
-      expect(AIConnection.isBotRequest(botRequest, authors)).toEqual(true);          
+      expect(AIConnection.isRequestForLLM(personMessage, authors)).toEqual(false);   
+      expect(AIConnection.isRequestForLLM(botMessage, authors)).toEqual(false);     
+      expect(AIConnection.isRequestForLLM(botRequest, authors)).toEqual(true);          
    });   
 
    it("Needs to detect reference errors", function () {
