@@ -3,7 +3,7 @@
 export enum EIcon {
 
    kPersonPersona = "kPersonPersona", 
-   kBotPersona = "kBotPersona", 
+   kLLMPersona = "kLLMPersona", 
    kUnknownPersona = "kUnknownPersona",
    kFromBcd = "kFromBcd"
    

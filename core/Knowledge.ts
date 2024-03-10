@@ -401,7 +401,7 @@ class HtmlRespository  {
 export class KnowledgeEnrichedMessage extends MStreamable {
 
    private _message: string;
-   private _sources: Array<KnowledgeSegment>;
+   private _segments: Array<KnowledgeSegment>;
 
    /**
     * Create an empty KnowledgeEnrichedMessage object - required for particiation in serialisation framework
@@ -411,9 +411,9 @@ export class KnowledgeEnrichedMessage extends MStreamable {
    /**
     * Create a KnowledgeEnrichedMessage object
     * @param message_: the message back from the AI 
-    * @param sources_: array of the best source objects
+    * @param segments_: array of the best source objects
     */
-   public constructor(message_: string, sources_: Array<KnowledgeSegment>);
+   public constructor(message_: string, segments_: Array<KnowledgeSegment>);
 
    /**
     * Create a KnowledgeEnrichedMessage object
@@ -429,23 +429,23 @@ export class KnowledgeEnrichedMessage extends MStreamable {
       if (arr.length === 0) {   
 
          this._message = "";         
-         this._sources = new Array<KnowledgeSegment> ();                          
+         this._segments = new Array<KnowledgeSegment> ();                          
          return;
       }
 
       if (arr.length === 1) {
          this._message = arr[0]._message;
-         this._sources = arr[0]._sources; 
+         this._segments = arr[0]._sources; 
       }
       else {
          this._message = arr[0];
-         this._sources = arr[1];      
+         this._segments = arr[1];      
       }
    }
 
    streamOut(): string {
 
-      return JSON.stringify({ message: this._message, sources: this._sources});
+      return JSON.stringify({ message: this._message, segments: this._segments});
    }
 
    streamIn(stream: string): void {
@@ -454,11 +454,11 @@ export class KnowledgeEnrichedMessage extends MStreamable {
 
       this._message = obj.message;
 
-      this._sources = new Array<KnowledgeSegment> (); 
+      this._segments = new Array<KnowledgeSegment> (); 
 
-      for (let i = 0; i < obj.sources.length; i++) {
+      for (let i = 0; i < obj.segments.length; i++) {
          let newSource = new KnowledgeSegment (obj.sources[i]);
-         this._sources.push (newSource);
+         this._segments.push (newSource);
       }
    }
 
@@ -468,8 +468,8 @@ export class KnowledgeEnrichedMessage extends MStreamable {
    get message (): string {
       return this._message;
    }     
-   get sources (): Array<KnowledgeSegment> {
-      return this._sources;
+   get segments (): Array<KnowledgeSegment> {
+      return this._segments;
    }   
 
    /**
@@ -479,9 +479,9 @@ export class KnowledgeEnrichedMessage extends MStreamable {
 
       this._message = message_;
    }   
-   set sources(sources_: Array<KnowledgeSegment>) {
+   set segments(segments_: Array<KnowledgeSegment>) {
 
-      this._sources = sources_;
+      this._segments = segments_;
    }   
 
    /**
@@ -491,7 +491,7 @@ export class KnowledgeEnrichedMessage extends MStreamable {
     */
    equals(rhs: KnowledgeEnrichedMessage): boolean {
 
-      return (this._message === rhs._message && areSameDeepArray (this._sources, rhs._sources));
+      return (this._message === rhs._message && areSameDeepArray (this._segments, rhs._segments));
    }
 
    /**
@@ -501,7 +501,7 @@ export class KnowledgeEnrichedMessage extends MStreamable {
    assign(rhs: KnowledgeEnrichedMessage): KnowledgeEnrichedMessage {
 
       this._message = rhs._message;
-      this._sources = rhs._sources;
+      this._segments = rhs._segments;
 
       return this;
    }

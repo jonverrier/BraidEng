@@ -29,7 +29,7 @@ describe("AIConnection", function () {
 
    let authors = new Map<string, Persona> ();
    let person = new Persona (myAuthorId, myAuthorId, EIcon.kPersonPersona, undefined, new Date());   
-   let bot = new Persona (botAuthorId, botAuthorId, EIcon.kBotPersona, undefined, new Date());
+   let bot = new Persona (botAuthorId, botAuthorId, EIcon.kLLMPersona, undefined, new Date());
    authors.set (person.id, person);
    authors.set (bot.id, bot);
 
@@ -50,9 +50,9 @@ describe("AIConnection", function () {
 
       var messageEmpty = new Message();
 
-      expect(AIConnection.isBotMessage(botMessage, authors)).toEqual(true);
-      expect(AIConnection.isBotMessage(personMessage, authors)).toEqual(false); 
-      expect(AIConnection.isBotMessage(botRequest, authors)).toEqual(false);           
+      expect(AIConnection.isFromLLM(botMessage, authors)).toEqual(true);
+      expect(AIConnection.isFromLLM(personMessage, authors)).toEqual(false); 
+      expect(AIConnection.isFromLLM(botRequest, authors)).toEqual(false);           
    });
 
    it("Needs to detect Bot request type", function () {
@@ -70,7 +70,7 @@ describe("AIConnection", function () {
       let caught = false;
 
       try {
-         AIConnection.isBotMessage(newMessage, authors);
+         AIConnection.isFromLLM(newMessage, authors);
       }
       catch (e) {
          caught = true;

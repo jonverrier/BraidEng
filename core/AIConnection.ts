@@ -159,7 +159,7 @@ export class AIConnection {
             builtQuery.push (entry);
          }
 
-         if (AIConnection.isBotMessage(message, authors)) {
+         if (AIConnection.isFromLLM(message, authors)) {
             
             let entry = { role: 'assistant', content: message.text };
             builtQuery.push (entry);     
@@ -174,13 +174,13 @@ export class AIConnection {
       return builtQuery; 
    }
 
-   static isBotMessage (message: Message, authors: Map<string, Persona>) : boolean {
+   static isFromLLM (message: Message, authors: Map<string, Persona>) : boolean {
 
       let author = authors.get (message.authorId);
 
       throwIfUndefined (author);
 
-      return (author.icon === EIcon.kBotPersona);
+      return (author.icon === EIcon.kLLMPersona);
    }
 
    static isBotRequest (message: Message, authors: Map<string, Persona>) : boolean {

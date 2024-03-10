@@ -276,7 +276,7 @@ const noGlow = makeStyles({
    const glowClasses = glow();    
    const noGlowClasses = noGlow(); 
 
-   return ((props.author.icon === EIcon.kBotPersona) ?
+   return ((props.author.icon === EIcon.kLLMPersona) ?
             <Laptop24Regular className={glowClasses.root} />
             : <Person24Regular className={noGlowClasses.root}/>
    );

@@ -94,7 +94,7 @@ export class MessageBotFluidConnection extends FluidConnection {
 
       if (! isStored ) {
 
-         let botPersona = new Persona (EConfigStrings.kBotGuid, EConfigStrings.kBotName, EIcon.kBotPersona, undefined, new Date());
+         let botPersona = new Persona (EConfigStrings.kBotGuid, EConfigStrings.kBotName, EIcon.kLLMPersona, undefined, new Date());
          participantCaucus.add (botPersona.id, botPersona);            
       }
    }
