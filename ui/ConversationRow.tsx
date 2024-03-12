@@ -217,7 +217,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
                <ConversationHeaderRow joinKey={props.joinKey} 
                   audience={props.audience} 
                   onTrimConversation={props.onTrimConversation}>                    
-                  </ConversationHeaderRow>
+               </ConversationHeaderRow>
                
                &nbsp;
 
@@ -225,7 +225,8 @@ export const ConversationRow = (props: IConversationRowProps) => {
                   <div className={conversationContentColumnClasses.root}>             
                      {conversation.map (message => {
                         if (message.isUnPrompted()
-                        &&  AIConnection.isFromLLM (message, audience)) {
+                        &&  AIConnection.isFromLLM (message, audience)
+                        &&  message.segments.length > 0) {  // This last test is for backwards compatibility with existing conversations - remove when upgrade is communicated. 
                            return (         
                               <SingleFadeMessageView 
                                  message={message} 
