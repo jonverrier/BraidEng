@@ -26,5 +26,5 @@ export enum EUIStrings {
    kAiContentWarning = "AI can make mistakes. Consider checking important information.",
 
    kNeedInspiration = "Need some inspiration? Your classmates have been looking at this.",
-   kAtReminder = "It looks like you might have wanted me to answer that. If you want me to look up an answer, remember to ask '@Braid'. With an '@' sign."
+   kLLMNameReminder = "Just checking...  if you want your request to be sent the AI model, remember to include the phrase '@Braid'. With an '@' sign."
 };

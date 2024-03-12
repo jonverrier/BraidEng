@@ -174,6 +174,9 @@ export class AIConnection {
       return builtQuery; 
    }
 
+   /**
+    * is a message from the LLM - look at the author ID
+    */
    static isFromLLM (message: Message, authors: Map<string, Persona>) : boolean {
 
       let author = authors.get (message.authorId);
@@ -183,15 +186,33 @@ export class AIConnection {
       return (author.icon === EIcon.kLLMPersona);
    }
 
-   static isRequestForLLM (message: Message, authors: Map<string, Persona>) : boolean {
+
+   /**
+    * is a message invoking the LLM - look at the author, and if the message contains the LLM name 
+    */
+      static isRequestForLLM (message: Message, authors: Map<string, Persona>) : boolean {
 
       let author = authors.get (message.authorId);
-
       throwIfUndefined (author);
 
       return (author.icon === EIcon.kPersonPersona) && 
       (message.text.includes (EConfigStrings.kLLMRequestSignature) || message.text.includes (EConfigStrings.kLLMRequestSignatureLowerCase));
    }
+
+  /**
+    * is a message an attempt to invoke the LLM - look at the author, and if the message contains miss-spellings of LLM name 
+    */
+      static mightBeMissTypedRequestForLLM (message: Message, authors: Map<string, Persona>) : boolean {
+
+      if (AIConnection.isRequestForLLM (message, authors))
+         return false;
+
+      let author = authors.get (message.authorId);
+      throwIfUndefined (author);
+
+      return (author.icon === EIcon.kPersonPersona) && 
+         (message.text.includes (EConfigStrings.kLLMNearRequestSignature) || message.text.includes (EConfigStrings.kLLMNearRequestSignatureLowerCase));
+   }   
 
 }
 

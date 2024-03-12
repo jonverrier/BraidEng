@@ -14,7 +14,7 @@ import { describe, it } from 'mocha';
 
 let myMessageId: string = "1234";
 let myAuthorId: string = "Jon";
-let myText = "Please help me understand the difference between investing in a unit trust and investing in an equity in less than 50 words.";
+let myText = "Braid What is back propagation?";
 let mySentAt = new Date();
 
 let botMessageId: string = "5678";
@@ -23,7 +23,7 @@ let botText = "Bye";
 var botSentAt = new Date(0);
 
 let myBotRequestId: string = "12345";
-let myBotRequestText = "Hello @Braid Please help me understand the difference between investing in a unit trust and investing in an equity in less than 50 words.";
+let myBotRequestText = "Hello @Braid What is back propagation?";
 
 describe("AIConnection", function () {
 
@@ -60,6 +60,13 @@ describe("AIConnection", function () {
       expect(AIConnection.isRequestForLLM(personMessage, authors)).toEqual(false);   
       expect(AIConnection.isRequestForLLM(botMessage, authors)).toEqual(false);     
       expect(AIConnection.isRequestForLLM(botRequest, authors)).toEqual(true);          
+   });   
+
+   it("Needs to detect near-miss Bot request type", function () {
+
+      expect(AIConnection.mightBeMissTypedRequestForLLM (personMessage, authors)).toEqual(true);   
+      expect(AIConnection.mightBeMissTypedRequestForLLM(botMessage, authors)).toEqual(false);
+      expect(AIConnection.mightBeMissTypedRequestForLLM(botRequest, authors)).toEqual(false);                 
    });   
 
    it("Needs to detect reference errors", function () {

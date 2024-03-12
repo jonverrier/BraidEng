@@ -275,8 +275,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
                // Push it to shared data
                addMessage (fluidMessagesConnection, response);
 
-               setIsBusy(false);               
-               forceUpdate ();                
+               setIsBusy(false);                         
 
             }).catch ( (e: any) => {
                
@@ -288,6 +287,21 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
             props.onAiError (EUIStrings.kJoinApiError + " :" + props.joinKey.firstPart + ".");
             setIsBusy(false);             
          });
+      }
+      else
+      // If the user looks they have miss-typed, we send a reminder.  
+      // ======================================================      
+      if (AIConnection.mightBeMissTypedRequestForLLM (message, audienceMap)) {
+
+         // set up a message to append
+         let response = new Message ();
+         response.authorId = EConfigStrings.kLLMGuid;
+         response.text = EUIStrings.kLLMNameReminder;
+         response.sentAt = new Date();
+         response.responseToId = message.id;
+
+         // Push it to shared data
+         addMessage (fluidMessagesConnection, response);                         
       }
 
       forceUpdate ();      
