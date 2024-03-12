@@ -90,11 +90,11 @@ export class MessageBotFluidConnection extends FluidConnection {
       this.checkAddAddSelfToAudience (participantCaucus);
 
       // Add the Bot persona if its not already there
-      let isStored = participantCaucus.has(EConfigStrings.kBotGuid);
+      let isStored = participantCaucus.has(EConfigStrings.kLLMGuid);
 
       if (! isStored ) {
 
-         let botPersona = new Persona (EConfigStrings.kBotGuid, EConfigStrings.kBotName, EIcon.kLLMPersona, undefined, new Date());
+         let botPersona = new Persona (EConfigStrings.kLLMGuid, EConfigStrings.kLLMName, EIcon.kLLMPersona, undefined, new Date());
          participantCaucus.add (botPersona.id, botPersona);            
       }
    }

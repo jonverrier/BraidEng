@@ -37,9 +37,11 @@ import { EConfigStrings }  from '../core/ConfigStrings';
 import { JoinKey } from '../core/JoinKey';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
-import { KnowledgeSegment } from '../core/Knowledge';
+import { AIConnection } from '../core/AIConnection';
+import { KnowledgeSegment, KnowledgeRepository } from '../core/Knowledge';
 import { EUIStrings } from './UIStrings';
 import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
+import { throwIfUndefined } from '../core/Asserts';
 
 export interface IConversationHeaderProps {
 
@@ -187,7 +189,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
    const conversationContentRowClasses = conversationContentRowStyles();
    const conversationContentColumnClasses =  conversationContentColumnStyles();
    const footerSectionClasses = innerColumnFooterStyles();   
-
+    
    // Shorthand only
    let conversation = props.conversation;
    let audience = props.audience;
@@ -222,14 +224,28 @@ export const ConversationRow = (props: IConversationRowProps) => {
                <div className={conversationContentRowClasses.root}>                
                   <div className={conversationContentColumnClasses.root}>             
                      {conversation.map (message => {
-                        return (         
-                           <SingleMessageView 
-                              message={message} 
-                              key={message.id}
-                              author={(audience.get (message.authorId) as Persona)}
-                              showAiWarning={message.authorId === EConfigStrings.kBotGuid}
-                           />
-                     )})}
+                        if (message.isUnPrompted()
+                        &&  AIConnection.isFromLLM (message, audience)) {
+                           return (         
+                              <SingleFadeMessageView 
+                                 message={message} 
+                                 key={message.id}
+                                 author={(audience.get (message.authorId) as Persona)}
+                                 showAiWarning={message.authorId === EConfigStrings.kLLMGuid}
+                              />
+                           )                     
+                        }
+                        else {
+                           return (         
+                              <SingleMessageView 
+                                 message={message} 
+                                 key={message.id}
+                                 author={(audience.get (message.authorId) as Persona)}
+                                 showAiWarning={message.authorId === EConfigStrings.kLLMGuid}
+                              />
+                           )
+                        }
+                     })}                          
                      <AlwaysScrollToBottom />  
                   </div>               
                </div>
@@ -256,12 +272,34 @@ export interface ISingleMessageViewProps {
  export interface IAuthorIconProps {
  
    author: Persona;
+   fade: boolean;   
 }
+
+export interface IKnowledgeSegmentProps {
+
+   segment: KnowledgeSegment;  
+   key: string;
+   fade: boolean;
+}
+
+const fadeColour = makeStyles({
+   root: {  
+      color: "#595959"
+   },
+});
 
 const glow = makeStyles({
    root: {    
       marginBottom: '10px' ,      
       boxShadow: '0px 0px 5px 0px white;'
+   },
+});
+
+const fadedGlow = makeStyles({
+   root: {    
+      marginBottom: '10px' ,      
+      boxShadow: '0px 0px 5px 0px white;',
+      color: "#595959"      
    },
 });
 
@@ -274,11 +312,23 @@ const noGlow = makeStyles({
  export const AuthorIcon = (props: IAuthorIconProps) => {
 
    const glowClasses = glow();    
+   const fadedGlowClasses = fadedGlow();    
    const noGlowClasses = noGlow(); 
+   var className;
+
+   if (props.author.icon === EIcon.kLLMPersona) {
+      if (props.fade)
+         className = fadedGlowClasses.root;
+      else
+         className = glowClasses.root;
+   }
+   else {
+      className = noGlowClasses.root;      
+   }
 
    return ((props.author.icon === EIcon.kLLMPersona) ?
-            <Laptop24Regular className={glowClasses.root} />
-            : <Person24Regular className={noGlowClasses.root}/>
+            <Laptop24Regular className={className} />
+            : <Person24Regular className={className}/>
    );
 }
 
@@ -314,7 +364,50 @@ const sourcesRow = makeStyles({
    },
 });
 
-const sourcesHeader = makeStyles({
+const padAfterMessage = makeStyles({
+   root: {    
+      marginBottom: '10px'    
+   },
+});
+
+const linkStyles = makeStyles({
+   root: {    
+      marginRight: '10px'    
+   },
+});
+
+const fadedLinkStyles = makeStyles({
+   root: {    
+      color: '#595959',
+      marginRight: '10px'    
+   },
+});
+
+const greenStyles = makeStyles({
+   root: {    
+      color: 'green'    
+   },
+});
+
+const amberStyles = makeStyles({
+   root: {    
+      color: 'orange'    
+   },
+});
+
+const fadedGreenStyles = makeStyles({
+   root: {    
+      color: '#006622'    
+   },
+});
+
+const fadedAmberStyles = makeStyles({
+   root: {    
+      color: '#663d00'    
+   },
+});
+
+const segmentStyles = makeStyles({
    root: {    
       display: 'flex',
       flexDirection: 'row',
@@ -322,41 +415,59 @@ const sourcesHeader = makeStyles({
    },
 });
 
-const padAfterMessage = makeStyles({
+const fadedSegmentStyles = makeStyles({
    root: {    
-      marginBottom: '10px'    
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'left',
+      color: "#595959"        
    },
 });
 
-const padAfterLink = makeStyles({
-   root: {    
-      marginRight: '10px'    
-   },
-});
+export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
 
-const green = makeStyles({
-   root: {    
-      color: 'green'    
-   },
-});
+   const sourcesClasses = sourcesRow();
+   const greenClasses = greenStyles();
+   const amberClasses = amberStyles();
+   const fadedGreenClasses = fadedGreenStyles();
+   const fadedAmberClasses = fadedAmberStyles();
 
-const amber = makeStyles({
-   root: {    
-      color: 'orange'    
-   },
-});
+   let segment = props.segment;
+   let relevanceText = segment.relevance ? (segment.relevance * 100).toPrecision(2) + '%': "";
+
+   var relevanceClasses, linkClasses, segmentClasses;
+   
+   if (props.fade) {
+      relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? fadedGreenClasses : fadedAmberClasses : fadedAmberClasses;  
+      linkClasses = fadedLinkStyles();      
+      segmentClasses = fadedSegmentStyles();       
+   }
+   else {
+      relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
+      linkClasses = linkStyles();
+      segmentClasses = segmentStyles();             
+   }
+
+   return (<div className={sourcesClasses.root} key={segment.url}>
+              <div className={segmentClasses.root}>
+                 <Link target='_blank' className={linkClasses.root} 
+                    href={segment.url}>{segment.url}
+                  </Link>
+                  <Body1 className={relevanceClasses.root}> {relevanceText} </Body1>
+               </div>
+               <Body1 className={segmentClasses.root}> {segment.summary} </Body1>
+            </div>      
+         );
+}
 
 export const SingleMessageView = (props: ISingleMessageViewProps) => {
 
    const singleMessageRowClasses = singleMessageRow();
    const singleMessageIconColumnClasses = singleMessageIconColumn();
    const singleMessageTextColumnClasses = singleMessageTextColumn();
-   const sourcesClasses = sourcesRow();
-   const sourcesHeaderClasses = sourcesHeader();   
+
    const padAfterMessageClasses = padAfterMessage();  
-   const padAfterLinkClasses = padAfterLink();
-   const greenClasses = green();
-   const amberClasses = amber();
+   const amberClasses = amberStyles();
 
    var aiSources;
    var aiFooter;   
@@ -365,22 +476,9 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
       
       if (props.message.segments.length > 0) { 
 
-         aiSources = props.message.segments.map ((knowledgeSource : KnowledgeSegment) => {
-   
-            let relevanceText = knowledgeSource.relevance ? (knowledgeSource.relevance * 100).toPrecision(2) + '%': "";
-            let relevanceClasses = knowledgeSource.relevance ? knowledgeSource.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
-   
-            return (<div className={sourcesClasses.root} key={knowledgeSource.url}>
-               <div className={sourcesHeaderClasses.root}>
-                  <Link target='_blank' className={padAfterLinkClasses.root} 
-                     href={knowledgeSource.url}>{knowledgeSource.url}
-                  </Link>
-                  <Body1 className={relevanceClasses.root}> {relevanceText} </Body1>
-               </div>
-               <Body1 className={sourcesHeaderClasses.root}> {knowledgeSource.summary} </Body1>
-            </div>      
-   
-         )})      
+         aiSources = props.message.segments.map ((segment : KnowledgeSegment) => {
+            return <KowledgeSegmentsView segment={segment} fade={false} key={segment.url}/>
+         })      
       }
       else {
          aiSources = <Text size={100} className={amberClasses.root}> {EUIStrings.kAiNoGoodSources} </Text>;  
@@ -396,17 +494,40 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
    return (
       <div className={singleMessageRowClasses.root}>
          <div className={singleMessageIconColumnClasses.root}>
-            <AuthorIcon author={props.author}/>            
+            <AuthorIcon author={props.author} fade={false}/>            
          </div>   
          <div className={singleMessageTextColumnClasses.root}>
             <Caption1><b>{props.author.name}</b></Caption1>     
-            <Body1 className={padAfterMessageClasses.root}>{props.message.text}</Body1>   
+            <Body1>{props.message.text}</Body1>   
+            <div className={padAfterMessageClasses.root}></div>              
             {aiSources}  
             <div className={padAfterMessageClasses.root}></div>                     
             {aiFooter}
             <div className={padAfterMessageClasses.root}></div> 
          </div>              
       </div>);    
+}
+
+export const SingleFadeMessageView = (props: ISingleMessageViewProps) => {
+
+   const singleMessageRowClasses = singleMessageRow();
+   const singleMessageIconColumnClasses = singleMessageIconColumn();
+   const singleMessageTextColumnClasses = singleMessageTextColumn();
+   const padAfterMessageClasses = padAfterMessage();  
+   const fadeColourClasses = fadeColour();
+
+   return (
+      <div className={singleMessageRowClasses.root}>
+         <div className={singleMessageIconColumnClasses.root}>
+            <AuthorIcon author={props.author} fade={true}/>            
+         </div>   
+         <div className={singleMessageTextColumnClasses.root}>
+            <Caption1 className={fadeColourClasses.root}><b>{props.author.name}</b></Caption1>     
+            <Body1 className={fadeColourClasses.root}>{props.message.text}</Body1>  
+            <KowledgeSegmentsView segment={props.message.segments[0]} fade={true} key={props.message.segments[0].url}/>
+            <div className={padAfterMessageClasses.root}></div>              
+         </div>              
+      </div>); 
 }
 
 export interface IInputViewProps {

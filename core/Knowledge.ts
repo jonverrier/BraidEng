@@ -331,6 +331,21 @@ export class KnowledgeRepository  {
 
       return bestSources;
    }   
+
+   // TODO - this is a plug!!    
+   static lookUpTrending () : KnowledgeSegment | undefined {
+      
+      function randomIntFromInterval(min : number, max: number) { // min and max included
+         return Math.floor(Math.random() * (max - min + 1) + min)
+         }
+
+      // TODO - this is a plug!! 
+      if (randomIntFromInterval(-1, 1) < 0)
+         return YouTubeRespository.lookUpUrl ("https://www.youtube.com/watch?v=l5mG4z343qg&t=00h00m00s");
+      else
+         return HtmlRespository.lookUpUrl ("https://huyenchip.com/2023/04/11/llm-engineering.html"); 
+
+   }
 }
 
 /**
@@ -352,6 +367,23 @@ class YouTubeRespository  {
          let candidate = new KnowledgeSegment (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, relevance);
          let changed = builder.replaceIfBeatsCurrent (candidate);
       }      
+   }
+
+   static lookUpUrl (url_: string) : KnowledgeSegment | undefined {
+
+      let embeddings = new Array<LiteEmbedding>();
+      embeddings = liteYouTubeEmbeddings as Array<LiteEmbedding>;
+
+      for (let i = 0; i < embeddings.length; i++) {
+
+         let url = makeYouTubeUrl (embeddings[i].sourceId, embeddings[i].start, embeddings[i].seconds);
+         if (url === url_) {
+            let candidate = new KnowledgeSegment (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, undefined);
+            return candidate;
+         }
+      }  
+
+      return undefined;
    }
    
 }
@@ -395,6 +427,23 @@ class HtmlRespository  {
          let changed = builder.replaceIfBeatsCurrent (candidate);
       }      
    }
+
+   static lookUpUrl (url_: string) : KnowledgeSegment | undefined {
+
+      let embeddings = new Array<LiteEmbedding>();
+      embeddings = liteHtmlEmbeddings as Array<LiteEmbedding>;
+
+      for (let i = 0; i < embeddings.length; i++) {
+
+         let url = makeWebUrl (embeddings[i].sourceId);
+         if (url === url_) {
+            let candidate = new KnowledgeSegment (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, undefined);
+            return candidate;
+         }
+      }  
+
+      return undefined;
+   }   
    
 }
 

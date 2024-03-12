@@ -17,8 +17,8 @@ import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
 import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } from '../core/NotificationFramework';
 import { AIConnection, AIConnector } from '../core/AIConnection';
 import { EUIStrings } from './UIStrings';
-import { EConfigStrings } from '../core/ConfigStrings';
-import { KnowledgeEnrichedMessage } from '../core/Knowledge';
+import { EConfigNumbers, EConfigStrings } from '../core/ConfigStrings';
+import { KnowledgeEnrichedMessage, KnowledgeSegment, KnowledgeRepository } from '../core/Knowledge';
 
 export interface IConversationControllerProps {
 
@@ -44,10 +44,73 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    const [fullJoinKey, setFullJoinKey] = useState<JoinKey> (props.joinKey);
    const [isBusy, setIsBusy] = useState<boolean>(false);
 
+   function addMessage (fluidMessagesConnection_: MessageBotFluidConnection, message_: Message) : void {
+
+      fluidMessagesConnection_.messageCaucus().add (message_.id, message_);
+
+      // Save state and force a refresh                  
+      let messageArray = fluidMessagesConnection_.messageCaucus().currentAsArray();      
+      setConversation (messageArray);                
+      forceUpdate ();         
+   }
+
+   function hasRecentHepfulStart (fluidMessagesConnection_: MessageBotFluidConnection) : boolean {
+
+      let messageArray = fluidMessagesConnection_.messageCaucus().currentAsArray();  
+
+      let currentTime = new Date();
+      
+      for (let i = 0; i < messageArray.length; i++) {
+
+         if (messageArray[i].authorId === EConfigStrings.kLLMGuid
+            && messageArray[i].isUnPrompted()) {
+
+               let messageTime = messageArray[i].sentAt;
+
+               let difference = currentTime.getTime() - messageTime.getTime();
+
+               if (difference < EConfigNumbers.kHelpfulPromptMinimumGapMins * 60 * 1000) {
+                  return true;
+               }
+         }
+      }
+
+      return false;
+   }
+
+   function makeHelpfulStart (fluidMessagesConnection_: MessageBotFluidConnection,) : void {
+
+      setIsBusy (true);
+
+      setTimeout(() => {
+
+         if (! hasRecentHepfulStart (fluidMessagesConnection_)) {
+
+            let helpfulMessage = new Message();
+            helpfulMessage.authorId = EConfigStrings.kLLMGuid;
+            helpfulMessage.text = EUIStrings.kNeedInspiration;
+            helpfulMessage.sentAt = new Date();
+            let segmentCandidate = KnowledgeRepository.lookUpTrending ();
+            let segments = new Array<KnowledgeSegment> ();
+   
+            if (segmentCandidate) {
+               throwIfUndefined (segmentCandidate);
+               segments.push (segmentCandidate);
+            }
+   
+            helpfulMessage.segments = segments;  
+
+            addMessage (fluidMessagesConnection_, helpfulMessage);
+         }
+         setIsBusy (false);
+
+      }, EConfigNumbers.kHelpfulPromptDelayMsecs);  
+   }
+
    function initialiseConnectionState (fluidMessagesConnection_: MessageBotFluidConnection, 
       containerId: string) : void {
 
-      setFluidConnection (fluidMessagesConnection_);
+      setFluidConnection (fluidMessagesConnection_);  
 
       // Notifications function for adds, removes, changes
       // Warning - this function must be decalred after the call to setFluidConnection(), else it binds to the original value - which is always undefined. 
@@ -66,7 +129,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
             }
          }
 
-         offlineRefresh();
+         offlineRefresh();    
          forceUpdate ();            
       }      
 
@@ -91,7 +154,9 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       fluidMessagesConnection_.participantCaucus().addObserver (addedObserverInterest);   
       fluidMessagesConnection_.participantCaucus().addObserver (removedObserverInterest);       
       
-      setFullJoinKey (JoinKey.makeFromTwoParts (props.joinKey.firstPart, containerId));      
+      setFullJoinKey (JoinKey.makeFromTwoParts (props.joinKey.firstPart, containerId));  
+
+      makeHelpfulStart (fluidMessagesConnection_);              
    }
 
    let validater = new JoinPageValidator();
@@ -174,6 +239,10 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       // Push it to shared data
       fluidMessagesConnection.messageCaucus().add (message.id, message);
+      // Update the timestamp of the person who posted it
+      let storedPerson = fluidMessagesConnection.participantCaucus().get (props.localPersona.id);
+      storedPerson.lastSeenAt = message.sentAt;
+      fluidMessagesConnection.participantCaucus().add (storedPerson.id, storedPerson);      
 
       // Save state and force a refresh
       let messageArray = fluidMessagesConnection.messageCaucus().currentAsArray();      
@@ -197,18 +266,15 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
                
                // set up a message to append
                let response = new Message ();
-               response.authorId = EConfigStrings.kBotGuid;
+               response.authorId = EConfigStrings.kLLMGuid;
                response.text = result_.message;
                response.sentAt = new Date();
                response.responseToId = message.id;
                response.segments = result_.segments; // Add KnowledgeSegments
 
                // Push it to shared data
-               fluidMessagesConnection.messageCaucus().add (response.id, response);
+               addMessage (fluidMessagesConnection, response);
 
-               // Save state and force a refresh
-               let messageArray = fluidMessagesConnection.messageCaucus().currentAsArray();      
-               setConversation (messageArray); 
                setIsBusy(false);               
                forceUpdate ();                
 

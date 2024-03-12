@@ -37,6 +37,7 @@ describe("Message", function () {
 
       expect(messageEmpty.text).toEqual("");
       expect(messageEmpty.responseToId).toEqual(undefined);
+      expect(messageEmpty.isUnPrompted()).toEqual(true);
       expect(keyGenerator.couldBeAKey (messageEmpty.id)).toEqual(true);      
    });
 
@@ -98,6 +99,7 @@ describe("Message", function () {
          
       expect(message1.authorId === myAuthorId).toEqual(true);
       expect(message1.responseToId === myResponseToId).toEqual(true);
+      expect(message1.isUnPrompted()).toEqual(false);      
       expect(message1.sentAt.getTime() === mySentAt.getTime()).toEqual(true);
    });
 

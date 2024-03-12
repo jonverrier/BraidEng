@@ -14,16 +14,21 @@ export enum EConfigStrings {
    kAzureProductionFluidHost = "https://eu.fluidrelay.azure.com",
    kAzureLocalFluidHost = "http://localhost:7070",
 
-   kBotName = 'Braid',
-   kBotNameLowerCase = 'braid',   
-   kBotGuid = "313aafdb-a05c-4dc7-98d0-4db7f28f122f",
-   kBotRequestSignature = '@Braid',
-   kBotRequestSignatureLowerCase = '@braid',
+   kLLMName = 'Braid',
+   kLLMNameLowerCase = 'braid',   
+   kLLMGuid = "313aafdb-a05c-4dc7-98d0-4db7f28f122f",
+   kLLMRequestSignature = '@Braid',
+   kLLMRequestSignatureLowerCase = '@braid',
    kOpenAiPersonaPrompt = "You are an AI assistant helping a developer understand AI. You explaining complex concepts in simple language, using Python examples if it helps. You limit replies to 100 words or less. If you don't know the answer to a question, just say 'I dont't know'.",
 
    kErrorConnectingToKeyAPI = "Error connecting to Braid server.",
    kErrorConnectingToAiAPI = "Error connecting to AI server." 
 };
+
+export enum EConfigNumbers {
+   kHelpfulPromptDelayMsecs = 5000,
+   kHelpfulPromptMinimumGapMins = 60
+}
 
 // This is used for local running only, as in browser we cannot access environment variables
 // NEVER PUT PRODUCTION SECRETS IN HERE
