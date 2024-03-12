@@ -39,22 +39,19 @@ webUrls = [
 ["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter7/1", True],
 ["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter8/1", True],
 ["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter9/1", True],
-["Open AI Coockbook", "https://cookbook.openai.com/", True]
+["Open AI Coockbook", "https://cookbook.openai.com/", True],
+["State of Open Source AI - 2023 Edition", "https://book.premai.io/state-of-open-source-ai/", True],
 ]
 
-
-#SITE_URL = "https://stanford-cs324.github.io/winter2022/lectures/"
-#SITE_NAME="Stamford CS234 - Large Language Models"
-#download_html (SITE_URL, SITE_NAME, HTML_DESTINATION_DIR, 100)
-
+# Keep this comment as example of how to just process one file for debugging
 #SITE_URL = "https://book.premai.io/state-of-open-source-ai/"
 #SITE_NAME="State of Open Source AI - 2023 Edition"
 #download_html (SITE_URL, SITE_NAME, HTML_DESTINATION_DIR, 100)
 
-#for item in webUrls:
-   #download_html (item[1], item[0], item[2], HTML_DESTINATION_DIR, 100)
+for item in webUrls:
+   download_html (item[1], item[0], item[2], HTML_DESTINATION_DIR, 100)
 
-download_html ("https://cookbook.openai.com/", "Open AI Coockbook", True, HTML_DESTINATION_DIR, 100)
+#download_html ("https://huyenchip.com/2023/04/11/llm-engineering.html", "Building LLM applications for production (huyenchip.com)", True, HTML_DESTINATION_DIR, 100)
 
 enrich_text_buckets(HTML_DESTINATION_DIR, 10, 100) # 10 minutes long (at average speaking rate), dont add if < 100 words
 enrich_text_summaries(HTML_DESTINATION_DIR, 50)

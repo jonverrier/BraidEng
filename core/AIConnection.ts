@@ -154,7 +154,7 @@ export class AIConnection {
 
          if (AIConnection.isRequestForLLM(message, authors)) {
 
-            let edited = message.text.replace (EConfigStrings.kBotRequestSignature, "");
+            let edited = message.text.replace (EConfigStrings.kLLMRequestSignature, "");
             let entry = { role: 'user', content: edited };
             builtQuery.push (entry);
          }
@@ -190,7 +190,7 @@ export class AIConnection {
       throwIfUndefined (author);
 
       return (author.icon === EIcon.kPersonPersona) && 
-      (message.text.includes (EConfigStrings.kBotRequestSignature) || message.text.includes (EConfigStrings.kBotRequestSignatureLowerCase));
+      (message.text.includes (EConfigStrings.kLLMRequestSignature) || message.text.includes (EConfigStrings.kLLMRequestSignatureLowerCase));
    }
 
 }

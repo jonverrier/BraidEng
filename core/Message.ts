@@ -243,6 +243,13 @@ export class Message extends MDynamicStreamable {
    }
 
    /**
+    * is this message unprompted i.e. not a reply.  
+    */ 
+   isUnPrompted () : boolean {
+      return (typeof (this._responseToId) === "undefined") ;
+   }
+
+   /**
     * test for equality - checks all fields are the same. 
     * Uses field values, not identity bcs if objects are streamed to/from JSON, field identities will be different. 
     * @param rhs - the object to compare this one to.  

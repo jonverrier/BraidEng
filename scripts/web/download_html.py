@@ -38,9 +38,8 @@ def makePathOnly (url):
     # split_url.scheme   "http"
     # split_url.netloc   "127.0.0.1" 
     # split_url.path     "/asdf/login.php"
-    # Use all the path except everything after the last '/'
-    path = split_url.path.rpartition("/")[:-1]
-    clean_path = str(split_url.netloc) + path[0]
+    # Use all the path 
+    clean_path = str(split_url.netloc) + split_url.path
     return clean_path
 
 def makeFullyQualified (base, rel):
