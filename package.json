@@ -1,14 +1,14 @@
 {
    "name": "aibot",
    "version": "0.0.0",
-   "description": "An OpenAI assistant that likes to talk about AI, written in typescript, node.js, and the MS technology stack - Fluid Framework, Fluent UI, Azure.",
+   "description": "Engine code for an OpenAI assistant that likes to talk about AI, written using Typescript, Node.js, and the Azure stack. GPT-3 backed with a store of AI Canon documents.",
    "main": "ui/AppEntry.tsx",
    "author": {
       "name": "Jon Verrier"
    },
    "sideEffects": false,
    "scripts": {
-      "build-package": "webpack-cli --config webpack-config.js && copy dist\\aibot.pack.js ..\\FSBotWeb\\public\\assets\\js && copy dist\\aibot.pack.js.map ..\\FSBotWeb\\public\\assets\\js",
+      "build-package": "webpack-cli --config webpack-config.js && copy dist\\aibot.pack.js ..\\braidweb\\public\\assets\\js && copy dist\\aibot.pack.js.map ..\\braidweb\\public\\assets\\js",
       "build": "tsc --build",
       "clean": "tsc --build --clean",
       "test": "mocha --debug-brk --require ts-node/register test/*.test.ts",
@@ -66,7 +66,7 @@
    },
    "repository": {
       "type": "git",
-      "url": "https://github.com/jonverrier/fsbot.git"
+      "url": "https://github.com/jonverrier/braideng.git"
    },
    "engines": {
       "node": ">=20.10.0",
