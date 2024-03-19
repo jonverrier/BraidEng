@@ -37,4 +37,4 @@ By design, the app builds to a single .JS file using webpack. The JS file is the
 ## Licence
 GNU AFFERO GENERAL PUBLIC LICENSE.
 
-This is intentionally a restrictive licence. The source is effectively available for non-commercial use (subject to the licence terms as listed, which enable use for learning, self study etc). Commercial use either must abide by the licence terms, which are strong, or a separate licence that enables more normal commercial use & distribution is available from Braid. Contact us for more details mailto:info@bradtechnologies.io. 
+This is intentionally a restrictive licence. The source is effectively available for non-commercial use (subject to the licence terms as listed, which enable use for learning, self study etc). Commercial use either must abide by the licence terms, which are strong, or a separate licence that enables more normal commercial use & distribution is available from Braid. Contact us for more details malto:info@braidtechnologies.io. 
