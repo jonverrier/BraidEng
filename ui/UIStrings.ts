@@ -9,6 +9,7 @@ export enum EUIStrings {
    kJoinConversationKeyPlaceholder = "Key... ",  
    kJoinConversationDoesNotLookLikeKeyAndName = "It does not look like both the joining key and your name/initials are valid yet.",
    kJoinConversationLooksLikeKeyAndName = "It looks like the joining key and your name/initials are good now, you can join the conversation now.",
+   kJoinConversationWithLinkedInPrompt = "Join with LinkedIn... ",  
 
    kPageErrorCaption = "Error",
    

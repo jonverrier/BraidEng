@@ -6,7 +6,7 @@ import React, { ChangeEvent, KeyboardEvent, useState } from 'react';
 // Fluent
 import {
    makeStyles, Button, ButtonProps, Tooltip,
-   Text, Input, 
+   Text, Input, Image, 
    InputOnChangeData
 } from '@fluentui/react-components';
 
@@ -46,7 +46,6 @@ const joinFormRowStyles = makeStyles({
    },
 });
 
-
 const JoinButton: React.FC<ButtonProps> = (props) => {
    return (
      <Button
@@ -58,12 +57,30 @@ const JoinButton: React.FC<ButtonProps> = (props) => {
    );
  };
 
+ const buttonDisabledStyles = makeStyles({
+   root: {    
+      filter: 'grayscale(100%)',
+      marginLeft: 'auto', 
+      marginRight: '0'
+   },
+});
+
+const buttonEnabledStyles = makeStyles({
+   root: {    
+      filter: 'grayscale(0%)',
+      marginLeft: 'auto', 
+      marginRight: '0'
+   },
+});
+
 export const JoinRow = (props: IJoinPageProps) => {
 
    const joinPageInnerClasses = joinPageInnerStyles();   
    const joinFormRowClasses = joinFormRowStyles();
    const innerColumnFooterClasses = innerColumnFooterStyles(); 
    const stretchClasses = textFieldStyles();
+   const buttonDisabledClasses = buttonDisabledStyles();
+   const buttonEnabledClasses = buttonEnabledStyles();
 
    const validator = new JoinPageValidator();
    const retriever = new KeyRetriever();
@@ -172,6 +189,14 @@ export const JoinRow = (props: IJoinPageProps) => {
                      />
                   </Tooltip>                
                </div>
+               <div className={joinFormRowClasses.root}>               
+                  <Tooltip withArrow content={EUIStrings.kJoinConversationWithLinkedInPrompt} relationship="label">
+                     <Image className={canJoin? buttonEnabledClasses.root : buttonDisabledClasses.root}
+                        alt={EUIStrings.kJoinConversationWithLinkedInPrompt}
+                        src="assets/img/SignInWithLinkedIn.png"
+                     />
+                  </Tooltip>                
+               </div>               
                &nbsp;                   
                <div className={joinFormRowClasses.root}> 
                   <Text className={stretchClasses.root}>{canJoin ? EUIStrings.kJoinConversationLooksLikeKeyAndName : EUIStrings.kJoinConversationDoesNotLookLikeKeyAndName}</Text>   
