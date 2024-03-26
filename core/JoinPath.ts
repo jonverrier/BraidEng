@@ -1,10 +1,8 @@
 // Copyright (c) 2024 Braid Technologies Ltd
-import axios from "axios";
-
 import { IKeyGenerator } from './KeyGenerator';
 import { UuidKeyGenerator } from './UuidKeyGenerator';
 
-export class JoinKey {
+export class JoinPath {
 
    private _isValid: boolean;
    private _isSinglePart: boolean;
@@ -26,7 +24,7 @@ export class JoinKey {
 
       let split = trialInput_.split('/');
 
-      if (split.length === 1) {
+      if (split.length === 1 || (split.length === 2 && split[1] === '')) {
          if (this.isValidPart1 (split[0])) {
             this._isValid = true;
             this._isSinglePart = true;
@@ -68,7 +66,7 @@ export class JoinKey {
 
    static makeFromTwoParts (part1_: string, part2_: string) {
 
-      return new JoinKey (part1_ + '/' + part2_);
+      return new JoinPath (part1_ + '/' + part2_);
    }
 
    // Looks at the key provided, and returns true if it looks like a GUID, else false.

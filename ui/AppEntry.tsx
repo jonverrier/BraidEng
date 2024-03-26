@@ -16,9 +16,10 @@ import { log, LogLevel, tag } from 'missionlog';
 import { EConfigStrings } from '../core/ConfigStrings';
 import { Persona } from '../core/Persona';
 import { EIcon } from '../core/Icons';
-import { JoinKey } from '../core/JoinKey';
+import { JoinPath } from '../core/JoinPath';
+import { JoinDetails } from '../core/JoinDetails';
 import { EUIStrings } from './UIStrings';
-import { innerColumnStyles, innerColumnFooterStyles } from './ColumnStyles';
+import { innerColumnStyles } from './ColumnStyles';
 import { EMainPageMessageTypes, MainPageMessageRow } from './MainPageMessage';
 import { JoinRow } from './JoinRow';
 import { ConversationControllerRow } from './ConversationController';
@@ -58,20 +59,33 @@ const pageOuterStyles = makeStyles({
    },
 });
 
+/*
 // create a forceUpdate hook
 // https://stackoverflow.com/questions/46240647/how-to-force-a-functional-react-component-to-render
 function useForceUpdate() {
    const [value, setValue] = useState(0); // simple integer state
    return () => setValue(value => value + 1); // update state to force render
 }
+*/
+
 export const App = (props: IAppProps) => {
 
    let localPersona = new Persona ();
    localPersona.icon = EIcon.kPersonPersona;
 
+   // This little block attempts to pick up a joinpath from the URL after the #value
+   // If it looks valid, we pre-populate the joining form
+   // *** BE CAREFUL HERE - CAN GENERATE INFINITE RE_RENDERING ***
+   var hashValue: string = "";
+   if (window.location.hash)
+      hashValue = window.location.hash.substring(1);
+   
+   let joinAttempt = new JoinDetails (hashValue);
+   localPersona.name = joinAttempt.email; 
+
    const [lastMessage, setLastMessage] = useState<string>("");
    const [lastMessageType, setLastMessageType] = useState<EMainPageMessageTypes> (EMainPageMessageTypes.kNothing);
-   const [joinKey, setJoinKey] = useState<JoinKey>(new JoinKey(""));
+   const [joinPath, setJoinPath] = useState<JoinPath>(joinAttempt.joinPath);
    const [joinAsPersona, setJoinAsPersona] = useState<Persona>(localPersona);   
 
    const pageOuterClasses = pageOuterStyles();
@@ -82,30 +96,16 @@ export const App = (props: IAppProps) => {
       logger[level as keyof typeof logger](tag, msg, params);
    });
 
-   // This little block attempts to pick up a joinkey from the URL after the #value
-   // If it looks valid, we pre-populate the joining form
-   // *** BE CAREFUL HERE - CAN GENERATE INFINITE RE_RENDERING ***
-   var hashValue: string = "";
-   if (window.location.hash)
-      hashValue = window.location.hash.substring(1);
-   let joinAttempt = new JoinKey (hashValue);
-   if (joinAttempt.isValid && !(joinKey.asString === hashValue)) {
-      window.location.hash = joinAttempt.asString;
-      setJoinKey (joinAttempt);
-   }
-
-         // call the force update hook 
-   const forceUpdate = useForceUpdate(); 
-
-   function onConnect (joinKey: JoinKey, name_: string) : void  {
+   function onConnect (joinPath_: JoinPath) : void  {
       
       setLastMessage ("");
       setLastMessageType (EMainPageMessageTypes.kNothing);      
 
-      setJoinKey (joinKey);
-      joinAsPersona.name = name_;
-      setJoinAsPersona(joinAsPersona);
-      forceUpdate(); // Because we have only changed an attribute on the joinPersona, react wont detect it so we force it
+      setJoinPath (joinPath_);
+
+      // Start the login process by redirecting to the login API
+      let query = JoinDetails.makeAsString ("", joinPath_);
+      location.replace ("/api/login" + '?' + query);
    }
 
    function onConnectError (hint_: string) : void  {
@@ -132,7 +132,7 @@ export const App = (props: IAppProps) => {
       setLastMessageType (EMainPageMessageTypes.kError);
 
       // Clear the join key - takes up back to the join page.
-      setJoinKey (new JoinKey (""));
+      setJoinPath (new JoinPath (""));
    }
    
    function onAiError (hint_: string) : void  {
@@ -164,14 +164,14 @@ export const App = (props: IAppProps) => {
                      onDismiss={onDismissMessage}/>
       
                   <ConversationControllerRow 
-                     joinKey={joinKey}
+                     joinPath={joinPath}
                      localPersona={joinAsPersona}
                      onFluidError={onFluidError}
                      onAiError={onAiError}>                           
                   </ConversationControllerRow>      
 
                   <JoinRow 
-                     joinKey={joinKey} 
+                     joinPath={joinPath} 
                      joinPersona={joinAsPersona}                     
                      onConnect={onConnect} 
                      onConnectError={onConnectError}>                     
