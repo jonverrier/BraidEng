@@ -14,16 +14,15 @@ export enum EUIStrings {
    kJoinApiError = "Sorry, we were not able to connect to the conversation.",
    kAiApiError = "Sorry, we were not able to connect to the AI.",   
 
-   kSendMessagePreamble = "Type a message here. If you want @Braid to reply, put '@Braid' in the message. All messages with the phrase '@Braid' are read by the bot, and no others. All messages are read by anyone in the chat thread.",
+   kSendMessagePreamble = "Type a message here. If you want @Braid to reply, put '@Braid' in the message. All messages with the phrase '@Braid' are sent to the language model and AI document store, and no others. All messages can be read by everyone in the chat thread.",
    kSendButtonPrompt = "Send",
    kSendMessagePlaceholder = "Write a message... ",   
    kCopyJoinKeyButtonPrompt = "Copy the joining URL for this conversation to the clipboard",
-   kTrimParticipantsButtonPrompt = "Trim the audience to those still activive in the conversation",
    kTrimConversationButtonPrompt = "Delete the conversation history",
 
-   kAiNoGoodSources = "I don't have any good sources for this answer.",
+   kAiNoGoodSources = "We could not find good sources for this answer. AI can make mistakes. Consider checking important information.",
    kAiContentWarning = "AI can make mistakes. Consider checking important information.",
 
    kNeedInspiration = "Need some inspiration? Your classmates have been looking at this.",
-   kLLMNameReminder = "Just checking...  if you want your request to be sent the AI model, remember to include the phrase '@Braid'. With an '@' sign."
+   kLLMNameReminder = "Just checking...  if you want your request to be sent to the language model and AI document store, remember to include the phrase '@Braid'. With an '@' sign."
 };

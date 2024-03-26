@@ -42,6 +42,7 @@ import { KnowledgeSegment, KnowledgeRepository } from '../core/Knowledge';
 import { EUIStrings } from './UIStrings';
 import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
 import { throwIfUndefined } from '../core/Asserts';
+import { JoinDetails } from '../core/JoinDetails';
 
 export interface IConversationHeaderProps {
 
@@ -85,13 +86,16 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
 
    function onCopy (ev: React.MouseEvent<HTMLButtonElement>) : void {
 
+      // Make a join details with no email address
+      let joinDetails = JoinDetails.makeFromTwoParts ("", props.joinKey);
+      
       // https://stackoverflow.com/questions/10783322/window-location-url-javascript
 
       let newUrl = window.location.protocol + // => "http:"
       '//' +
       window.location.host +                  // => "example.com:3000"
       window.location.pathname +              // => "/pathname/
-      '#' + props.joinKey.asString;
+      '#' + joinDetails.asString;
 
       navigator.clipboard.writeText (newUrl);
    }       
@@ -479,13 +483,13 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
 
          aiSources = props.message.segments.map ((segment : KnowledgeSegment) => {
             return <KowledgeSegmentsView segment={segment} fade={false} key={segment.url}/>
-         })      
+         })   
+         aiFooter = <Text size={100}> {EUIStrings.kAiContentWarning} </Text>;   
       }
       else {
          aiSources = <Text size={100} className={amberClasses.root}> {EUIStrings.kAiNoGoodSources} </Text>;  
+         aiFooter = <div/>;         
       }
-
-      aiFooter = <Text size={100}> {EUIStrings.kAiContentWarning} </Text>;
    } 
    else {
       aiFooter = <div/>;
