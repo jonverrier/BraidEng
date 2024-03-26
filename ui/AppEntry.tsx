@@ -59,15 +59,6 @@ const pageOuterStyles = makeStyles({
    },
 });
 
-/*
-// create a forceUpdate hook
-// https://stackoverflow.com/questions/46240647/how-to-force-a-functional-react-component-to-render
-function useForceUpdate() {
-   const [value, setValue] = useState(0); // simple integer state
-   return () => setValue(value => value + 1); // update state to force render
-}
-*/
-
 export const App = (props: IAppProps) => {
 
    let localPersona = new Persona ();
