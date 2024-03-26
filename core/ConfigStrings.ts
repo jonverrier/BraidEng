@@ -24,7 +24,10 @@ export enum EConfigStrings {
    kOpenAiPersonaPrompt = "You are an AI assistant helping a developer understand AI. You explaining complex concepts in simple language, using Python examples if it helps. You limit replies to 100 words or less. If you don't know the answer to a question, just say 'I don't know'.",
 
    kErrorConnectingToKeyAPI = "Error connecting to Braid server.",
-   kErrorConnectingToAiAPI = "Error connecting to AI server." 
+   kErrorConnectingToAiAPI = "Error connecting to AI server.",
+
+   kJoinPathParamName = "joinpath",
+   kEmailParamName = "email"
 };
 
 export enum EConfigNumbers {

@@ -2,13 +2,12 @@
 
 export enum EUIStrings {
 
-   kJoinPagePreamble = "To join a conversation with @Braid, you need to enter the key from your contact at Braid, then your name or initials to identify yourself in the conversation.",
-   kJoinConversationAsPrompt = "Join as (name/initials)",
-   kJoinConversationAsPlaceholder = "Join as... ",
+   kJoinPagePreamble = "To join a conversation with @Braid, you need to enter the key from your contact at Braid, then login with LinkedIn to identify yourself in the conversation.",
    kJoinConversationKeyPrompt = "Key",
    kJoinConversationKeyPlaceholder = "Key... ",  
-   kJoinConversationDoesNotLookLikeKeyAndName = "It does not look like both the joining key and your name/initials are valid yet.",
-   kJoinConversationLooksLikeKeyAndName = "It looks like the joining key and your name/initials are good now, you can join the conversation now.",
+   kJoinConversationDoesNotLookLikeKey = "It does not look like the joining key is valid.",
+   kJoinConversationLooksLikeKeyOk = "It looks like the joining key is valid, you can join the conversation via LinkedIn.",
+   kJoinConversationWithLinkedInPrompt = "Join with LinkedIn... ",  
 
    kPageErrorCaption = "Error",
    

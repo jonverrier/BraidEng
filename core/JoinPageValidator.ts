@@ -1,5 +1,5 @@
 // Copyright (c) 2024 Braid Technologies Ltd
-import { JoinKey } from "./JoinKey";
+import { JoinPath } from "./JoinPath";
 
 export class JoinPageValidator {
 
@@ -10,9 +10,9 @@ export class JoinPageValidator {
    }   
 
    // Looks at the name and key provided, and returns true if the data looks ready to join a conversation, else false.
-   isJoinAttemptReady  (name_: string, key_: JoinKey) : boolean {
+   isJoinAttemptReady  (name_: string, key_: JoinPath) : boolean {
 
-      if (name_.length < 1)
+      if (name_.length < 3)
          return false;
 
       if (!key_.isValid)

@@ -5,19 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "ts-node",
+            "name": "mocha tests",
             "type": "node",
             "request": "launch",
-            "args": [
-                "${relativeFile}"
-            ],
-            "runtimeArgs": [
-                "-r",
-                "ts-node/register"
-            ],
-            "cwd": "${workspaceRoot}",
-            "protocol": "inspector",
-            "internalConsoleOptions": "openOnSessionStart"
+            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "stopOnEntry": false,
+            "args": [ "-r", "ts-node/register", "${workspaceRoot}/test/*.ts", "--no-timeouts"],
+            "cwd": "${workspaceRoot}"
         }
     ]
 }

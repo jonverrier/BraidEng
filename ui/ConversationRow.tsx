@@ -34,7 +34,7 @@ import {
 
 import { EIcon } from '../core/Icons';
 import { EConfigStrings }  from '../core/ConfigStrings';
-import { JoinKey } from '../core/JoinKey';
+import { JoinPath } from '../core/JoinPath';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { AIConnection } from '../core/AIConnection';
@@ -45,7 +45,7 @@ import { throwIfUndefined } from '../core/Asserts';
 
 export interface IConversationHeaderProps {
 
-   joinKey: JoinKey;
+   joinKey: JoinPath;
    audience: Map<string, Persona>;
    onTrimConversation () : void;    
 }
@@ -53,7 +53,7 @@ export interface IConversationHeaderProps {
 export interface IConversationRowProps {
 
    isConnected: boolean;
-   joinKey: JoinKey;
+   joinKey: JoinPath;
    audience: Map<string, Persona>;
    conversation: Array<Message>;
    onSend (message_: string) : void;   

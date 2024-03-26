@@ -10,7 +10,7 @@ import { throwIfUndefined } from '../core/Asserts';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { CaucusOf } from '../core/CaucusFramework';
-import { JoinKey } from '../core/JoinKey';
+import { JoinPath } from '../core/JoinPath';
 import { JoinPageValidator } from '../core/JoinPageValidator';
 import { ConversationRow } from './ConversationRow';
 import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
@@ -22,7 +22,7 @@ import { KnowledgeEnrichedMessage, KnowledgeSegment, KnowledgeRepository } from 
 
 export interface IConversationControllerProps {
 
-   joinKey: JoinKey;
+   joinPath: JoinPath;
    localPersona: Persona; 
    onFluidError (hint_: string) : void;   
    onAiError (hint_: string) : void;        
@@ -41,7 +41,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    const [audience, setAudience] = useState<Map<string, Persona>>(new Map<string, Persona>());
    const [fluidConnection, setFluidConnection] = useState<MessageBotFluidConnection | undefined>(undefined);
    const [joining, setJoining] = useState<boolean> (false);
-   const [fullJoinKey, setFullJoinKey] = useState<JoinKey> (props.joinKey);
+   const [fullJoinKey, setFullJoinKey] = useState<JoinPath> (props.joinPath);
    const [isBusy, setIsBusy] = useState<boolean>(false);
 
    function addMessage (fluidMessagesConnection_: MessageBotFluidConnection, message_: Message) : void {
@@ -154,20 +154,20 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       fluidMessagesConnection_.participantCaucus().addObserver (addedObserverInterest);   
       fluidMessagesConnection_.participantCaucus().addObserver (removedObserverInterest);       
       
-      setFullJoinKey (JoinKey.makeFromTwoParts (props.joinKey.firstPart, containerId));  
+      setFullJoinKey (JoinPath.makeFromTwoParts (props.joinPath.firstPart, containerId));  
 
       makeHelpfulStart (fluidMessagesConnection_);              
    }
 
    let validater = new JoinPageValidator();
 
-   if (validater.isJoinAttemptReady (props.localPersona.name, props.joinKey) && 
+   if (validater.isJoinAttemptReady (props.localPersona.name, props.joinPath) && 
       fluidConnection === undefined 
       && !joining) {
 
       setJoining(true);
 
-      let joinKey = props.joinKey;
+      let joinKey = props.joinPath;
 
       let fluidMessagesConnection = new MessageBotFluidConnection ( {}, props.localPersona);
       
@@ -256,7 +256,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
          setIsBusy(true);
 
-         let connectionPromise = AIConnector.connect (props.joinKey.firstPart);
+         let connectionPromise = AIConnector.connect (props.joinPath.firstPart);
 
          connectionPromise.then ( (connection : AIConnection) => {
 
@@ -284,7 +284,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
             });            
 
          }).catch ( (e: any) => {
-            props.onAiError (EUIStrings.kJoinApiError + " :" + props.joinKey.firstPart + ".");
+            props.onAiError (EUIStrings.kJoinApiError + " :" + props.joinPath.firstPart + ".");
             setIsBusy(false);             
          });
       }
@@ -309,7 +309,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    let joinValidator = new JoinPageValidator ();
 
-   if (! joinValidator.isJoinAttemptReady (props.localPersona.name, props.joinKey)) {
+   if (! joinValidator.isJoinAttemptReady (props.localPersona.name, props.joinPath)) {
       return (<div></div>);
    }
    else

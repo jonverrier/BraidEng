@@ -1,12 +1,12 @@
 /*! Copyright Braid Technologies 2022 */
 
 // React
-import React, { ChangeEvent, KeyboardEvent, useState } from 'react';
+import React, { ChangeEvent, KeyboardEvent, MouseEvent, useState } from 'react';
 
 // Fluent
 import {
    makeStyles, Button, ButtonProps, Tooltip,
-   Text, Input, 
+   Text, Input, Image, 
    InputOnChangeData
 } from '@fluentui/react-components';
 
@@ -16,7 +16,7 @@ import {
    Send24Regular
 } from '@fluentui/react-icons';
 
-import { JoinKey } from '../core/JoinKey';
+import { JoinPath } from '../core/JoinPath';
 import { Persona } from '../core/Persona';
 import { JoinPageValidator } from '../core/JoinPageValidator';
 import { KeyRetriever } from '../core/KeyRetriever';
@@ -26,9 +26,9 @@ import { Environment, EEnvironment } from '../core/Environment';
 import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
 
 export interface IJoinPageProps {
-   joinKey: JoinKey;  
+   joinPath: JoinPath;  
    joinPersona: Persona;
-   onConnect (joinKey: JoinKey, name: string) : void;
+   onConnect (joinKey: JoinPath) : void;
    onConnectError (hint_: string) : void;    
 }
 
@@ -46,7 +46,6 @@ const joinFormRowStyles = makeStyles({
    },
 });
 
-
 const JoinButton: React.FC<ButtonProps> = (props) => {
    return (
      <Button
@@ -58,35 +57,52 @@ const JoinButton: React.FC<ButtonProps> = (props) => {
    );
  };
 
+ const buttonDisabledStyles = makeStyles({
+   root: {    
+      filter: 'grayscale(100%)',
+      marginLeft: 'auto', 
+      marginRight: '0'
+   },
+});
+
+const buttonEnabledStyles = makeStyles({
+   root: {    
+      filter: 'grayscale(0%)',
+      marginLeft: 'auto', 
+      marginRight: '0'
+   },
+});
+
 export const JoinRow = (props: IJoinPageProps) => {
 
    const joinPageInnerClasses = joinPageInnerStyles();   
    const joinFormRowClasses = joinFormRowStyles();
    const innerColumnFooterClasses = innerColumnFooterStyles(); 
    const stretchClasses = textFieldStyles();
+   const buttonDisabledClasses = buttonDisabledStyles();
+   const buttonEnabledClasses = buttonEnabledStyles();
 
-   const validator = new JoinPageValidator();
    const retriever = new KeyRetriever();
 
-   const [name, setName] = useState<string>("");
-   const [joinKey, setJoinKey] = useState<JoinKey>(props.joinKey);
-   const [joinKeyText, setJoinKeyText] = useState<string>(props.joinKey.asString);   
-   const [canJoin, setCanJoin] = useState<boolean>(false);
-
-   function onJoinAsChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
-
-      setName(data.value);
-      setCanJoin (validator.isJoinAttemptReady (data.value, joinKey));
-   }
+   const [joinKey, setJoinKey] = useState<JoinPath>(props.joinPath);
+   const [joinKeyText, setJoinKeyText] = useState<string>(props.joinPath.asString);   
+   const [canJoin, setCanJoin] = useState<boolean>(props.joinPath.isValid);
 
    function onKeyChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
 
-      let asKey = new JoinKey (data.value);
+      let asKey = new JoinPath (data.value);
 
       setJoinKey(asKey);
       setJoinKeyText(data.value);
-      setCanJoin (validator.isJoinAttemptReady (name, asKey));
+      setCanJoin (asKey.isValid);
    }   
+
+   function onTryJoin(ev: MouseEvent<HTMLImageElement>): void {
+      
+      ev.preventDefault();
+
+      tryToJoin();
+   }
 
    function tryToJoin () : void {
 
@@ -102,7 +118,7 @@ export const JoinRow = (props: IJoinPageProps) => {
          joinKey.firstPart)
       .then (
          (returnedKey: string):void => {
-            props.onConnect(joinKey, name);
+            props.onConnect(joinKey);
           },
           (e: any) => {
             props.onConnectError(e.toString());
@@ -110,21 +126,9 @@ export const JoinRow = (props: IJoinPageProps) => {
       );
    }
 
-   function onKeyDown(ev: KeyboardEvent<HTMLInputElement>): void {
-  
-      if (ev.key === 'Enter' && canJoin) {
-         tryToJoin();
-      }
-   };
-
-   function onTryJoin(ev: React.MouseEvent<HTMLButtonElement>) : void {
-
-      tryToJoin();
-   }
-
    let joinValidator = new JoinPageValidator ();
 
-   if (joinValidator.isJoinAttemptReady (props.joinPersona.name, props.joinKey)) {
+   if (joinValidator.isJoinAttemptReady (props.joinPersona.name, props.joinPath)) {
       return (<div></div>);
    }
    else {
@@ -151,30 +155,19 @@ export const JoinRow = (props: IJoinPageProps) => {
                      />
                </Tooltip>  
                </div>
-               &nbsp;
+               &nbsp;                  
                <div className={joinFormRowClasses.root}>               
-                  <Tooltip withArrow content={EUIStrings.kJoinConversationAsPrompt} relationship="label">
-                     <Input aria-label={EUIStrings.kJoinConversationAsPrompt} 
-                        className={stretchClasses.root}
-                        required={true}
-                        value={name}
-                        maxLength={20}
-                        contentBefore={<Person24Regular />}
-                        contentAfter={<JoinButton 
-                           aria-label={EUIStrings.kSendButtonPrompt} 
-                           disabled={(!canJoin) || retriever.isBusy()} 
-                           onClick={onTryJoin}
-                        />}                
-                        placeholder={EUIStrings.kJoinConversationAsPlaceholder}
-                        onChange={onJoinAsChange}
-                        onKeyDown={onKeyDown}                        
-                        disabled={false}
+                  <Tooltip withArrow content={EUIStrings.kJoinConversationWithLinkedInPrompt} relationship="label">
+                     <Image className={canJoin? buttonEnabledClasses.root : buttonDisabledClasses.root}
+                        alt={EUIStrings.kJoinConversationWithLinkedInPrompt}
+                        src="assets/img/SignInWithLinkedIn.png"
+                        onClick={onTryJoin}
                      />
                   </Tooltip>                
-               </div>
+               </div>               
                &nbsp;                   
                <div className={joinFormRowClasses.root}> 
-                  <Text className={stretchClasses.root}>{canJoin ? EUIStrings.kJoinConversationLooksLikeKeyAndName : EUIStrings.kJoinConversationDoesNotLookLikeKeyAndName}</Text>   
+                  <Text className={stretchClasses.root}>{canJoin ? EUIStrings.kJoinConversationLooksLikeKeyOk : EUIStrings.kJoinConversationDoesNotLookLikeKey}</Text>   
                </div>
                &nbsp;                
             </div>                          
