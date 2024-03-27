@@ -2,6 +2,7 @@
 // Copyright Braid technologies ltd, 2024
 import { MDynamicStreamable } from '../core/StreamingFramework';
 import { ActivityRecord} from '../core/ActivityRecord';
+import { UrlActivityRecord } from '../core/UrlActivityRecord';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -147,6 +148,108 @@ describe("ActivityRecord", function () {
       expect(activity1.equals(activityNew)).toEqual(false);
 
       activityNew = MDynamicStreamable.resurrect(stream) as ActivityRecord;
+
+      expect(activity1.equals(activityNew)).toEqual(true);
+   });
+
+});
+
+var myUrl: string = "url";
+var someoneElsesUrl: string = "Barry";
+
+describe("UrlActivityRecord", function () {
+
+   var activity1: UrlActivityRecord, activity2: UrlActivityRecord, activityErr:UrlActivityRecord;
+
+   activity1 = new UrlActivityRecord(myId, myEmail, myHappenedAt, myUrl);
+
+   activity2 = new UrlActivityRecord(someoneElsesId, someoneElsesEmail, someoneElsesHappenedAt, someoneElsesUrl);
+
+   it("Needs to construct an empty object", function () {
+
+      var activityEmpty = new UrlActivityRecord();
+
+      expect(activityEmpty.url).toEqual("");     
+   });
+
+
+   it("Needs to detect invalid url", function () {
+
+      var caught: boolean = false;
+      try {
+         var activityErr: UrlActivityRecord = new UrlActivityRecord(myId, myEmail, myHappenedAt, undefined as unknown as string);
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).toEqual(true);
+   });
+
+
+   it("Needs to compare for equality and inequality", function () {
+
+      var activityNew: UrlActivityRecord = new UrlActivityRecord(activity1.id, activity1.email, activity1.happenedAt, activity1.url);
+
+      expect(activity1.equals(activity1)).toEqual(true);
+      expect(activity1.equals(activityNew)).toEqual(true);
+      expect(activity1.equals(activity2)).toEqual(false);
+   });
+
+
+   it("Needs to correctly store attributes", function () {
+         
+      expect(activity1.url === myUrl).toEqual(true);
+   });
+
+   it("Needs to copy construct", function () {
+
+      let activity2: UrlActivityRecord = new UrlActivityRecord(activity1);
+
+      expect(activity1.equals(activity2) === true).toEqual(true);
+   });
+
+   it("Needs to correctly change attributes", function () {
+
+      var activityNew: UrlActivityRecord = new UrlActivityRecord(activity1.id, activity1.email, activity1.happenedAt, activity1.url);
+
+      activityNew.id = someoneElsesId;
+      activityNew.email = someoneElsesEmail;
+      activityNew.happenedAt = someoneElsesHappenedAt;
+      activityNew.url = someoneElsesUrl;      
+
+      expect(activity2.equals (activityNew)).toEqual(true);
+   });
+
+   it("Needs to throw errors on change url attribute", function () {
+
+      var caught: boolean = false;
+      try {
+         activity1.url = undefined as unknown as string;
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).toEqual(true);
+
+   });
+
+   it("Needs to convert to and from JSON()", function () {
+
+      var stream: string = activity1.streamOut();
+
+      var activityNew: UrlActivityRecord = new UrlActivityRecord(activity1.id, activity1.email, activity1.happenedAt, activity1.url);
+      activityNew.streamIn(stream);
+
+      expect(activity1.equals(activityNew)).toEqual(true);
+   });
+
+   it("Needs to dynamically create ActivityRecord to and from JSON()", function () {
+
+      var stream: string = activity1.flatten();
+
+      var activityNew: UrlActivityRecord = new UrlActivityRecord();
+
+      expect(activity1.equals(activityNew)).toEqual(false);
+
+      activityNew = MDynamicStreamable.resurrect(stream) as UrlActivityRecord;
 
       expect(activity1.equals(activityNew)).toEqual(true);
    });

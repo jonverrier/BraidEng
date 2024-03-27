@@ -1,14 +1,12 @@
 // Copyright (c) 2024 Braid Technologies Ltd
 
 import { InvalidParameterError } from './Errors';
-import { throwIfUndefined } from './Asserts'; 
 import { MDynamicStreamable, DynamicStreamableFactory } from "./StreamingFramework";
 
-const className = "ActivityRecord";
+const activityRecordClassName = "ActivityRecord";
 
 
-// Persona - aggregates name, icon type, & timestamp of last time we saw them
-// excludes email and other PII so can be passed to client even when describing an individual.
+// ActivityRecord - email of  aperson and a datestamp. Will hace many derived classes according to different activity types. 
 export class ActivityRecord extends MDynamicStreamable {
    private _id: string | undefined;
    private _email: string;
@@ -77,14 +75,14 @@ export class ActivityRecord extends MDynamicStreamable {
     */
    className(): string {
 
-      return className;
+      return activityRecordClassName;
    }
 
    static createDynamicInstance(): MDynamicStreamable {
       return new ActivityRecord();
    }
 
-   static _dynamicStreamableFactory: DynamicStreamableFactory = new DynamicStreamableFactory(className, ActivityRecord.createDynamicInstance);
+   static _dynamicStreamableFactory: DynamicStreamableFactory = new DynamicStreamableFactory(activityRecordClassName, ActivityRecord.createDynamicInstance);
    streamOut(): string {
 
       return JSON.stringify({ id: this._id, email: this._email, happenedAt: this._happenedAt });
@@ -179,14 +177,14 @@ export class ActivityRecord extends MDynamicStreamable {
    }
 
    /**
-    * test for valid name 
-    * @param name - the string to test
+    * test for valid email 
+    * @param email - the string to test
     */
    static isValidEmail(email: string): boolean {
 
       if (email == undefined)
          return false;
 
-      return true; // Currently allow anything for a name, even empty string. 
+      return true; // Currently allow anything, even empty string. 
    }
 }
