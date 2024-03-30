@@ -1,7 +1,6 @@
 'use strict';
 // Copyright Braid technologies ltd, 2024
 import { describe, it} from 'mocha';
-import { log, LogLevel } from 'missionlog';
 import { expect } from 'expect';
 
 import {

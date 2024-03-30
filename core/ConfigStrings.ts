@@ -2,7 +2,9 @@
 
 export enum EConfigStrings {
 
+   kCoreLogCategory = "Core",
    kApiLogCategory = "API",
+   kDbLogCategory = "DB",   
 
    kRequestJoinKeyUrl = "https://braidapps.io/api/joinkey",
    kRequestAiKeyUrl = "https://braidapps.io/api/aikey",   

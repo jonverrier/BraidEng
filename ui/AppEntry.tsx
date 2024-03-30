@@ -9,11 +9,7 @@ import {
    FluentProvider, teamsDarkTheme, makeStyles
 } from '@fluentui/react-components';
 
-// Other 3rd party imports
-import { log, LogLevel, tag } from 'missionlog';
-
 // Local
-import { EConfigStrings } from '../core/ConfigStrings';
 import { Persona } from '../core/Persona';
 import { EIcon } from '../core/Icons';
 import { JoinPath } from '../core/JoinPath';
@@ -23,15 +19,6 @@ import { innerColumnStyles } from './ColumnStyles';
 import { EMainPageMessageTypes, MainPageMessageRow } from './MainPageMessage';
 import { JoinRow } from './JoinRow';
 import { ConversationControllerRow } from './ConversationController';
-
-// Logging handler
-const logger = {
-   [LogLevel.ERROR]: (tag, msg, params) => console.error(msg, ...params),
-   [LogLevel.WARN]: (tag, msg, params) => console.warn(msg, ...params),
-   [LogLevel.INFO]: (tag, msg, params) => console.log(msg, ...params),
-   [LogLevel.TRACE]: (tag, msg, params) => console.log(msg, ...params),
-   [LogLevel.DEBUG]: (tag, msg, params) => console.log(msg, ...params),
-} as Record<LogLevel, (tag: string, msg: unknown, params: unknown[]) => void>;
 
 export interface IAppProps {
 
@@ -82,11 +69,6 @@ export const App = (props: IAppProps) => {
    const pageOuterClasses = pageOuterStyles();
    const innerColumnClasses = innerColumnStyles();
 
-   // Initialise logging
-   log.init({ application: 'DEBUG', notification: 'DEBUG' }, (level, tag, msg, params) => {
-      logger[level as keyof typeof logger](tag, msg, params);
-   });
-
    function onConnect (joinPath_: JoinPath) : void  {
       
       setLastMessage ("");
@@ -101,23 +83,11 @@ export const App = (props: IAppProps) => {
 
    function onConnectError (hint_: string) : void  {
 
-      let params = new Array();
-      params.length = 1;
-      params[0] = hint_;
-
-      logger.ERROR (EConfigStrings.kApiLogCategory, "Error connecting to conversation.", params);
-
       setLastMessage (EUIStrings.kJoinApiError);
       setLastMessageType (EMainPageMessageTypes.kError);
    }
 
    function onFluidError (hint_: string) : void  {
-
-      let params = new Array();
-      params.length = 1;
-      params[0] = hint_;
-
-      logger.INFO (EConfigStrings.kApiLogCategory, "Error joining remote conversation.", params);
 
       setLastMessage (EUIStrings.kJoinApiError);
       setLastMessageType (EMainPageMessageTypes.kError);
@@ -127,12 +97,6 @@ export const App = (props: IAppProps) => {
    }
    
    function onAiError (hint_: string) : void  {
-
-      let params = new Array();
-      params.length = 1;
-      params[0] = hint_;
-
-      logger.INFO (EConfigStrings.kApiLogCategory, "Error connecting to AI.", params);
 
       setLastMessage (EUIStrings.kAiApiError);
       setLastMessageType (EMainPageMessageTypes.kError);

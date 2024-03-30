@@ -3,6 +3,7 @@ import { IFluidContainer, ConnectionState } from "fluid-framework";
 import { AzureClient } from "@fluidframework/azure-client";
 
 import { throwIfUndefined } from "./Asserts";
+import { logApiError } from "./Logging";
 import { ConnectionError, InvalidOperationError, InvalidStateError} from './Errors';
 import { Interest, NotificationFor, Notifier } from './NotificationFramework';
 import { ClientProps } from './FluidConnectionProps';
@@ -48,7 +49,8 @@ export abstract class FluidConnection extends Notifier {
                   self.setupAfterConnection(containerId, this._container);
                }
                else {
-                  throw new InvalidStateError("FluidConnection has reached inconsistent internal state.");
+                  logApiError ("FluidConnection is in inconsistent internal state.", null);
+                  throw new InvalidStateError("FluidConnection is in inconsistent internal state.");
                }
 
                resolve (containerId);

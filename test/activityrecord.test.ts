@@ -3,6 +3,7 @@
 import { MDynamicStreamable } from '../core/StreamingFramework';
 import { ActivityRecord} from '../core/ActivityRecord';
 import { UrlActivityRecord } from '../core/UrlActivityRecord';
+import { IActivityRepository, getRecordRepository } from '../core/ActivityRepository';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -253,5 +254,25 @@ describe("UrlActivityRecord", function () {
 
       expect(activity1.equals(activityNew)).toEqual(true);
    });
+
+});
+
+
+describe("ActivityRepository", function () {
+
+   let repository = getRecordRepository();
+
+   it("Needs to save a record", async function () {
+
+      var activity = new UrlActivityRecord(undefined, "jonathanverrier@hotmail.com", new Date(), 
+                                 "https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md");
+
+      let saved = await repository.save (activity);
+
+      expect(saved).toEqual(true);     
+   });
+
+
+  
 
 });

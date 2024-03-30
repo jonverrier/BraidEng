@@ -2,25 +2,11 @@
 
 import axios from "axios";
 
-// Other 3rd party imports
-import { log, LogLevel, tag } from 'missionlog';
-
 // Local
+import { logApiError } from "./Logging";
 import { EConfigStrings } from './ConfigStrings';
 import { ConnectionError } from "./Errors";
-import { EEnvironment, Environment } from "./Environment";
-import { throwIfUndefined } from "./Asserts";
-import { KStubEnvironmentVariables } from "./ConfigStrings";
-
-
-// Logging handler
-const logger = {
-   [LogLevel.ERROR]: (tag, msg, params) => console.error(msg, ...params),
-   [LogLevel.WARN]: (tag, msg, params) => console.warn(msg, ...params),
-   [LogLevel.INFO]: (tag, msg, params) => console.log(msg, ...params),
-   [LogLevel.TRACE]: (tag, msg, params) => console.log(msg, ...params),
-   [LogLevel.DEBUG]: (tag, msg, params) => console.log(msg, ...params),
-} as Record<LogLevel, (tag: string, msg: unknown, params: unknown[]) => void>;
+import { Environment } from "./Environment";
 
 export class KeyRetriever {
 
@@ -67,7 +53,7 @@ export class KeyRetriever {
          
          this.activeCallCount--;
    
-         logger.ERROR (EConfigStrings.kApiLogCategory, EConfigStrings.kErrorConnectingToKeyAPI, [e]);           
+         logApiError (EConfigStrings.kErrorConnectingToKeyAPI, e);           
       }
 
       if (!response || !response.data)

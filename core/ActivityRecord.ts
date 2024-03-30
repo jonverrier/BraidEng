@@ -6,7 +6,7 @@ import { MDynamicStreamable, DynamicStreamableFactory } from "./StreamingFramewo
 const activityRecordClassName = "ActivityRecord";
 
 
-// ActivityRecord - email of  aperson and a datestamp. Will hace many derived classes according to different activity types. 
+// ActivityRecord - email of a person and a datestamp. Will have many derived classes according to different activity types. 
 export class ActivityRecord extends MDynamicStreamable {
    private _id: string | undefined;
    private _email: string;

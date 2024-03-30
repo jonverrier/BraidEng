@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 
 // Local
 import { throwIfUndefined } from '../core/Asserts';
+import { logApiError } from '../core/Logging';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { CaucusOf } from '../core/CaucusFramework';
