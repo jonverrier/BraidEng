@@ -1,10 +1,8 @@
 // Copyright (c) 2024 Braid Technologies Ltd
 import axios from "axios";
 
-// Other 3rd party imports
-import { tag, LogLevel } from 'missionlog';
-
 // Local
+import { logApiError } from "./Logging";
 import { Message } from './Message';
 import { Persona } from './Persona';
 import { EIcon } from './Icons';
@@ -14,15 +12,6 @@ import { ConnectionError, AssertionFailedError } from "./Errors";
 import { KeyRetriever } from "./KeyRetriever";
 import { Environment, EEnvironment } from "./Environment";
 import { KnowledgeEnrichedMessage, KnowledgeRepository, kDefaultKnowledgeSegmentCount, kDefaultMinimumCosineSimilarity} from "./Knowledge";
-
-// Logging handler
-const logger = {
-   [LogLevel.ERROR]: (tag, msg, params) => console.error(msg, ...params),
-   [LogLevel.WARN]: (tag, msg, params) => console.warn(msg, ...params),
-   [LogLevel.INFO]: (tag, msg, params) => console.log(msg, ...params),
-   [LogLevel.TRACE]: (tag, msg, params) => console.log(msg, ...params),
-   [LogLevel.DEBUG]: (tag, msg, params) => console.log(msg, ...params),
-} as Record<LogLevel, (tag: string, msg: unknown, params: unknown[]) => void>;
 
 // Actual is 2048, but leave some headroom
 const kMaxTokens : number= 1536;
@@ -67,7 +56,7 @@ export class AIConnection {
 
          this._activeCallCount--;     
 
-         logger.ERROR (EConfigStrings.kApiLogCategory, EConfigStrings.kErrorConnectingToAiAPI, [error]);
+         logApiError (EConfigStrings.kErrorConnectingToAiAPI, error);
       });
 
       if (!response)
@@ -102,11 +91,11 @@ export class AIConnection {
          response = resp;
          this._activeCallCount--;         
       })
-         .catch((error: any) => {
+      .catch((error: any) => {
    
          this._activeCallCount--;     
    
-         logger.ERROR (EConfigStrings.kApiLogCategory, EConfigStrings.kErrorConnectingToAiAPI, [error]);
+         logApiError (EConfigStrings.kErrorConnectingToAiAPI, error);
       });
    
       if (!response)
