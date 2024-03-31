@@ -9,8 +9,10 @@ import axios from "axios";
 
 
 // Internal imports
-import { throwIfNull } from "./Asserts";
-import { logDbError } from "./Logging";
+import { Environment, EEnvironment } from "./Environment";
+import { EConfigStrings } from "./ConfigStrings";
+import { KeyRetriever } from "./KeyRetriever";
+import { logDbError, logApiError } from "./Logging";
 import { ActivityRecord } from './ActivityRecord';
 
 export interface IActivityRepository {
@@ -20,26 +22,68 @@ export interface IActivityRepository {
 
 }
 
-export function getRecordRepository () : IActivityRepository {
-   return new ActivityRepository();   
+export function getRecordRepository (joinKey: string) : IActivityRepository {
+   return new ActivityRepository(joinKey);   
 }
 
 // ActivityRecord - email of a person and a datestamp. Will have many derived classes according to different activity types. 
 export class ActivityRepository implements IActivityRepository {
 
-   /**
-    * Create an empty ActivityRepository object - required for particiation in serialisation framework
-    */
-   public constructor() {
+   private _dbkey: string | undefined;
+   private _joinKey: string;
 
+   /**
+    * Create an ActivityRepository object 
+    * @param joinKey - joining key
+    */
+   public constructor(joinKey: string) {
+
+      this._dbkey = undefined;
+      this._joinKey = joinKey;
+   }
+
+   async connect (joinKey : string) : Promise<string | undefined> {
+      let retriever = new KeyRetriever();
+      var url: string;
+
+      if (Environment.environment() === EEnvironment.kLocal)
+         url = EConfigStrings.kRequestLocalDbKeyUrl;
+      else
+         url = EConfigStrings.kRequestDbKeyUrl;
+      
+      let self = this;
+
+      let done = new Promise<string | undefined>(function(resolve, reject) {
+         
+         retriever.requestKey (url, 
+            EConfigStrings.kRequestKeyParameterName, 
+            joinKey)
+         .then ((key) => {
+            self._dbkey = key;
+            resolve (key);
+         })
+         .catch ((error: any) => {
+            logApiError ("Error getting database key:", error);   
+            resolve(undefined);   
+         });
+      });
+
+      return done;
    }
 
    async save (record : ActivityRecord) : Promise<boolean> {
       
+      let self = this;
+
+      if (!self._dbkey) {
+         await self.connect(self._joinKey);
+      }
+
       let done = new Promise<boolean>(function(resolve, reject) {
 
          let stream = record.streamOut ();
          let document = JSON.parse(stream);
+         let key = self._dbkey;
 
          axios.post('https://eu-west-1.aws.data.mongodb-api.com/app/braidlmsclient-fsivu/endpoint/data/v1/action/insertOne', 
          {   
@@ -50,7 +94,7 @@ export class ActivityRepository implements IActivityRepository {
           },
           {
              headers: {                  
-               "apiKey": "IcFsSMgxqWvxZceSM7i73Vpalxf2vpfiJQXBb3HpOg7KkL82QIL5EINDLsfak2GS",
+               "apiKey": key,
                "Content-Type": "application/ejson",                  
                "Accept": "application/json",
             }              

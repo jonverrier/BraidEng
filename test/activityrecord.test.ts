@@ -7,6 +7,7 @@ import { IActivityRepository, getRecordRepository } from '../core/ActivityReposi
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
+import { throwIfUndefined } from '../core/Asserts';
 
 
 var myId: string = "1234";
@@ -260,7 +261,9 @@ describe("UrlActivityRecord", function () {
 
 describe("ActivityRepository", function () {
 
-   let repository = getRecordRepository();
+   let joinKey = process.env.JoinKey;
+   throwIfUndefined (joinKey);
+   let repository = getRecordRepository(joinKey);
 
    it("Needs to save a record", async function () {
 

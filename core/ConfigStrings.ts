@@ -8,8 +8,10 @@ export enum EConfigStrings {
 
    kRequestJoinKeyUrl = "https://braidapps.io/api/joinkey",
    kRequestAiKeyUrl = "https://braidapps.io/api/aikey",   
+   kRequestDbKeyUrl = "https://braidapps.io/api/dbkey",
    kRequestLocalJoinKeyUrl = "http://localhost:1337/api/joinkey",
-   kRequestLocalAiKeyUrl = "http://localhost:1337/api/aikey",     
+   kRequestLocalAiKeyUrl = "http://localhost:1337/api/aikey",  
+   kRequestLocalDbKeyUrl = "http://localhost:1337/api/dbkey",      
    kRequestKeyParameterName = "JoinKey",
    
    kAzureTenantId = "45155576-770f-47cc-92dc-9d3328dbf837",
