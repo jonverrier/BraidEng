@@ -38,15 +38,17 @@ import { JoinPath } from '../core/JoinPath';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { AIConnection } from '../core/AIConnection';
-import { KnowledgeSegment, KnowledgeRepository } from '../core/Knowledge';
+import { KnowledgeSegment } from '../core/Knowledge';
 import { EUIStrings } from './UIStrings';
 import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
-import { throwIfUndefined } from '../core/Asserts';
 import { JoinDetails } from '../core/JoinDetails';
+import { AnimatedIconButton, EAnimatedIconButtonTypes } from './AnimatedIconButton';
+import { getRecordRepository } from '../core/ActivityRepository';
+import { UrlActivityRecord } from '../core/UrlActivityRecord';
 
 export interface IConversationHeaderProps {
 
-   joinKey: JoinPath;
+   joinPath: JoinPath;
    audience: Map<string, Persona>;
    onTrimConversation () : void;    
 }
@@ -54,7 +56,7 @@ export interface IConversationHeaderProps {
 export interface IConversationRowProps {
 
    isConnected: boolean;
-   joinKey: JoinPath;
+   joinPath: JoinPath;
    audience: Map<string, Persona>;
    conversation: Array<Message>;
    onSend (message_: string) : void;   
@@ -87,7 +89,7 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
    function onCopy (ev: React.MouseEvent<HTMLButtonElement>) : void {
 
       // Make a join details with no email address
-      let joinDetails = JoinDetails.makeFromTwoParts ("", props.joinKey);
+      let joinDetails = JoinDetails.makeFromTwoParts ("", props.joinPath);
       
       // https://stackoverflow.com/questions/10783322/window-location-url-javascript
 
@@ -128,7 +130,7 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
                <ToolbarButton
                   icon={<Copy24Regular />}
                   aria-label={EUIStrings.kCopyJoinKeyButtonPrompt} 
-                  disabled={!(props.joinKey.isValid)} 
+                  disabled={!(props.joinPath.isValid)} 
                   onClick={onCopy}
                />                 
             </Tooltip>           
@@ -137,7 +139,7 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
                <ToolbarButton
                   icon={<Delete24Regular />}
                   aria-label={EUIStrings.kTrimConversationButtonPrompt} 
-                  disabled={!(props.joinKey.isValid)} 
+                  disabled={!(props.joinPath.isValid)} 
                   onClick={onTrimConversation}
                />  
             </Tooltip>                              
@@ -218,7 +220,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
          <div className={embeddedRowClasses.root}>      
             <div className={embeddedColumnClasses.root}>                     
 
-               <ConversationHeaderRow joinKey={props.joinKey} 
+               <ConversationHeaderRow joinPath={props.joinPath} 
                   audience={props.audience} 
                   onTrimConversation={props.onTrimConversation}>                    
                </ConversationHeaderRow>
@@ -233,6 +235,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
                         &&  message.segments.length > 0) {  // This last test is for backwards compatibility with existing conversations - remove when upgrade is communicated. 
                            return (         
                               <SingleFadeMessageView 
+                                 sessionKey={props.joinPath.firstPart}
                                  message={message} 
                                  key={message.id}
                                  author={(audience.get (message.authorId) as Persona)}
@@ -243,6 +246,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
                         else {
                            return (         
                               <SingleMessageView 
+                                 sessionKey={props.joinPath.firstPart}                              
                                  message={message} 
                                  key={message.id}
                                  author={(audience.get (message.authorId) as Persona)}
@@ -269,6 +273,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
 
 export interface ISingleMessageViewProps {
 
+   sessionKey: string;
    message: Message;  
    author: Persona;
    showAiWarning: boolean;
@@ -282,6 +287,7 @@ export interface ISingleMessageViewProps {
 
 export interface IKnowledgeSegmentProps {
 
+   sessionKey: string;
    segment: KnowledgeSegment;  
    key: string;
    fade: boolean;
@@ -442,6 +448,17 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
 
    var relevanceClasses, linkClasses, segmentClasses;
    
+   const onLink = (event: React.MouseEvent<HTMLAnchorElement>): void => {
+      // NB we dont call 'prevent default' as we want the default acton to occur i.e. open a  new tab. 
+      event.stopPropagation();
+
+      let repository = getRecordRepository(props.sessionKey);
+      let email = "test.email";
+      let record = new UrlActivityRecord (undefined, email, new Date(), segment.url);
+      repository.save (record);
+   };
+
+
    if (props.fade) {
       relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? fadedGreenClasses : fadedAmberClasses : fadedAmberClasses;  
       linkClasses = fadedLinkStyles();      
@@ -456,7 +473,7 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
    return (<div className={sourcesClasses.root} key={segment.url}>
               <div className={segmentClasses.root}>
                  <Link target='_blank' className={linkClasses.root} 
-                    href={segment.url}>{segment.url}
+                    href={segment.url} onClick={onLink}>{segment.url}                    
                   </Link>
                   <Body1 className={relevanceClasses.root}> {relevanceText} </Body1>
                </div>
@@ -482,7 +499,7 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
       if (props.message.segments.length > 0) { 
 
          aiSources = props.message.segments.map ((segment : KnowledgeSegment) => {
-            return <KowledgeSegmentsView segment={segment} fade={false} key={segment.url}/>
+            return <KowledgeSegmentsView sessionKey={props.sessionKey} segment={segment} fade={false} key={segment.url}/>
          })   
          aiFooter = <Text size={100}> {EUIStrings.kAiContentWarning} </Text>;   
       }
@@ -529,7 +546,10 @@ export const SingleFadeMessageView = (props: ISingleMessageViewProps) => {
          <div className={singleMessageTextColumnClasses.root}>
             <Caption1 className={fadeColourClasses.root}><b>{props.author.name}</b></Caption1>     
             <Body1 className={fadeColourClasses.root}>{props.message.text}</Body1>  
-            <KowledgeSegmentsView segment={props.message.segments[0]} fade={true} key={props.message.segments[0].url}/>
+            <KowledgeSegmentsView sessionKey={props.sessionKey} 
+               segment={props.message.segments[0]} 
+               fade={true} 
+               key={props.message.segments[0].url}/>
             <div className={padAfterMessageClasses.root}></div>              
          </div>              
       </div>); 
@@ -561,10 +581,20 @@ const SendButton: React.FC<ButtonProps> = (props) => {
    },
 });
 
+const messageInputRowStyles = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'row',      
+      textAlign: 'left',
+      width: '100%'
+   },
+});
+
 export const InputView = (props: IInputViewProps) => {
 
    const messageInputGroupClasses = messageInputGroupStyles();
-   const messageInputClasses = textFieldStyles();
+   const messageInputRowClasses = messageInputRowStyles();
+   const textFieldClasses = textFieldStyles();
 
    const [message, setMessage] = useState<string>("");
    const [canSend, setCanSend] = useState<boolean>(false);
@@ -594,29 +624,38 @@ export const InputView = (props: IInputViewProps) => {
       doSend();       
    }
 
+   let buttonPrompt = "Change this";
+
    return (
       <div className={messageInputGroupClasses.root}>
          <Text>{EUIStrings.kSendMessagePreamble}</Text>
          &nbsp;
-         <Tooltip content={EUIStrings.kSendButtonPrompt} relationship="label" positioning={'above'}>
-            <Input aria-label={EUIStrings.kSendButtonPrompt}
-               className={messageInputClasses.root}                  
-               required={true}                  
-               value={message}
-               maxLength={256}
-               contentBefore={<Mail24Regular />}
-               placeholder={EUIStrings.kSendMessagePlaceholder}
-               onChange={onKeyChange}
-               onKeyDown={onKeyDown}
-               disabled={false}
-               autoFocus={true}               
-               contentAfter={<SendButton 
-                  aria-label={EUIStrings.kSendButtonPrompt} 
-                  disabled={(!canSend) || (props.isBusy)} 
-                  onClick={onMessageSend}
-               />}            
-         />
-         </Tooltip>       
+         <div className={messageInputRowClasses.root}>
+            <Tooltip content={EUIStrings.kSendButtonPrompt} relationship="label" positioning={'above'}>
+               <Input aria-label={EUIStrings.kSendButtonPrompt}
+                  className={textFieldClasses.root}                  
+                  required={true}                  
+                  value={message}
+                  maxLength={256}
+                  contentBefore={<Mail24Regular />}
+                  placeholder={EUIStrings.kSendMessagePlaceholder}
+                  onChange={onKeyChange}
+                  onKeyDown={onKeyDown}
+                  disabled={false}
+                  autoFocus={true}               
+                  contentAfter={<SendButton 
+                     aria-label={EUIStrings.kSendButtonPrompt} 
+                     disabled={(!canSend) || (props.isBusy)} 
+                     onClick={onMessageSend}
+                  />}            
+            />
+            </Tooltip>   
+            &nbsp;
+            <AnimatedIconButton animate={true} 
+               icon={EAnimatedIconButtonTypes.kLightBulb} 
+               promptAnimated={EUIStrings.kAiHasSuggestedDocuments} 
+               promptUnamimated={EUIStrings.kAiHasNoSuggestedDocuments}/>            
+         </div>   
       </div>        
    );
 }

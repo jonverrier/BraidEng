@@ -19,6 +19,8 @@ export enum EUIStrings {
    kSendMessagePlaceholder = "Write a message... ",   
    kCopyJoinKeyButtonPrompt = "Copy the joining URL for this conversation to the clipboard",
    kTrimConversationButtonPrompt = "Delete the conversation history",
+   kAiHasSuggestedDocuments = "There is a document available that is similar to your recent reading history.",
+   kAiHasNoSuggestedDocuments = "When you click on linked documents, we can propose other similar documents.", 
 
    kAiNoGoodSources = "We could not find good sources for this answer. AI can make mistakes. Consider checking important information.",
    kAiContentWarning = "AI can make mistakes. Consider checking important information.",

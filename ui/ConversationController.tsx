@@ -7,7 +7,6 @@ import React, { useState } from 'react';
 
 // Local
 import { throwIfUndefined } from '../core/Asserts';
-import { logApiError } from '../core/Logging';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { CaucusOf } from '../core/CaucusFramework';
@@ -251,7 +250,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       let audienceMap = fluidMessagesConnection.participantCaucus().current();
       setAudience (audienceMap);
 
-      // If AI is being invoked we make a call here 
+      // If LLM is being invoked we make a call here 
       // ======================================================
       if (AIConnection.isRequestForLLM (message, audienceMap)) {
 
@@ -318,7 +317,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
          <ConversationRow 
              isConnected={fullJoinKey.isValid && fullJoinKey.isTwoPart}
              isBusy = {isBusy}
-             joinKey={fullJoinKey}
+             joinPath={fullJoinKey}
              conversation={conversation}
              audience={audience} 
              onSend={onSend} 
