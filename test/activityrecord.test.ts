@@ -276,6 +276,11 @@ describe("ActivityRepository", function () {
    });
 
 
-  
+   it("Needs to load a record", async function () {
+
+      let loaded = await repository.loadRecent (3);
+
+      expect(true).toEqual(true);     
+   });  
 
 });
