@@ -261,6 +261,13 @@ describe("UrlActivityRecord", function () {
 
 describe("ActivityRepository", function () {
 
+   this.timeout(10000);
+
+   beforeEach(async () => {
+
+      this.timeout(10000);
+   });
+      
    let joinKey = process.env.JoinKey;
    throwIfUndefined (joinKey);
    let repository = getRecordRepository(joinKey);

@@ -31,6 +31,7 @@ export class ActivityRepository implements IActivityRepository {
 
    private _dbkey: string | undefined;
    private _joinKey: string;
+   private _timer: NodeJS.Timeout | undefined;
 
    /**
     * Create an ActivityRepository object 
@@ -40,6 +41,14 @@ export class ActivityRepository implements IActivityRepository {
 
       this._dbkey = undefined;
       this._joinKey = joinKey;
+      this._timer = undefined;
+   }
+
+   disConnect () : void {
+      if (this._timer) {
+         clearInterval(this._timer);
+         this._timer = undefined;
+      }
    }
 
    async connect (joinKey : string) : Promise<string | undefined> {
@@ -52,6 +61,14 @@ export class ActivityRepository implements IActivityRepository {
          url = EConfigStrings.kRequestDbKeyUrl;
       
       let self = this;
+
+      // Set a timer to invalidate the key every 15 mins.
+      // This well below the Mongo limit of 30 mins, foces us to keep refreshing
+      if (!self._timer) {
+         self._timer = setInterval(() => { 
+            self._dbkey = undefined;
+         }, 15*60*60*1000);         
+      }
 
       let done = new Promise<string | undefined>(function(resolve, reject) {
          
@@ -94,7 +111,7 @@ export class ActivityRepository implements IActivityRepository {
           },
           {
              headers: {                  
-               "apiKey": key,
+               'Authorization': `Bearer ${key}`,
                "Content-Type": "application/ejson",                  
                "Accept": "application/json",
             }              
@@ -106,7 +123,7 @@ export class ActivityRepository implements IActivityRepository {
          .catch((error: any) => {   
 
             logDbError ("Error calling database:", error);   
-            resolve(false);     
+            reject(false);     
          });  
       });
    
@@ -135,9 +152,9 @@ export class ActivityRepository implements IActivityRepository {
           },
           {
              headers: {                  
-               "apiKey": key,
                "Content-Type": "application/ejson",                  
                "Accept": "application/json",
+               'Authorization': `Bearer ${key}`               
             }              
          })
          .then((resp : any) => {

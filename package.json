@@ -12,7 +12,7 @@
       "build": "tsc --build",
       "clean": "tsc --build --clean",
       "test": "mocha --debug-brk --require ts-node/register test/*.test.ts",
-      "test-mini": "mocha --debug-brk --require ts-node/register -g UrlActivity",
+      "test-mini": "mocha --debug-brk --require ts-node/register -g ActivityRepository",
       "cover": "tsc && nyc mocha --require ts-node/register test/*.test.ts",
       "local-server": "npx @fluidframework/azure-local-service@latest",
       "embeddings-lite": "mocha --require ts-node/register scripts/make_lite_embedding.ts"
