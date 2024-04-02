@@ -62,6 +62,7 @@ export interface IConversationRowProps {
    onSend (message_: string) : void;   
    onTrimConversation () : void;   
    isBusy: boolean;
+   localPersona: Persona;
 }
 
 const headerRowStyles = makeStyles({
@@ -240,6 +241,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
                                  key={message.id}
                                  author={(audience.get (message.authorId) as Persona)}
                                  showAiWarning={message.authorId === EConfigStrings.kLLMGuid}
+                                 localPersona={props.localPersona}
                               />
                            )                     
                         }
@@ -251,6 +253,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
                                  key={message.id}
                                  author={(audience.get (message.authorId) as Persona)}
                                  showAiWarning={message.authorId === EConfigStrings.kLLMGuid}
+                                 localPersona={props.localPersona}
                               />
                            )
                         }
@@ -277,6 +280,7 @@ export interface ISingleMessageViewProps {
    message: Message;  
    author: Persona;
    showAiWarning: boolean;
+   localPersona: Persona;
 }
 
  export interface IAuthorIconProps {
@@ -291,6 +295,7 @@ export interface IKnowledgeSegmentProps {
    segment: KnowledgeSegment;  
    key: string;
    fade: boolean;
+   localPersona: Persona;   
 }
 
 const fadeColour = makeStyles({
@@ -453,7 +458,7 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
       event.stopPropagation();
 
       let repository = getRecordRepository(props.sessionKey);
-      let email = "test.email";
+      let email = props.localPersona.name;
       let record = new UrlActivityRecord (undefined, email, new Date(), segment.url);
       repository.save (record);
    };
@@ -499,7 +504,8 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
       if (props.message.segments.length > 0) { 
 
          aiSources = props.message.segments.map ((segment : KnowledgeSegment) => {
-            return <KowledgeSegmentsView sessionKey={props.sessionKey} segment={segment} fade={false} key={segment.url}/>
+            return <KowledgeSegmentsView sessionKey={props.sessionKey} segment={segment} fade={false} key={segment.url} 
+                    localPersona={props.localPersona}/>
          })   
          aiFooter = <Text size={100}> {EUIStrings.kAiContentWarning} </Text>;   
       }
@@ -549,7 +555,8 @@ export const SingleFadeMessageView = (props: ISingleMessageViewProps) => {
             <KowledgeSegmentsView sessionKey={props.sessionKey} 
                segment={props.message.segments[0]} 
                fade={true} 
-               key={props.message.segments[0].url}/>
+               key={props.message.segments[0].url}
+               localPersona={props.localPersona}/>
             <div className={padAfterMessageClasses.root}></div>              
          </div>              
       </div>); 

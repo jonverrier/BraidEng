@@ -321,7 +321,8 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
              conversation={conversation}
              audience={audience} 
              onSend={onSend} 
-             onTrimConversation={onTrimConversation}>
+             onTrimConversation={onTrimConversation}
+             localPersona={props.localPersona}>
          </ConversationRow>
       );
 }
