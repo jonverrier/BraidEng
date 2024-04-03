@@ -35,8 +35,8 @@ export enum EConfigStrings {
 };
 
 export enum EConfigNumbers {
-   kHelpfulPromptDelayMsecs = 5000,
-   kHelpfulPromptMinimumGapMins = 60
+   kHelpfulPromptDelayMsecs = 3000,
+   kHelpfulPromptMinimumGapMins = 10
 }
 
 // This is used for local running only, as in browser we cannot access environment variables

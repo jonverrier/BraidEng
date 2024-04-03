@@ -66,7 +66,7 @@ export class AIConnection {
 
       let enriched = KnowledgeRepository.lookUpMostSimilar (embedding, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);
 
-      return new KnowledgeEnrichedMessage (response.data.choices[0].message.content as string, enriched.sources);
+      return new KnowledgeEnrichedMessage (response.data.choices[0].message.content as string, enriched.segments);
    }    
 
       // Makes an Axios call to call web endpoint

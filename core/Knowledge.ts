@@ -7,14 +7,59 @@ import liteYouTubeEmbeddings from '../core/youtube_embeddings_lite.json';
 import liteMarkdownEmbeddings from '../core/markdown_embeddings_lite.json';
 import liteHtmlEmbeddings from '../core/html_embeddings_lite.json';
 import { InvalidParameterError } from "./Errors";
+import { Message } from "./Message";
+import { EUIStrings } from "../ui/UIStrings";
+import { EConfigStrings } from "./ConfigStrings";
 
 function copyTimeStamp (stamp: Date | undefined) : Date | undefined {
    return (typeof stamp === 'undefined') ? undefined : new Date(stamp);
 }
+
 function copyRelevance (relevance: number | undefined) : number | undefined {
    return (typeof relevance === 'undefined') ? undefined : relevance;
 }
 
+const youTubeHostname = "www.youtube.com";
+
+export function isYouTube (url: string) : boolean {
+   let youTubeHostname = "www.youtube.com";
+
+   const URLIn = new URL (url);
+
+   if (URLIn.hostname === (youTubeHostname)) {
+      return true;
+   }
+   else {
+      return false;
+   }
+}
+
+export function lookLikeSameSource (url1: string, url2: string ) : boolean {
+
+   // Youtube format URL
+   // https://www.youtube.com/watch?v=l5mG4z343qg&t=00h00m00s
+
+   const URLLeft = new URL (url1);
+   const URLRight = new URL (url2);
+
+   if (URLLeft.hostname === (youTubeHostname) && URLRight.hostname === (youTubeHostname)) {
+      // To compare two YouTube URLs we look at the ?v= parameter for the video ID
+      const videoLeft = URLLeft.searchParams.get('v');
+      const videoRight = URLRight.searchParams.get('v');  
+      
+      if (videoLeft === videoRight)
+         return true;
+      else
+         return false;
+
+   }
+
+   if ((URLLeft.hostname === URLRight.hostname) && (URLLeft.pathname === URLRight.pathname)) {
+      return true;
+   }
+
+   return false;
+}
 
 /**
  * KnowledgeSource object
@@ -224,7 +269,7 @@ export class KnowledgeSegmentFinder {
    get howMany (): number {
       return this._howMany;
    }        
-   get sources (): Array<KnowledgeSegment> {
+   get segments (): Array<KnowledgeSegment> {
       return this._segments;
    }   
 
@@ -274,6 +319,12 @@ export class KnowledgeSegmentFinder {
     */
    replaceIfBeatsCurrent (candidate: KnowledgeSegment): boolean {
 
+      // First check if its just the same source e.g. different segment of a Youtube video
+      for (let i = 0; i < this._segments.length; i++) {
+         if (lookLikeSameSource (candidate.url, this._segments[i].url))
+            return false;
+      }
+
       // If the array can grow we just add the new candidate
       if (this._segments.length < this._howMany) {
          if (typeof candidate.relevance !== 'undefined' && candidate.relevance >= this._similarityThresholdLo) {
@@ -321,6 +372,7 @@ export function cosineSimilarity(vector1: number[], vector2: number[]): number {
 }
 
 export class KnowledgeRepository  {
+
    static lookUpMostSimilar (embedding: Array<number>, similarityThresholdLo: number, howMany: number) : KnowledgeSegmentFinder {
 
       let bestSources = new KnowledgeSegmentFinder(similarityThresholdLo, howMany);
@@ -332,19 +384,47 @@ export class KnowledgeRepository  {
       return bestSources;
    }   
 
-   // TODO - this is a plug!!    
-   static lookUpTrending () : KnowledgeSegment | undefined {
+   /**
+    * lookUpSimilarfromUrl 
+    * look to see of we have similar content from other sources
+    */   
+   static lookUpSimilarfromUrl (url_: string, similarityThresholdLo: number, howMany: number) : KnowledgeSegmentFinder {
       
-      function randomIntFromInterval(min : number, max: number) { // min and max included
-         return Math.floor(Math.random() * (max - min + 1) + min)
-         }
+      var segmentIn: KnowledgeSegment | undefined = undefined;
 
-      // TODO - this is a plug!! 
-      if (randomIntFromInterval(-1, 1) < 0)
-         return YouTubeRespository.lookUpUrl ("https://www.youtube.com/watch?v=l5mG4z343qg&t=00h00m00s");
+      if (isYouTube (url_))
+         segmentIn = YouTubeRespository.lookUpUrl ("https://www.youtube.com/watch?v=l5mG4z343qg&t=00h00m00s");
       else
-         return HtmlRespository.lookUpUrl ("https://huyenchip.com/2023/04/11/llm-engineering.html"); 
+         segmentIn =  HtmlRespository.lookUpUrl ("https://huyenchip.com/2023/04/11/llm-engineering.html"); 
 
+      if (segmentIn) {
+         return KnowledgeRepository.lookUpMostSimilar (segmentIn.ada_v2, similarityThresholdLo, howMany);
+      }
+
+      return new KnowledgeSegmentFinder(kDefaultMinimumCosineSimilarity, howMany);
+   }
+
+   static lookForSuggestedContent (url_: string) : Message | undefined {
+
+      let finder = KnowledgeRepository.lookUpSimilarfromUrl (url_, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);
+
+      if (finder.segments.length > 0) {
+
+         let suggested = new Message();
+         suggested.authorId = EConfigStrings.kLLMGuid;
+         suggested.text = EUIStrings.kNeedInspirationHereIsAnother;
+         suggested.sentAt = new Date();
+
+         let segmentCandidate = finder.segments[0];
+         let segments = new Array<KnowledgeSegment> ();
+         segments.push (segmentCandidate);
+
+         suggested.segments = segments;
+
+         return suggested;
+      } 
+      
+      return undefined;
    }
 }
 

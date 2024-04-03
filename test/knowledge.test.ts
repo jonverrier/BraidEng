@@ -1,7 +1,7 @@
 'use strict';
 // Copyright Braid Technologies ltd, 2024
 import { KnowledgeSegment, KnowledgeSegmentFinder, KnowledgeEnrichedMessage, 
-   kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount} from '../core/Knowledge';
+   kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount, lookLikeSameSource} from '../core/Knowledge';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -96,7 +96,7 @@ describe("KnowledgeSourceBuilder", function () {
 
       let ksEmpty = new KnowledgeSegmentFinder(kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);
 
-      expect(ksEmpty.sources.length).toEqual(0);     
+      expect(ksEmpty.segments.length).toEqual(0);     
    });
 
    it("Needs to compare for equality and inequality", function () {
@@ -179,4 +179,40 @@ describe("KnowledgeEnrichedMessage", function () {
     
       expect(enriched1.equals(enrichedNew)).toEqual(true);
    });
+});
+
+describe("KnowledgeSource URLs", function () {
+
+   it("Needs to identify URLs from same YouTube video", function () {
+
+      var url1 = "https://www.youtube.com/watch?v=roEKOzxilq4&t=00h00m00s";
+      var url2 = "https://www.youtube.com/watch?v=roEKOzxilq4&t=00h05m00s";
+
+      expect(lookLikeSameSource (url1, url2)).toEqual(true);     
+   });
+
+   it("Needs to identify URLs from different YouTube videos", function () {
+
+      var url1 = "https://www.youtube.com/watch?v=roEKOzxilq4&t=00h00m00s";
+      var url2 = "https://www.youtube.com/watch?v=xoEKOzailq4&t=00h00m00s";
+
+      expect(lookLikeSameSource (url1, url2)).toEqual(false);        
+   });
+
+   it("Needs to identify URLs from same path", function () {
+         
+      var url1 = "https://huyenchip.com/2023/04/11/llm-engineering.html";
+      var url2 = "https://huyenchip.com/2023/04/11/llm-engineering.html?x=y";
+
+      expect(lookLikeSameSource (url1, url2)).toEqual(true);        
+   });
+
+   it("Needs to identify URLs from different paths", function () {
+
+      var url1 = "https://huyenchip.com/2023/04/11/llm-engineering.html";
+      var url2 = "https://huyenchip.com/2023/04/11/llm-engineering2.html";
+
+      expect(lookLikeSameSource (url1, url2)).toEqual(false);       
+   });
+
 });

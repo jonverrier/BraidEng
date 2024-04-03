@@ -43,8 +43,6 @@ import { EUIStrings } from './UIStrings';
 import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
 import { JoinDetails } from '../core/JoinDetails';
 import { AnimatedIconButton, EAnimatedIconButtonTypes } from './AnimatedIconButton';
-import { getRecordRepository } from '../core/ActivityRepository';
-import { UrlActivityRecord } from '../core/UrlActivityRecord';
 
 export interface IConversationHeaderProps {
 
@@ -59,10 +57,12 @@ export interface IConversationRowProps {
    joinPath: JoinPath;
    audience: Map<string, Persona>;
    conversation: Array<Message>;
+   isBusy: boolean;   
+   hasSuggestedContent: boolean;
    onSend (message_: string) : void;   
    onTrimConversation () : void;   
-   isBusy: boolean;
-   localPersona: Persona;
+   onClickUrl (url_: string): void;   
+   onAddSuggestedContent (): void;
 }
 
 const headerRowStyles = makeStyles({
@@ -230,33 +230,17 @@ export const ConversationRow = (props: IConversationRowProps) => {
 
                <div className={conversationContentRowClasses.root}>                
                   <div className={conversationContentColumnClasses.root}>             
-                     {conversation.map (message => {
-                        if (message.isUnPrompted()
-                        &&  AIConnection.isFromLLM (message, audience)
-                        &&  message.segments.length > 0) {  // This last test is for backwards compatibility with existing conversations - remove when upgrade is communicated. 
-                           return (         
-                              <SingleFadeMessageView 
-                                 sessionKey={props.joinPath.firstPart}
-                                 message={message} 
-                                 key={message.id}
-                                 author={(audience.get (message.authorId) as Persona)}
-                                 showAiWarning={message.authorId === EConfigStrings.kLLMGuid}
-                                 localPersona={props.localPersona}
-                              />
-                           )                     
-                        }
-                        else {
-                           return (         
-                              <SingleMessageView 
-                                 sessionKey={props.joinPath.firstPart}                              
-                                 message={message} 
-                                 key={message.id}
-                                 author={(audience.get (message.authorId) as Persona)}
-                                 showAiWarning={message.authorId === EConfigStrings.kLLMGuid}
-                                 localPersona={props.localPersona}
-                              />
-                           )
-                        }
+                     {conversation.map (message => { 
+                        return (         
+                           <SingleMessageView 
+                              sessionKey={props.joinPath.firstPart}
+                              message={message} 
+                              key={message.id}
+                              author={(audience.get (message.authorId) as Persona)}
+                              showAiWarning={message.authorId === EConfigStrings.kLLMGuid}
+                              onClickUrl={props.onClickUrl}                                 
+                           />
+                        )                     
                      })}                          
                      <AlwaysScrollToBottom />  
                   </div>               
@@ -266,7 +250,12 @@ export const ConversationRow = (props: IConversationRowProps) => {
 
                <div className={footerSectionClasses.root}>               
                   {props.isBusy ? <DefaultSpinner/> : <div/>}              
-                  <InputView onSend={onSend} isBusy={props.isBusy}></InputView>          
+                  <InputView 
+                     onSend={onSend}
+                     onAddSuggestedContent={props.onAddSuggestedContent} 
+                     isBusy={props.isBusy}
+                     hasSuggestedContent={props.hasSuggestedContent}>
+                     </InputView>          
                </div> 
             </div>
          </div>
@@ -280,13 +269,12 @@ export interface ISingleMessageViewProps {
    message: Message;  
    author: Persona;
    showAiWarning: boolean;
-   localPersona: Persona;
+   onClickUrl (url_: string) : void;     
 }
 
  export interface IAuthorIconProps {
  
-   author: Persona;
-   fade: boolean;   
+   author: Persona; 
 }
 
 export interface IKnowledgeSegmentProps {
@@ -294,28 +282,13 @@ export interface IKnowledgeSegmentProps {
    sessionKey: string;
    segment: KnowledgeSegment;  
    key: string;
-   fade: boolean;
-   localPersona: Persona;   
+   onClickUrl (url_: string) : void;    
 }
-
-const fadeColour = makeStyles({
-   root: {  
-      color: "#595959"
-   },
-});
 
 const glow = makeStyles({
    root: {    
       marginBottom: '10px' ,      
       boxShadow: '0px 0px 5px 0px white;'
-   },
-});
-
-const fadedGlow = makeStyles({
-   root: {    
-      marginBottom: '10px' ,      
-      boxShadow: '0px 0px 5px 0px white;',
-      color: "#595959"      
    },
 });
 
@@ -328,15 +301,11 @@ const noGlow = makeStyles({
  export const AuthorIcon = (props: IAuthorIconProps) => {
 
    const glowClasses = glow();    
-   const fadedGlowClasses = fadedGlow();    
    const noGlowClasses = noGlow(); 
    var className;
 
    if (props.author.icon === EIcon.kLLMPersona) {
-      if (props.fade)
-         className = fadedGlowClasses.root;
-      else
-         className = glowClasses.root;
+      className = glowClasses.root;
    }
    else {
       className = noGlowClasses.root;      
@@ -445,40 +414,27 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
    const sourcesClasses = sourcesRow();
    const greenClasses = greenStyles();
    const amberClasses = amberStyles();
-   const fadedGreenClasses = fadedGreenStyles();
-   const fadedAmberClasses = fadedAmberStyles();
 
    let segment = props.segment;
    let relevanceText = segment.relevance ? (segment.relevance * 100).toPrecision(2) + '%': "";
 
    var relevanceClasses, linkClasses, segmentClasses;
    
-   const onLink = (event: React.MouseEvent<HTMLAnchorElement>): void => {
+   const onClickLink = (event: React.MouseEvent<HTMLAnchorElement>): void => {
       // NB we dont call 'prevent default' as we want the default acton to occur i.e. open a  new tab. 
       event.stopPropagation();
 
-      let repository = getRecordRepository(props.sessionKey);
-      let email = props.localPersona.name;
-      let record = new UrlActivityRecord (undefined, email, new Date(), segment.url);
-      repository.save (record);
+      props.onClickUrl (segment.url);   
    };
 
-
-   if (props.fade) {
-      relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? fadedGreenClasses : fadedAmberClasses : fadedAmberClasses;  
-      linkClasses = fadedLinkStyles();      
-      segmentClasses = fadedSegmentStyles();       
-   }
-   else {
-      relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
-      linkClasses = linkStyles();
-      segmentClasses = segmentStyles();             
-   }
+   relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
+   linkClasses = linkStyles();
+   segmentClasses = segmentStyles();             
 
    return (<div className={sourcesClasses.root} key={segment.url}>
               <div className={segmentClasses.root}>
                  <Link target='_blank' className={linkClasses.root} 
-                    href={segment.url} onClick={onLink}>{segment.url}                    
+                    href={segment.url} onClick={onClickLink}>{segment.url}                    
                   </Link>
                   <Body1 className={relevanceClasses.root}> {relevanceText} </Body1>
                </div>
@@ -504,8 +460,8 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
       if (props.message.segments.length > 0) { 
 
          aiSources = props.message.segments.map ((segment : KnowledgeSegment) => {
-            return <KowledgeSegmentsView sessionKey={props.sessionKey} segment={segment} fade={false} key={segment.url} 
-                    localPersona={props.localPersona}/>
+            return <KowledgeSegmentsView sessionKey={props.sessionKey} segment={segment} key={segment.url} 
+                    onClickUrl={props.onClickUrl}/>
          })   
          aiFooter = <Text size={100}> {EUIStrings.kAiContentWarning} </Text>;   
       }
@@ -522,7 +478,7 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
    return (
       <div className={singleMessageRowClasses.root}>
          <div className={singleMessageIconColumnClasses.root}>
-            <AuthorIcon author={props.author} fade={false}/>            
+            <AuthorIcon author={props.author} />            
          </div>   
          <div className={singleMessageTextColumnClasses.root}>
             <Caption1><b>{props.author.name}</b></Caption1>     
@@ -536,36 +492,12 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
       </div>);    
 }
 
-export const SingleFadeMessageView = (props: ISingleMessageViewProps) => {
-
-   const singleMessageRowClasses = singleMessageRow();
-   const singleMessageIconColumnClasses = singleMessageIconColumn();
-   const singleMessageTextColumnClasses = singleMessageTextColumn();
-   const padAfterMessageClasses = padAfterMessage();  
-   const fadeColourClasses = fadeColour();
-
-   return (
-      <div className={singleMessageRowClasses.root}>
-         <div className={singleMessageIconColumnClasses.root}>
-            <AuthorIcon author={props.author} fade={true}/>            
-         </div>   
-         <div className={singleMessageTextColumnClasses.root}>
-            <Caption1 className={fadeColourClasses.root}><b>{props.author.name}</b></Caption1>     
-            <Body1 className={fadeColourClasses.root}>{props.message.text}</Body1>  
-            <KowledgeSegmentsView sessionKey={props.sessionKey} 
-               segment={props.message.segments[0]} 
-               fade={true} 
-               key={props.message.segments[0].url}
-               localPersona={props.localPersona}/>
-            <div className={padAfterMessageClasses.root}></div>              
-         </div>              
-      </div>); 
-}
-
 export interface IInputViewProps {
    
-   onSend (message_: string) : void;
    isBusy: boolean;
+   hasSuggestedContent: boolean;
+   onSend (message_: string) : void;
+   onAddSuggestedContent(): void;
 }
 
 const SendButton: React.FC<ButtonProps> = (props) => {
@@ -658,10 +590,11 @@ export const InputView = (props: IInputViewProps) => {
             />
             </Tooltip>   
             &nbsp;
-            <AnimatedIconButton animate={true} 
+            <AnimatedIconButton animate={props.hasSuggestedContent} 
                icon={EAnimatedIconButtonTypes.kLightBulb} 
                promptAnimated={EUIStrings.kAiHasSuggestedDocuments} 
-               promptUnamimated={EUIStrings.kAiHasNoSuggestedDocuments}/>            
+               promptUnamimated={EUIStrings.kAiHasNoSuggestedDocuments}
+               onClick={props.onAddSuggestedContent}/>            
          </div>   
       </div>        
    );

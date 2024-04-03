@@ -28,9 +28,11 @@ interface IAnimatedIconButtonProps {
    icon: EAnimatedIconButtonTypes;  
    promptAnimated: string;
    promptUnamimated: string; 
+   onClick () : void;
 }
 
-let colors = ['#333333', '#444444', '#555555', '#666666', '#777777', '#888888', '#999999', '#AAAAAA', '#BBBBBB', '#CCCCCC', '#DDDDDD', '#EEEEEE', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF'];
+let animatedColourSequence = ['#333333', '#444444', '#555555', '#666666', '#777777', '#888888', '#999999', '#AAAAAA', '#BBBBBB', '#CCCCCC', '#DDDDDD', '#EEEEEE', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF'];
+let staticColourSeqeunce = ['#333333'];
 
 // create a forceUpdate hook
 // https://stackoverflow.com/questions/46240647/how-to-force-a-functional-react-component-to-render
@@ -43,33 +45,43 @@ export const AnimatedIconButton = (props: IAnimatedIconButtonProps) => {
 
    const [seq, setSeq] = useState<number>(0);
    let localSeq = seq;
-   
-   const animatedGlowIconClasses = animatedGlowIcon();
 
    // call the force update hook 
    const forceUpdate = useForceUpdate(); 
+      
+   function animateColours () : void {
+      setSeq (localSeq + 1);
+      localSeq = localSeq + 1;
+      if (localSeq > animatedColourSequence.length) {
+         localSeq = 0;
+         setSeq (0);
+      }     
+      forceUpdate ();             
+   } 
 
-   if (props.animate) {
-      useEffect(() => {
-         const interval = setInterval(() => { animateColours() }, 100);
+   useEffect(() => {
+      const interval = setInterval(animateColours, 100);
      
-         return () => clearInterval(interval);
-       }, []);
-  }
+      return (() => {
+         if (interval)
+            clearInterval(interval);
+      });
+   }, []);
 
-  const animateColours = () => {
-   setSeq (localSeq + 1);
-   localSeq = localSeq + 1;
-   if (localSeq > colors.length) {
-      localSeq = 0;
-      setSeq (0);
-   }     
-   forceUpdate ();             
-} 
+   const animatedGlowIconClasses = animatedGlowIcon();
 
-  return (
-    <Tooltip content={props.promptAnimated} relationship="label">
-       <Button icon={<Lightbulb24Filled className={animatedGlowIconClasses.root} primaryFill={colors[seq]}/>} />
-    </Tooltip> 
+   const onClick = (ev: React.MouseEvent<HTMLButtonElement>) => {
+      props.onClick ();
+   }
+
+   return (
+      <Tooltip content={props.animate ? props.promptAnimated : props.promptUnamimated} relationship="label">
+         <Button 
+            disabled={!props.animate}
+            icon={<Lightbulb24Filled 
+               className={animatedGlowIconClasses.root} 
+               primaryFill={props.animate ? animatedColourSequence[seq] : staticColourSeqeunce[0]}/>} 
+            onClick={onClick}/>
+      </Tooltip> 
   );
 };

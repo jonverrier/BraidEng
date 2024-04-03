@@ -19,6 +19,8 @@ import { AIConnection, AIConnector } from '../core/AIConnection';
 import { EUIStrings } from './UIStrings';
 import { EConfigNumbers, EConfigStrings } from '../core/ConfigStrings';
 import { KnowledgeEnrichedMessage, KnowledgeSegment, KnowledgeRepository } from '../core/Knowledge';
+import { getRecordRepository } from '../core/ActivityRepository';
+import { UrlActivityRecord } from '../core/UrlActivityRecord';
 
 export interface IConversationControllerProps {
 
@@ -43,6 +45,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    const [joining, setJoining] = useState<boolean> (false);
    const [fullJoinKey, setFullJoinKey] = useState<JoinPath> (props.joinPath);
    const [isBusy, setIsBusy] = useState<boolean>(false);
+   const [suggested, setSuggested] = useState<Message|undefined>(undefined);
 
    function addMessage (fluidMessagesConnection_: MessageBotFluidConnection, message_: Message) : void {
 
@@ -78,29 +81,13 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       return false;
    }
 
-   function makeHelpfulStart (fluidMessagesConnection_: MessageBotFluidConnection,) : void {
+   function makeHelpfulStart (fluidMessagesConnection_: MessageBotFluidConnection) : void {
 
       setIsBusy (true);
 
       setTimeout(() => {
 
          if (! hasRecentHepfulStart (fluidMessagesConnection_)) {
-
-            let helpfulMessage = new Message();
-            helpfulMessage.authorId = EConfigStrings.kLLMGuid;
-            helpfulMessage.text = EUIStrings.kNeedInspiration;
-            helpfulMessage.sentAt = new Date();
-            let segmentCandidate = KnowledgeRepository.lookUpTrending ();
-            let segments = new Array<KnowledgeSegment> ();
-   
-            if (segmentCandidate) {
-               throwIfUndefined (segmentCandidate);
-               segments.push (segmentCandidate);
-            }
-   
-            helpfulMessage.segments = segments;  
-
-            addMessage (fluidMessagesConnection_, helpfulMessage);
          }
          setIsBusy (false);
 
@@ -226,6 +213,28 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       refreshAfterTrim ();        
    }
 
+   function onClickUrl (url_: string) : void {
+      let repository = getRecordRepository(props.joinPath.firstPart);
+      let email = props.localPersona.name;
+      let record = new UrlActivityRecord (undefined, email, new Date(), url_);
+      repository.save (record);   
+      
+      let suggested = KnowledgeRepository.lookForSuggestedContent (url_);
+      if (suggested)
+         setSuggested (suggested);
+   }
+
+   function onAddSuggestedContent () {
+
+      throwIfUndefined (fluidConnection);
+      let fluidMessagesConnection : MessageBotFluidConnection = fluidConnection;
+
+      throwIfUndefined (suggested);      
+      addMessage (fluidMessagesConnection, suggested); 
+
+      setSuggested (undefined);
+   }
+
    function onSend (messageText_: string) : void {
 
       throwIfUndefined (fluidConnection);
@@ -320,9 +329,12 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
              joinPath={fullJoinKey}
              conversation={conversation}
              audience={audience} 
+             hasSuggestedContent={suggested ? true: false}
              onSend={onSend} 
+             onAddSuggestedContent={onAddSuggestedContent}
              onTrimConversation={onTrimConversation}
-             localPersona={props.localPersona}>
+             onClickUrl={onClickUrl}
+             >
          </ConversationRow>
       );
 }
