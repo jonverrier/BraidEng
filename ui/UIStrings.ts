@@ -19,10 +19,12 @@ export enum EUIStrings {
    kSendMessagePlaceholder = "Write a message... ",   
    kCopyJoinKeyButtonPrompt = "Copy the joining URL for this conversation to the clipboard",
    kTrimConversationButtonPrompt = "Delete the conversation history",
+   kAiHasSuggestedDocuments = "We have suggestions based on your reading history.",
+   kAiHasNoSuggestedDocuments = "If you read documents returned by @Braid, we can propose similar documents from other sources.", 
 
    kAiNoGoodSources = "We could not find good sources for this answer. AI can make mistakes. Consider checking important information.",
    kAiContentWarning = "AI can make mistakes. Consider checking important information.",
 
-   kNeedInspiration = "Need some inspiration? Your classmates have been looking at this.",
+   kNeedInspirationHereIsAnother = "Need more inspiration? Here is a document from another source on a similar topic to the one you just looked at.",
    kLLMNameReminder = "Just checking...  if you want your request to be sent to the language model and AI document store, remember to include the phrase '@Braid'. With an '@' sign."
 };

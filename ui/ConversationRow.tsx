@@ -38,15 +38,15 @@ import { JoinPath } from '../core/JoinPath';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { AIConnection } from '../core/AIConnection';
-import { KnowledgeSegment, KnowledgeRepository } from '../core/Knowledge';
+import { KnowledgeSegment } from '../core/Knowledge';
 import { EUIStrings } from './UIStrings';
 import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
-import { throwIfUndefined } from '../core/Asserts';
 import { JoinDetails } from '../core/JoinDetails';
+import { AnimatedIconButton, EAnimatedIconButtonTypes } from './AnimatedIconButton';
 
 export interface IConversationHeaderProps {
 
-   joinKey: JoinPath;
+   joinPath: JoinPath;
    audience: Map<string, Persona>;
    onTrimConversation () : void;    
 }
@@ -54,12 +54,15 @@ export interface IConversationHeaderProps {
 export interface IConversationRowProps {
 
    isConnected: boolean;
-   joinKey: JoinPath;
+   joinPath: JoinPath;
    audience: Map<string, Persona>;
    conversation: Array<Message>;
+   isBusy: boolean;   
+   hasSuggestedContent: boolean;
    onSend (message_: string) : void;   
    onTrimConversation () : void;   
-   isBusy: boolean;
+   onClickUrl (url_: string): void;   
+   onAddSuggestedContent (): void;
 }
 
 const headerRowStyles = makeStyles({
@@ -87,7 +90,7 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
    function onCopy (ev: React.MouseEvent<HTMLButtonElement>) : void {
 
       // Make a join details with no email address
-      let joinDetails = JoinDetails.makeFromTwoParts ("", props.joinKey);
+      let joinDetails = JoinDetails.makeFromTwoParts ("", props.joinPath);
       
       // https://stackoverflow.com/questions/10783322/window-location-url-javascript
 
@@ -128,7 +131,7 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
                <ToolbarButton
                   icon={<Copy24Regular />}
                   aria-label={EUIStrings.kCopyJoinKeyButtonPrompt} 
-                  disabled={!(props.joinKey.isValid)} 
+                  disabled={!(props.joinPath.isValid)} 
                   onClick={onCopy}
                />                 
             </Tooltip>           
@@ -137,7 +140,7 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
                <ToolbarButton
                   icon={<Delete24Regular />}
                   aria-label={EUIStrings.kTrimConversationButtonPrompt} 
-                  disabled={!(props.joinKey.isValid)} 
+                  disabled={!(props.joinPath.isValid)} 
                   onClick={onTrimConversation}
                />  
             </Tooltip>                              
@@ -218,7 +221,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
          <div className={embeddedRowClasses.root}>      
             <div className={embeddedColumnClasses.root}>                     
 
-               <ConversationHeaderRow joinKey={props.joinKey} 
+               <ConversationHeaderRow joinPath={props.joinPath} 
                   audience={props.audience} 
                   onTrimConversation={props.onTrimConversation}>                    
                </ConversationHeaderRow>
@@ -227,29 +230,17 @@ export const ConversationRow = (props: IConversationRowProps) => {
 
                <div className={conversationContentRowClasses.root}>                
                   <div className={conversationContentColumnClasses.root}>             
-                     {conversation.map (message => {
-                        if (message.isUnPrompted()
-                        &&  AIConnection.isFromLLM (message, audience)
-                        &&  message.segments.length > 0) {  // This last test is for backwards compatibility with existing conversations - remove when upgrade is communicated. 
-                           return (         
-                              <SingleFadeMessageView 
-                                 message={message} 
-                                 key={message.id}
-                                 author={(audience.get (message.authorId) as Persona)}
-                                 showAiWarning={message.authorId === EConfigStrings.kLLMGuid}
-                              />
-                           )                     
-                        }
-                        else {
-                           return (         
-                              <SingleMessageView 
-                                 message={message} 
-                                 key={message.id}
-                                 author={(audience.get (message.authorId) as Persona)}
-                                 showAiWarning={message.authorId === EConfigStrings.kLLMGuid}
-                              />
-                           )
-                        }
+                     {conversation.map (message => { 
+                        return (         
+                           <SingleMessageView 
+                              sessionKey={props.joinPath.firstPart}
+                              message={message} 
+                              key={message.id}
+                              author={(audience.get (message.authorId) as Persona)}
+                              showAiWarning={message.authorId === EConfigStrings.kLLMGuid}
+                              onClickUrl={props.onClickUrl}                                 
+                           />
+                        )                     
                      })}                          
                      <AlwaysScrollToBottom />  
                   </div>               
@@ -259,7 +250,12 @@ export const ConversationRow = (props: IConversationRowProps) => {
 
                <div className={footerSectionClasses.root}>               
                   {props.isBusy ? <DefaultSpinner/> : <div/>}              
-                  <InputView onSend={onSend} isBusy={props.isBusy}></InputView>          
+                  <InputView 
+                     onSend={onSend}
+                     onAddSuggestedContent={props.onAddSuggestedContent} 
+                     isBusy={props.isBusy}
+                     hasSuggestedContent={props.hasSuggestedContent}>
+                     </InputView>          
                </div> 
             </div>
          </div>
@@ -269,42 +265,30 @@ export const ConversationRow = (props: IConversationRowProps) => {
 
 export interface ISingleMessageViewProps {
 
+   sessionKey: string;
    message: Message;  
    author: Persona;
    showAiWarning: boolean;
+   onClickUrl (url_: string) : void;     
 }
 
  export interface IAuthorIconProps {
  
-   author: Persona;
-   fade: boolean;   
+   author: Persona; 
 }
 
 export interface IKnowledgeSegmentProps {
 
+   sessionKey: string;
    segment: KnowledgeSegment;  
    key: string;
-   fade: boolean;
+   onClickUrl (url_: string) : void;    
 }
-
-const fadeColour = makeStyles({
-   root: {  
-      color: "#595959"
-   },
-});
 
 const glow = makeStyles({
    root: {    
       marginBottom: '10px' ,      
       boxShadow: '0px 0px 5px 0px white;'
-   },
-});
-
-const fadedGlow = makeStyles({
-   root: {    
-      marginBottom: '10px' ,      
-      boxShadow: '0px 0px 5px 0px white;',
-      color: "#595959"      
    },
 });
 
@@ -317,15 +301,11 @@ const noGlow = makeStyles({
  export const AuthorIcon = (props: IAuthorIconProps) => {
 
    const glowClasses = glow();    
-   const fadedGlowClasses = fadedGlow();    
    const noGlowClasses = noGlow(); 
    var className;
 
    if (props.author.icon === EIcon.kLLMPersona) {
-      if (props.fade)
-         className = fadedGlowClasses.root;
-      else
-         className = glowClasses.root;
+      className = glowClasses.root;
    }
    else {
       className = noGlowClasses.root;      
@@ -434,29 +414,27 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
    const sourcesClasses = sourcesRow();
    const greenClasses = greenStyles();
    const amberClasses = amberStyles();
-   const fadedGreenClasses = fadedGreenStyles();
-   const fadedAmberClasses = fadedAmberStyles();
 
    let segment = props.segment;
    let relevanceText = segment.relevance ? (segment.relevance * 100).toPrecision(2) + '%': "";
 
    var relevanceClasses, linkClasses, segmentClasses;
    
-   if (props.fade) {
-      relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? fadedGreenClasses : fadedAmberClasses : fadedAmberClasses;  
-      linkClasses = fadedLinkStyles();      
-      segmentClasses = fadedSegmentStyles();       
-   }
-   else {
-      relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
-      linkClasses = linkStyles();
-      segmentClasses = segmentStyles();             
-   }
+   const onClickLink = (event: React.MouseEvent<HTMLAnchorElement>): void => {
+      // NB we dont call 'prevent default' as we want the default acton to occur i.e. open a  new tab. 
+      event.stopPropagation();
+
+      props.onClickUrl (segment.url);   
+   };
+
+   relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
+   linkClasses = linkStyles();
+   segmentClasses = segmentStyles();             
 
    return (<div className={sourcesClasses.root} key={segment.url}>
               <div className={segmentClasses.root}>
                  <Link target='_blank' className={linkClasses.root} 
-                    href={segment.url}>{segment.url}
+                    href={segment.url} onClick={onClickLink}>{segment.url}                    
                   </Link>
                   <Body1 className={relevanceClasses.root}> {relevanceText} </Body1>
                </div>
@@ -482,7 +460,8 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
       if (props.message.segments.length > 0) { 
 
          aiSources = props.message.segments.map ((segment : KnowledgeSegment) => {
-            return <KowledgeSegmentsView segment={segment} fade={false} key={segment.url}/>
+            return <KowledgeSegmentsView sessionKey={props.sessionKey} segment={segment} key={segment.url} 
+                    onClickUrl={props.onClickUrl}/>
          })   
          aiFooter = <Text size={100}> {EUIStrings.kAiContentWarning} </Text>;   
       }
@@ -499,7 +478,7 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
    return (
       <div className={singleMessageRowClasses.root}>
          <div className={singleMessageIconColumnClasses.root}>
-            <AuthorIcon author={props.author} fade={false}/>            
+            <AuthorIcon author={props.author} />            
          </div>   
          <div className={singleMessageTextColumnClasses.root}>
             <Caption1><b>{props.author.name}</b></Caption1>     
@@ -513,32 +492,12 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
       </div>);    
 }
 
-export const SingleFadeMessageView = (props: ISingleMessageViewProps) => {
-
-   const singleMessageRowClasses = singleMessageRow();
-   const singleMessageIconColumnClasses = singleMessageIconColumn();
-   const singleMessageTextColumnClasses = singleMessageTextColumn();
-   const padAfterMessageClasses = padAfterMessage();  
-   const fadeColourClasses = fadeColour();
-
-   return (
-      <div className={singleMessageRowClasses.root}>
-         <div className={singleMessageIconColumnClasses.root}>
-            <AuthorIcon author={props.author} fade={true}/>            
-         </div>   
-         <div className={singleMessageTextColumnClasses.root}>
-            <Caption1 className={fadeColourClasses.root}><b>{props.author.name}</b></Caption1>     
-            <Body1 className={fadeColourClasses.root}>{props.message.text}</Body1>  
-            <KowledgeSegmentsView segment={props.message.segments[0]} fade={true} key={props.message.segments[0].url}/>
-            <div className={padAfterMessageClasses.root}></div>              
-         </div>              
-      </div>); 
-}
-
 export interface IInputViewProps {
    
-   onSend (message_: string) : void;
    isBusy: boolean;
+   hasSuggestedContent: boolean;
+   onSend (message_: string) : void;
+   onAddSuggestedContent(): void;
 }
 
 const SendButton: React.FC<ButtonProps> = (props) => {
@@ -561,10 +520,20 @@ const SendButton: React.FC<ButtonProps> = (props) => {
    },
 });
 
+const messageInputRowStyles = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'row',      
+      textAlign: 'left',
+      width: '100%'
+   },
+});
+
 export const InputView = (props: IInputViewProps) => {
 
    const messageInputGroupClasses = messageInputGroupStyles();
-   const messageInputClasses = textFieldStyles();
+   const messageInputRowClasses = messageInputRowStyles();
+   const textFieldClasses = textFieldStyles();
 
    const [message, setMessage] = useState<string>("");
    const [canSend, setCanSend] = useState<boolean>(false);
@@ -594,29 +563,39 @@ export const InputView = (props: IInputViewProps) => {
       doSend();       
    }
 
+   let buttonPrompt = "Change this";
+
    return (
       <div className={messageInputGroupClasses.root}>
          <Text>{EUIStrings.kSendMessagePreamble}</Text>
          &nbsp;
-         <Tooltip content={EUIStrings.kSendButtonPrompt} relationship="label" positioning={'above'}>
-            <Input aria-label={EUIStrings.kSendButtonPrompt}
-               className={messageInputClasses.root}                  
-               required={true}                  
-               value={message}
-               maxLength={256}
-               contentBefore={<Mail24Regular />}
-               placeholder={EUIStrings.kSendMessagePlaceholder}
-               onChange={onKeyChange}
-               onKeyDown={onKeyDown}
-               disabled={false}
-               autoFocus={true}               
-               contentAfter={<SendButton 
-                  aria-label={EUIStrings.kSendButtonPrompt} 
-                  disabled={(!canSend) || (props.isBusy)} 
-                  onClick={onMessageSend}
-               />}            
-         />
-         </Tooltip>       
+         <div className={messageInputRowClasses.root}>
+            <Tooltip content={EUIStrings.kSendButtonPrompt} relationship="label" positioning={'above'}>
+               <Input aria-label={EUIStrings.kSendButtonPrompt}
+                  className={textFieldClasses.root}                  
+                  required={true}                  
+                  value={message}
+                  maxLength={256}
+                  contentBefore={<Mail24Regular />}
+                  placeholder={EUIStrings.kSendMessagePlaceholder}
+                  onChange={onKeyChange}
+                  onKeyDown={onKeyDown}
+                  disabled={false}
+                  autoFocus={true}               
+                  contentAfter={<SendButton 
+                     aria-label={EUIStrings.kSendButtonPrompt} 
+                     disabled={(!canSend) || (props.isBusy)} 
+                     onClick={onMessageSend}
+                  />}            
+            />
+            </Tooltip>   
+            &nbsp;
+            <AnimatedIconButton animate={props.hasSuggestedContent} 
+               icon={EAnimatedIconButtonTypes.kLightBulb} 
+               promptAnimated={EUIStrings.kAiHasSuggestedDocuments} 
+               promptUnamimated={EUIStrings.kAiHasNoSuggestedDocuments}
+               onClick={props.onAddSuggestedContent}/>            
+         </div>   
       </div>        
    );
 }

@@ -26,7 +26,8 @@ export class KeyRetriever {
       let environment = Environment.environment();
 
       /*  Now we use a localhost server bcs it can access environment variables
-      // If we are running locally, use the stub values - no Production secrets are really stored locally 
+      // If we are running locally directly in the browser (not via a web server on localhost:)
+      // use the stub values - no Production secrets are really stored locally 
       if (environment === EEnvironment.kLocal) {
          type KStubEnvironmentVariableKey = keyof typeof KStubEnvironmentVariables;
          let memberKeyAsStr: KStubEnvironmentVariableKey = paramName_ as any;
