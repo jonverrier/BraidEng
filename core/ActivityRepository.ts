@@ -81,7 +81,7 @@ export class ActivityRepository implements IActivityRepository {
          })
          .catch ((error: any) => {
             logApiError ("Error getting database key:", error);   
-            resolve(undefined);   
+            reject(undefined);   
          });
       });
 
