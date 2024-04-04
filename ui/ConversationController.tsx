@@ -88,7 +88,10 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       setTimeout(() => {
 
          if (! hasRecentHepfulStart (fluidMessagesConnection_)) {
-            KnowledgeRepository.lookForSuggestedContent (undefined);
+            if (!suggested) {
+             let suggestion = KnowledgeRepository.lookForSuggestedContent (undefined);
+             setSuggested (suggestion);
+            }
          } 
          setIsBusy (false);
 
