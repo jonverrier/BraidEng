@@ -404,27 +404,38 @@ export class KnowledgeRepository  {
       return new KnowledgeSegmentFinder(kDefaultMinimumCosineSimilarity, howMany);
    }
 
-   static lookForSuggestedContent (url_: string) : Message | undefined {
+   static lookForSuggestedContent (url_: string | undefined) : Message | undefined {
+
+      let segmentCandidate : KnowledgeSegment | undefined = undefined;
+      let haveUrl = true;
+
+      // If e do not have a history, provide a helpful start point 
+      if (!url_) {
+         haveUrl = false;
+         url_ = "https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md";
+      }
 
       let finder = KnowledgeRepository.lookUpSimilarfromUrl (url_, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);
+         
+      if (finder.segments.length > 0)
+         segmentCandidate = finder.segments[0];
 
-      if (finder.segments.length > 0) {
+      if (segmentCandidate) {
 
          let suggested = new Message();
          suggested.authorId = EConfigStrings.kLLMGuid;
-         suggested.text = EUIStrings.kNeedInspirationHereIsAnother;
+         suggested.text = haveUrl ? EUIStrings.kNeedInspirationHereIsAnother : EUIStrings.kNewUserNeedInspiration;
          suggested.sentAt = new Date();
 
-         let segmentCandidate = finder.segments[0];
-         let segments = new Array<KnowledgeSegment> ();
+         let segments = new Array<KnowledgeSegment> ();         
          segments.push (segmentCandidate);
 
          suggested.segments = segments;
 
          return suggested;
-      } 
+      }
       
-      return undefined;
+      return undefined;   
    }
 }
 

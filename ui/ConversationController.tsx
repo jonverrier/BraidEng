@@ -88,7 +88,8 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       setTimeout(() => {
 
          if (! hasRecentHepfulStart (fluidMessagesConnection_)) {
-         }
+            KnowledgeRepository.lookForSuggestedContent (undefined);
+         } 
          setIsBusy (false);
 
       }, EConfigNumbers.kHelpfulPromptDelayMsecs);  

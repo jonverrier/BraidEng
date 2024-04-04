@@ -1,7 +1,7 @@
 'use strict';
 // Copyright Braid Technologies ltd, 2024
 import { KnowledgeSegment, KnowledgeSegmentFinder, KnowledgeEnrichedMessage, 
-   kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount, lookLikeSameSource} from '../core/Knowledge';
+   kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount, lookLikeSameSource, KnowledgeRepository} from '../core/Knowledge';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -199,20 +199,22 @@ describe("KnowledgeSource URLs", function () {
       expect(lookLikeSameSource (url1, url2)).toEqual(false);        
    });
 
-   it("Needs to identify URLs from same path", function () {
-         
-      var url1 = "https://huyenchip.com/2023/04/11/llm-engineering.html";
-      var url2 = "https://huyenchip.com/2023/04/11/llm-engineering.html?x=y";
+   describe("KnowledgeRepository", function () {
 
-      expect(lookLikeSameSource (url1, url2)).toEqual(true);        
-   });
+      it("Needs to identify related content given an input URL", function () {
+   
+         let message = KnowledgeRepository.lookForSuggestedContent ("https://www.youtube.com/watch?v=roEKOzxilq4&t=00h00m00s");
+   
+         expect(typeof message === 'undefined').toEqual(false);     
+      });
+   
+      it("Needs to identify starter content", function () {
 
-   it("Needs to identify URLs from different paths", function () {
-
-      var url1 = "https://huyenchip.com/2023/04/11/llm-engineering.html";
-      var url2 = "https://huyenchip.com/2023/04/11/llm-engineering2.html";
-
-      expect(lookLikeSameSource (url1, url2)).toEqual(false);       
+         let message = KnowledgeRepository.lookForSuggestedContent (undefined);         
+   
+         expect(typeof message === 'undefined').toEqual(false);       
+      });
+   
    });
 
 });
