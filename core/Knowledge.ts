@@ -412,13 +412,14 @@ export class KnowledgeRepository  {
       // If e do not have a history, provide a helpful start point 
       if (!url_) {
          haveUrl = false;
-         url_ = "https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md";
+         url_ = "https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md";         
+         segmentCandidate = MarkdownRespository.lookUpUrl (url_);
       }
-
-      let finder = KnowledgeRepository.lookUpSimilarfromUrl (url_, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);
-         
-      if (finder.segments.length > 0)
-         segmentCandidate = finder.segments[0];
+      else {
+         let finder = KnowledgeRepository.lookUpSimilarfromUrl (url_, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);         
+         if (finder.segments.length > 0)
+            segmentCandidate = finder.segments[0];
+      }
 
       if (segmentCandidate) {
 
@@ -499,6 +500,22 @@ class MarkdownRespository  {
          let changed = builder.replaceIfBeatsCurrent (candidate);
       }      
    }
+   static lookUpUrl (url_: string) : KnowledgeSegment | undefined {
+
+      let embeddings = new Array<LiteEmbedding>();
+      embeddings = liteMarkdownEmbeddings as Array<LiteEmbedding>;
+
+      for (let i = 0; i < embeddings.length; i++) {
+
+         let url = makeGithubUrl (embeddings[i].sourceId);
+         if (url === url_) {
+            let candidate = new KnowledgeSegment (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, undefined);
+            return candidate;
+         }
+      }  
+
+      return undefined;
+   }   
    
 }
 
