@@ -159,22 +159,23 @@ export const JoinRow = (props: IJoinPageProps) => {
          newJoinPath = JoinPath.makeFromTwoParts (joinPath.sessionId, conversationKey);
       }
       setJoinPath (newJoinPath);
-      setJoinPathText(newJoinPath.asString);      
+      setJoinPathText(newJoinPath.asString);     
+      setCanJoin (newJoinPath.isValid);       
     };
 
    function onKeyChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
 
-      let newPath = new JoinPath (data.value);
+      let newJoinPath = new JoinPath (data.value);
 
       // If we have a full valid session key for the first part, and we are running
       // against production, complete the full path
-      if (newPath.hasSessionOnly && newPath.isValid && (!amLocal)) {
-         newPath = JoinPath.makeFromTwoParts (data.value, joinPath.conversationId);
+      if (newJoinPath.hasSessionOnly && newJoinPath.isValid && (!amLocal)) {
+         newJoinPath = JoinPath.makeFromTwoParts (data.value, joinPath.conversationId);
       }
 
-      setJoinPath(newPath);
-      setJoinPathText(data.value);
-      setCanJoin (newPath.isValid);
+      setJoinPath(newJoinPath);
+      setJoinPathText(newJoinPath.asString);
+      setCanJoin (newJoinPath.isValid);
    }   
 
    function onTryJoin(ev: MouseEvent<HTMLImageElement>): void {
