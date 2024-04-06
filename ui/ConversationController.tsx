@@ -145,7 +145,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       fluidMessagesConnection_.participantCaucus().addObserver (addedObserverInterest);   
       fluidMessagesConnection_.participantCaucus().addObserver (removedObserverInterest);       
       
-      setFullJoinKey (JoinPath.makeFromTwoParts (props.joinPath.firstPart, containerId));  
+      setFullJoinKey (JoinPath.makeFromTwoParts (props.joinPath.sessionId, containerId));  
 
       makeHelpfulStart (fluidMessagesConnection_);              
    }
@@ -162,30 +162,30 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       let fluidMessagesConnection = new MessageBotFluidConnection ( {}, props.localPersona);
       
-      if (joinKey.isSinglePart) {
+      if (joinKey.hasSessionOnly) {
 
-         fluidMessagesConnection.createNew (joinKey.firstPart).then (containerId => {
+         fluidMessagesConnection.createNew (joinKey.sessionId).then (containerId => {
         
             initialiseConnectionState (fluidMessagesConnection, containerId);
             setJoining (false);
 
          }).catch ((e : any) => {
          
-            props.onFluidError (e? e.toString() : "Error creating new conversation, " + joinKey.secondPart + ".");
+            props.onFluidError (e? e.toString() : "Error creating new conversation, " + joinKey.conversationId + ".");
             setJoining (false);
          })
       }
-      else if (joinKey.isTwoPart) {
+      else if (joinKey.hasSessionAndConversation) {
 
-         fluidMessagesConnection.attachToExisting (joinKey.firstPart, joinKey.secondPart).then (containerId => {
+         fluidMessagesConnection.attachToExisting (joinKey.sessionId, joinKey.conversationId).then (containerId => {
 
-            initialiseConnectionState (fluidMessagesConnection, joinKey.secondPart);
+            initialiseConnectionState (fluidMessagesConnection, joinKey.conversationId);
          
             setJoining (false);
 
          }).catch ((e: any) => {
          
-            props.onFluidError (e? e.toString() : EUIStrings.kJoinApiError + " :" + joinKey.secondPart + ".");
+            props.onFluidError (e? e.toString() : EUIStrings.kJoinApiError + " :" + joinKey.conversationId + ".");
             setJoining (false);
          })
       }
@@ -218,7 +218,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    }
 
    function onClickUrl (url_: string) : void {
-      let repository = getRecordRepository(props.joinPath.firstPart);
+      let repository = getRecordRepository(props.joinPath.sessionId);
       let email = props.localPersona.name;
       let record = new UrlActivityRecord (undefined, email, new Date(), url_);
       repository.save (record);   
@@ -269,7 +269,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
          setIsBusy(true);
 
-         let connectionPromise = AIConnector.connect (props.joinPath.firstPart);
+         let connectionPromise = AIConnector.connect (props.joinPath.sessionId);
 
          connectionPromise.then ( (connection : AIConnection) => {
 
@@ -297,7 +297,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
             });            
 
          }).catch ( (e: any) => {
-            props.onAiError (EUIStrings.kJoinApiError + " :" + props.joinPath.firstPart + ".");
+            props.onAiError (EUIStrings.kJoinApiError + " :" + props.joinPath.sessionId + ".");
             setIsBusy(false);             
          });
       }
@@ -328,7 +328,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    else
       return (
          <ConversationRow 
-             isConnected={fullJoinKey.isValid && fullJoinKey.isTwoPart}
+             isConnected={fullJoinKey.isValid && fullJoinKey.hasSessionAndConversation}
              isBusy = {isBusy}
              joinPath={fullJoinKey}
              conversation={conversation}

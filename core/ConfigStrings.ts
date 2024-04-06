@@ -25,13 +25,19 @@ export enum EConfigStrings {
    kLLMRequestSignatureLowerCase = '@braid',
    kLLMNearRequestSignature = 'Braid',
    kLLMNearRequestSignatureLowerCase = 'braid',   
-   kOpenAiPersonaPrompt = "You are an AI assistant helping a developer understand AI. You explaining complex concepts in simple language, using Python examples if it helps. You limit replies to 100 words or less. If you don't know the answer to a question, just say 'I don't know'.",
+   kOpenAiPersonaPrompt = "You are an AI assistant helping a team of developers understand AI. You explaining complex concepts in simple language, using Python examples if it helps. You limit replies to 100 words or less. If you don't know the answer to a question, just say 'I don't know'.",
 
    kErrorConnectingToKeyAPI = "Error connecting to Braid server.",
    kErrorConnectingToAiAPI = "Error connecting to AI server.",
 
    kJoinPathParamName = "joinpath",
-   kEmailParamName = "email"
+   kEmailParamName = "email",
+
+   kCohort1ConversationKey = "d94c8521-b234-4679-8b8f-93bcc0a221b7",
+   kCohort1Team1ConversationKey = "1591d257-f836-4faf-bdb7-703b02539b95",   
+   kCohort1Team2ConversationKey = "f0837123-6ed3-4c49-84f9-be6c3dc54855",
+   kCohort1Team3ConversationKey = "e586f7f7-4d4b-485c-b50f-382c544fd8e6",   
+   kCohort1Team4ConversationKey = "694cef73-939f-4c6c-ab02-76158a41ac43",      
 };
 
 export enum EConfigNumbers {
