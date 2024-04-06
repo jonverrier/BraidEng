@@ -114,15 +114,15 @@ export const JoinRow = (props: IJoinPageProps) => {
    */
    let amLocal = Environment.environment() === EEnvironment.kLocal;
 
-   let path = props.joinPath;
+   let localPath = new JoinPath (props.joinPath.asString);
    let defaultConversationName = EUIStrings.kCohort1ConversationName;
 
-   if ((!path.hasSessionAndConversation) && (!amLocal)) {
-      path = JoinPath.makeFromTwoParts (props.joinPath.sessionId, EConfigStrings.kCohort1ConversationKey);
+   if ((!localPath.hasSessionAndConversation) && (!amLocal)) {
+      localPath = JoinPath.makeFromTwoParts (props.joinPath.sessionId, EConfigStrings.kCohort1ConversationKey);
    }
-   const [joinPath, setJoinPath] = useState<JoinPath>(path);
-   const [joinPathText, setJoinPathText] = useState<string>(path.asString);   
-   const [canJoin, setCanJoin] = useState<boolean>(path.isValid);
+   const [joinPath, setJoinPath] = useState<JoinPath>(localPath);
+   const [joinPathText, setJoinPathText] = useState<string>(localPath.asString);   
+   const [canJoin, setCanJoin] = useState<boolean>(localPath.isValid);
 
    let conversations  = [
       EUIStrings.kCohort1ConversationName,
