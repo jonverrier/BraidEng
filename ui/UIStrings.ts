@@ -8,6 +8,14 @@ export enum EUIStrings {
    kJoinConversationDoesNotLookLikeKey = "It does not look like the joining key is valid.",
    kJoinConversationLooksLikeKeyOk = "It looks like the joining key is valid, you can join the conversation via LinkedIn.",
    kJoinConversationWithLinkedInPrompt = "Join with LinkedIn... ",  
+   kJoinConversationPicker = "Select a conversation to join.",
+
+   kCohort1ConversationName = "Cohort 1 - Paris Olympics 2024",
+   kCohort1Team1ConversationName = "4x100m swim",
+   kCohort1Team2ConversationName = "Triathlon",
+   kCohort1Team3ConversationName = "Judo",   
+   kCohort1Team4ConversationName = "4x400m run",   
+   kTestConversationName = "Test",   
 
    kPageErrorCaption = "Error",
    
@@ -19,13 +27,13 @@ export enum EUIStrings {
    kSendMessagePlaceholder = "Write a message... ",   
    kCopyJoinKeyButtonPrompt = "Copy the joining URL for this conversation to the clipboard",
    kTrimConversationButtonPrompt = "Delete the conversation history",
-   kAiHasSuggestedDocuments = "We have suggestions for your to read.",
-   kAiHasNoSuggestedDocuments = "If you read documents returned by @Braid, we can propose similar documents from other sources.", 
+   kAiHasSuggestedDocuments = "@Braid has some other suggestions for you to read.",
+   kAiHasNoSuggestedDocuments = "No suggestions at present. Interacting with @Braid will probably kick-start some suggestions.", 
 
-   kAiNoGoodSources = "We could not find good sources for this answer. AI can make mistakes. Consider checking important information.",
+   kAiNoGoodSources = "@Braid does not have good backup for this answer. AI can make mistakes. Consider checking important information.",
    kAiContentWarning = "AI can make mistakes. Consider checking important information.",
 
    kNeedInspirationHereIsAnother = "Need more inspiration? Here is a document from another source on a similar topic to the one you just looked at...",
-   kNewUserNeedInspiration = "It looks like you are new to this system. You might like to start here, or type your own AI related query.",   
-   kLLMNameReminder = "Just checking...  if you want your request to be sent to the language model and AI document store, remember to include the phrase '@Braid'. With an '@' sign."
+   kNewUserNeedInspiration = "It looks we have a new joiner. You might like to start here, or type your own AI related query at the bottom of the page.",   
+   kLLMNameReminder = "Just checking...  if you want your request to be sent to @Braid, include the phrase '@Braid' in your message. With an '@' sign."
 };

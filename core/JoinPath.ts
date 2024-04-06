@@ -5,10 +5,10 @@ import { UuidKeyGenerator } from './UuidKeyGenerator';
 export class JoinPath {
 
    private _isValid: boolean;
-   private _isSinglePart: boolean;
-   private _isTwoPart: boolean;
-   private _firstPart: string;
-   private _secondPart: string;
+   private _hasSessionOnly: boolean;
+   private _hasSessionAndConversation: boolean;
+   private _sessionId: string;
+   private _conversationId: string;
 
    /**
     * Create a JoinKey object. A join key is in the format 'UUID/Optional Container GUID'. 
@@ -17,27 +17,27 @@ export class JoinPath {
    constructor(trialInput_: string) {
 
       this._isValid = false;        
-      this._isSinglePart = false;   
-      this._isTwoPart = false;
-      this._firstPart = "";
-      this._secondPart = "";
+      this._hasSessionOnly = false;   
+      this._hasSessionAndConversation = false;
+      this._sessionId = "";
+      this._conversationId = "";
 
       let split = trialInput_.split('/');
 
       if (split.length === 1 || (split.length === 2 && split[1] === '')) {
          if (this.isValidPart1 (split[0])) {
             this._isValid = true;
-            this._isSinglePart = true;
-            this._firstPart = split[0];
+            this._hasSessionOnly = true;
+            this._sessionId = split[0];
          }
       }
       else
       if (split.length === 2) {
          if (this.isValidPart1 (split[0]) && this.isValidPart2 (split[1])) {
             this._isValid = true;
-            this._isTwoPart = true;
-            this._firstPart = split[0];
-            this._secondPart = split[1];
+            this._hasSessionAndConversation = true;
+            this._sessionId = split[0];
+            this._conversationId = split[1];
          }
       }      
    }   
@@ -48,20 +48,20 @@ export class JoinPath {
    get isValid(): boolean {
       return this._isValid;
    }
-   get isSinglePart(): boolean {
-      return this._isSinglePart;
+   get hasSessionOnly(): boolean {
+      return this._hasSessionOnly;
    }
-   get isTwoPart(): boolean {
-      return this._isTwoPart;
+   get hasSessionAndConversation(): boolean {
+      return this._hasSessionAndConversation;
    }   
-   get firstPart(): string  {
-      return this._firstPart;
+   get sessionId(): string  {
+      return this._sessionId;
    }
-   get secondPart(): string  {
-      return this._secondPart;
+   get conversationId(): string  {
+      return this._conversationId;
    }
    get asString(): string  {
-      return this._firstPart + '/' + this._secondPart;
+      return this._sessionId + '/' + this._conversationId;
    }
 
    static makeFromTwoParts (part1_: string, part2_: string) {

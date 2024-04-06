@@ -71,7 +71,7 @@ describe("JoinPath", function () {
       let key = new JoinPath(trialInput + '/');
 
       expect(key.isValid == true).toEqual(true);
-      expect(key.isSinglePart == true).toEqual(true);        
+      expect(key.hasSessionOnly == true).toEqual(true);        
    }); 
 
    it("Needs to detect valid single part join path", function () {
@@ -80,10 +80,10 @@ describe("JoinPath", function () {
       let key = new JoinPath(trialInput);
 
       expect(key.isValid == true).toEqual(true);
-      expect(key.isSinglePart == true).toEqual(true);      
-      expect(key.isTwoPart == false).toEqual(true); 
-      expect(key.firstPart).toEqual(trialInput);   
-      expect(key.secondPart).toEqual("");                 
+      expect(key.hasSessionOnly == true).toEqual(true);      
+      expect(key.hasSessionAndConversation == false).toEqual(true); 
+      expect(key.sessionId).toEqual(trialInput);   
+      expect(key.conversationId).toEqual("");                 
    }); 
 
    it("Needs to detect valid double part join path", function () {
@@ -92,10 +92,10 @@ describe("JoinPath", function () {
       let key = new JoinPath(trialInput + "/" + trialInput);
 
       expect(key.isValid == true).toEqual(true);
-      expect(key.isSinglePart == false).toEqual(true);      
-      expect(key.isTwoPart == true).toEqual(true); 
-      expect(key.firstPart).toEqual(trialInput);   
-      expect(key.secondPart).toEqual(trialInput); 
+      expect(key.hasSessionOnly == false).toEqual(true);      
+      expect(key.hasSessionAndConversation == true).toEqual(true); 
+      expect(key.sessionId).toEqual(trialInput);   
+      expect(key.conversationId).toEqual(trialInput); 
       expect(key.asString).toEqual(trialInput + "/" + trialInput);       
    });    
    
@@ -131,7 +131,7 @@ describe("JoinDetails", function () {
       let details = new JoinDetails("&email=a@b.com&joinpath=" + key.asString);
 
       expect(details.isValid == true).toEqual(true);
-      expect(details.joinPath.isSinglePart == true).toEqual(true);      
+      expect(details.joinPath.hasSessionOnly == true).toEqual(true);      
    }); 
 
    it("Needs to detect valid single part join path", function () {

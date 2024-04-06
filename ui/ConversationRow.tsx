@@ -233,7 +233,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
                      {conversation.map (message => { 
                         return (         
                            <SingleMessageView 
-                              sessionKey={props.joinPath.firstPart}
+                              sessionKey={props.joinPath.sessionId}
                               message={message} 
                               key={message.id}
                               author={(audience.get (message.authorId) as Persona)}

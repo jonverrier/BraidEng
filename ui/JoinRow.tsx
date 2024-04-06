@@ -1,19 +1,21 @@
 /*! Copyright Braid Technologies 2022 */
 
 // React
-import React, { ChangeEvent, KeyboardEvent, MouseEvent, useState } from 'react';
+import React, { ChangeEvent, MouseEvent, useState } from 'react';
 
 // Fluent
 import {
-   makeStyles, Button, ButtonProps, Tooltip,
+   makeStyles, shorthands, 
+   Dropdown, Option, Tooltip,
    Text, Input, Image, 
-   InputOnChangeData
+   InputOnChangeData,
+   SelectionEvents,
+   OptionOnSelectData,
+   useIsomorphicLayoutEffect
 } from '@fluentui/react-components';
 
 import {
-   Person24Regular,
-   Key24Regular,
-   Send24Regular
+   Key24Regular
 } from '@fluentui/react-icons';
 
 import { JoinPath } from '../core/JoinPath';
@@ -24,6 +26,7 @@ import { EUIStrings } from './UIStrings';
 import { EConfigStrings } from '../core/ConfigStrings';
 import { Environment, EEnvironment } from '../core/Environment';
 import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
+import { throwIfUndefined } from '../core/Asserts';
 
 export interface IJoinPageProps {
    joinPath: JoinPath;  
@@ -46,17 +49,6 @@ const joinFormRowStyles = makeStyles({
    },
 });
 
-const JoinButton: React.FC<ButtonProps> = (props) => {
-   return (
-     <Button
-       {...props}
-       appearance="transparent"
-       icon={<Send24Regular />}
-       size="medium"
-     />
-   );
- };
-
  const buttonDisabledStyles = makeStyles({
    root: {    
       filter: 'grayscale(100%)',
@@ -73,6 +65,35 @@ const buttonEnabledStyles = makeStyles({
    },
 });
 
+const dropdownStyles = makeStyles({
+   root: {
+     // Stack the label above the field with a gap
+     display: "grid",
+     gridTemplateRows: "repeat(1fr)",
+     justifyItems: "start",
+     ...shorthands.gap("2px"),
+     maxWidth: "400px",
+   },
+ });
+
+ function conversationKeyFromName (name: string) : string {
+   switch (name) {
+
+      case EUIStrings.kCohort1Team1ConversationName:
+         return EConfigStrings.kCohort1Team1ConversationKey;            
+      case EUIStrings.kCohort1Team2ConversationName:
+         return EConfigStrings.kCohort1Team2ConversationKey;              
+      case EUIStrings.kCohort1Team3ConversationName:
+         return EConfigStrings.kCohort1Team3ConversationKey;    
+      case EUIStrings.kCohort1Team4ConversationName:
+         return EConfigStrings.kCohort1Team4ConversationKey;      
+      case EUIStrings.kCohort1ConversationName:
+      default:
+         return EConfigStrings.kCohort1ConversationKey;                
+      }   
+ }
+
+
 export const JoinRow = (props: IJoinPageProps) => {
 
    const joinPageInnerClasses = joinPageInnerStyles();   
@@ -81,19 +102,72 @@ export const JoinRow = (props: IJoinPageProps) => {
    const stretchClasses = textFieldStyles();
    const buttonDisabledClasses = buttonDisabledStyles();
    const buttonEnabledClasses = buttonEnabledStyles();
+   const dropdownClasses = dropdownStyles();
 
    const retriever = new KeyRetriever();
 
-   const [joinKey, setJoinKey] = useState<JoinPath>(props.joinPath);
-   const [joinKeyText, setJoinKeyText] = useState<string>(props.joinPath.asString);   
-   const [canJoin, setCanJoin] = useState<boolean>(props.joinPath.isValid);
+   /*
+    * @param amLocal
+    * All this logic with amLocal is bcs when running against a local fluid framework, we dont know the container ID
+    * we have to let the code create a new container then share it manually in the URL#string
+    * In production, we have well known container IDs which were created beforehand.
+   */
+   let amLocal = Environment.environment() === EEnvironment.kLocal;
+
+   let path = props.joinPath;
+   let defaultConversationName = EUIStrings.kCohort1ConversationName;
+
+   if (!path.hasSessionAndConversation && !amLocal) {
+      path = JoinPath.makeFromTwoParts (props.joinPath.sessionId, EConfigStrings.kCohort1ConversationKey);
+   }
+   const [joinPath, setJoinPath] = useState<JoinPath>(path);
+   const [joinPathText, setJoinPathText] = useState<string>(path.asString);   
+   const [canJoin, setCanJoin] = useState<boolean>(path.isValid);
+
+   let conversations  = [
+      EUIStrings.kCohort1ConversationName,
+      EUIStrings.kCohort1Team1ConversationName,
+      EUIStrings.kCohort1Team2ConversationName,
+      EUIStrings.kCohort1Team3ConversationName,
+      EUIStrings.kCohort1Team4ConversationName
+    ];
+
+    if (amLocal) {
+       conversations.push (EUIStrings.kTestConversationName);
+    }
+
+    const [selectedConversationNames, setSelectedConversationNames] = React.useState<string[]>([
+      defaultConversationName
+    ]);
+    const [conversationName, setConversationName] = React.useState<string>(defaultConversationName);
+  
+    function onConversationSelect (ev: SelectionEvents, data: OptionOnSelectData) {
+
+      let conversationName = data.optionText;
+
+      setSelectedConversationNames(data.selectedOptions);
+      throwIfUndefined (conversationName); // Make compiler happy for next line
+      setConversationName(conversationName);
+
+      var newJoinPath: JoinPath;
+
+      if (amLocal && conversationName === EUIStrings.kTestConversationName) {
+         newJoinPath = props.joinPath;
+      }
+      else {
+         let conversationKey = conversationKeyFromName (conversationName);
+         newJoinPath = JoinPath.makeFromTwoParts (joinPath.sessionId, conversationKey);
+      }
+      setJoinPath (newJoinPath);
+      setJoinPathText(newJoinPath.asString);      
+    };
 
    function onKeyChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
 
       let asKey = new JoinPath (data.value);
 
-      setJoinKey(asKey);
-      setJoinKeyText(data.value);
+      setJoinPath(asKey);
+      setJoinPathText(data.value);
       setCanJoin (asKey.isValid);
    }   
 
@@ -105,7 +179,7 @@ export const JoinRow = (props: IJoinPageProps) => {
    }
 
    function tryToJoin () : void {
-
+      
       var url: string;
 
       if (Environment.environment() === EEnvironment.kLocal)
@@ -115,10 +189,10 @@ export const JoinRow = (props: IJoinPageProps) => {
 
       retriever.requestKey (url, 
          EConfigStrings.kRequestKeyParameterName, 
-         joinKey.firstPart)
+         joinPath.sessionId)
       .then (
          (returnedKey: string):void => {
-            props.onConnect(joinKey);
+            props.onConnect(joinPath);
           },
           (e: any) => {
             props.onConnectError(e.toString());
@@ -145,7 +219,7 @@ export const JoinRow = (props: IJoinPageProps) => {
                      <Input aria-label={EUIStrings.kJoinConversationKeyPrompt}
                         className={stretchClasses.root}                  
                         required={true}                  
-                        value={joinKeyText}
+                        value={joinPathText}
                         maxLength={75}
                         contentBefore={<Key24Regular />}
                         placeholder={EUIStrings.kJoinConversationKeyPlaceholder}
@@ -155,6 +229,25 @@ export const JoinRow = (props: IJoinPageProps) => {
                      />
                </Tooltip>  
                </div>
+               &nbsp;
+               <div className={joinFormRowClasses.root}>     
+                  <div className={dropdownClasses.root}>              
+                     <Tooltip withArrow content={EUIStrings.kJoinConversationPicker} relationship="label">
+                        <Dropdown
+                           defaultValue={EUIStrings.kCohort1ConversationName}
+                           defaultSelectedOptions={[EUIStrings.kCohort1ConversationName]}
+                           onOptionSelect={onConversationSelect}
+                           {...props}
+                        >
+                           {conversations.map((conversation) => (
+                              <Option key={conversation}>
+                                 {conversation}
+                              </Option>
+                           ))}
+                        </Dropdown>
+                     </Tooltip>      
+                  </div>
+               </div>          
                &nbsp;                  
                <div className={joinFormRowClasses.root}>               
                   <Tooltip withArrow content={EUIStrings.kJoinConversationWithLinkedInPrompt} relationship="label">
