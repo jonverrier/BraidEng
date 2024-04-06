@@ -121,8 +121,6 @@ export const JoinRow = (props: IJoinPageProps) => {
       path = JoinPath.makeFromTwoParts (props.joinPath.sessionId, EConfigStrings.kCohort1ConversationKey);
    }
    const [joinPath, setJoinPath] = useState<JoinPath>(path);
-   const [joinPathText, setJoinPathText] = useState<string>(path.asString);   
-   const [canJoin, setCanJoin] = useState<boolean>(path.isValid);
 
    let conversations  = [
       EUIStrings.kCohort1ConversationName,
@@ -158,9 +156,7 @@ export const JoinRow = (props: IJoinPageProps) => {
          let conversationKey = conversationKeyFromName (conversationName);
          newJoinPath = JoinPath.makeFromTwoParts (joinPath.sessionId, conversationKey);
       }
-      setJoinPath (newJoinPath);
-      setJoinPathText(newJoinPath.asString);     
-      setCanJoin (newJoinPath.isValid);       
+      setJoinPath (newJoinPath);      
     };
 
    function onKeyChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
@@ -174,8 +170,6 @@ export const JoinRow = (props: IJoinPageProps) => {
       }
 
       setJoinPath(newJoinPath);
-      setJoinPathText(newJoinPath.asString);
-      setCanJoin (newJoinPath.isValid);
    }   
 
    function onTryJoin(ev: MouseEvent<HTMLImageElement>): void {
@@ -226,7 +220,7 @@ export const JoinRow = (props: IJoinPageProps) => {
                      <Input aria-label={EUIStrings.kJoinConversationKeyPrompt}
                         className={stretchClasses.root}                  
                         required={true}                  
-                        value={joinPathText}
+                        value={joinPath.asString}
                         maxLength={75}
                         contentBefore={<Key24Regular />}
                         placeholder={EUIStrings.kJoinConversationKeyPlaceholder}
@@ -258,7 +252,7 @@ export const JoinRow = (props: IJoinPageProps) => {
                &nbsp;                  
                <div className={joinFormRowClasses.root}>               
                   <Tooltip withArrow content={EUIStrings.kJoinConversationWithLinkedInPrompt} relationship="label">
-                     <Image className={canJoin? buttonEnabledClasses.root : buttonDisabledClasses.root}
+                     <Image className={joinPath.isValid? buttonEnabledClasses.root : buttonDisabledClasses.root}
                         alt={EUIStrings.kJoinConversationWithLinkedInPrompt}
                         src="assets/img/SignInWithLinkedIn.png"
                         onClick={onTryJoin}
@@ -267,7 +261,7 @@ export const JoinRow = (props: IJoinPageProps) => {
                </div>               
                &nbsp;                   
                <div className={joinFormRowClasses.root}> 
-                  <Text className={stretchClasses.root}>{canJoin ? EUIStrings.kJoinConversationLooksLikeKeyOk : EUIStrings.kJoinConversationDoesNotLookLikeKey}</Text>   
+                  <Text className={stretchClasses.root}>{joinPath.isValid ? EUIStrings.kJoinConversationLooksLikeKeyOk : EUIStrings.kJoinConversationDoesNotLookLikeKey}</Text>   
                </div>
                &nbsp;                
             </div>                          
