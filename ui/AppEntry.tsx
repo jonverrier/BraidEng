@@ -19,6 +19,7 @@ import { innerColumnStyles } from './ColumnStyles';
 import { EMainPageMessageTypes, MainPageMessageRow } from './MainPageMessage';
 import { JoinRow } from './JoinRow';
 import { ConversationControllerRow } from './ConversationController';
+import { EEnvironment, Environment } from '../core/Environment';
 
 export interface IAppProps {
 
@@ -48,8 +49,10 @@ const pageOuterStyles = makeStyles({
 
 export const App = (props: IAppProps) => {
 
-   let localPersona = new Persona ();
-   localPersona.icon = EIcon.kPersonPersona;
+   let localUserPersona = new Persona ();
+   localUserPersona.icon = EIcon.kPersonPersona;
+
+   // Environment.override (EEnvironment.kProduction);
 
    // This little block attempts to pick up a joinpath from the URL after the #value
    // If it looks valid, we pre-populate the joining form
@@ -59,12 +62,11 @@ export const App = (props: IAppProps) => {
       hashValue = window.location.hash.substring(1);
    
    let joinAttempt = new JoinDetails (hashValue);
-   localPersona.name = joinAttempt.email; 
+   localUserPersona.name = joinAttempt.email; 
 
    const [lastMessage, setLastMessage] = useState<string>("");
    const [lastMessageType, setLastMessageType] = useState<EMainPageMessageTypes> (EMainPageMessageTypes.kNothing);
    const [joinPath, setJoinPath] = useState<JoinPath>(joinAttempt.joinPath);
-   const [joinAsPersona, setJoinAsPersona] = useState<Persona>(localPersona);   
 
    const pageOuterClasses = pageOuterStyles();
    const innerColumnClasses = innerColumnStyles();
@@ -120,14 +122,14 @@ export const App = (props: IAppProps) => {
       
                   <ConversationControllerRow 
                      joinPath={joinPath}
-                     localPersona={joinAsPersona}
+                     localPersona={localUserPersona}
                      onFluidError={onFluidError}
                      onAiError={onAiError}>                           
                   </ConversationControllerRow>      
 
                   <JoinRow 
                      joinPath={joinPath} 
-                     joinPersona={joinAsPersona}                     
+                     joinPersona={localUserPersona}                     
                      onConnect={onConnect} 
                      onConnectError={onConnectError}>                     
                   </JoinRow>   
