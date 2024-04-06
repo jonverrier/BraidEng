@@ -117,7 +117,7 @@ export const JoinRow = (props: IJoinPageProps) => {
    let path = props.joinPath;
    let defaultConversationName = EUIStrings.kCohort1ConversationName;
 
-   if (!path.hasSessionAndConversation && !amLocal) {
+   if ((!path.hasSessionAndConversation) && (!amLocal)) {
       path = JoinPath.makeFromTwoParts (props.joinPath.sessionId, EConfigStrings.kCohort1ConversationKey);
    }
    const [joinPath, setJoinPath] = useState<JoinPath>(path);
@@ -164,11 +164,15 @@ export const JoinRow = (props: IJoinPageProps) => {
 
    function onKeyChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
 
-      let asKey = new JoinPath (data.value);
+      let newPath = new JoinPath (data.value);
 
-      setJoinPath(asKey);
+      if (newPath.hasSessionOnly) {
+         newPath = JoinPath.makeFromTwoParts (data.value, joinPath.conversationId);
+      }
+
+      setJoinPath(newPath);
       setJoinPathText(data.value);
-      setCanJoin (asKey.isValid);
+      setCanJoin (newPath.isValid);
    }   
 
    function onTryJoin(ev: MouseEvent<HTMLImageElement>): void {
