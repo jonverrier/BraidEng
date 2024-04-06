@@ -166,7 +166,9 @@ export const JoinRow = (props: IJoinPageProps) => {
 
       let newPath = new JoinPath (data.value);
 
-      if (newPath.hasSessionOnly) {
+      // If we have a full valid session key for the first part, and we are running
+      // against production, complete the full path
+      if (newPath.hasSessionOnly && newPath.isValid && (!amLocal)) {
          newPath = JoinPath.makeFromTwoParts (data.value, joinPath.conversationId);
       }
 
@@ -186,7 +188,7 @@ export const JoinRow = (props: IJoinPageProps) => {
       
       var url: string;
 
-      if (Environment.environment() === EEnvironment.kLocal)
+      if (amLocal)
          url = EConfigStrings.kRequestLocalJoinKeyUrl;
       else
          url = EConfigStrings.kRequestJoinKeyUrl;
