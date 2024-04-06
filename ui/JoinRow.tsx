@@ -117,7 +117,7 @@ export const JoinRow = (props: IJoinPageProps) => {
    let localPath = new JoinPath (props.joinPath.asString);
    let defaultConversationName = EUIStrings.kCohort1ConversationName;
 
-   if ((!localPath.hasSessionAndConversation) && (!amLocal)) {
+   if ((!amLocal)) {
       localPath = JoinPath.makeFromTwoParts (props.joinPath.sessionId, EConfigStrings.kCohort1ConversationKey);
    }
    const [joinPath, setJoinPath] = useState<JoinPath>(localPath);
