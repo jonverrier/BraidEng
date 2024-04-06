@@ -112,17 +112,17 @@ export const JoinRow = (props: IJoinPageProps) => {
     * we have to let the code create a new container then share it manually in the URL#string
     * In production, we have well known container IDs which were created beforehand.
    */
-   let amLocal = Environment.environment() === EEnvironment.kLocal;
+   let amLocal: boolean = (Environment.environment() === EEnvironment.kLocal);
 
-   let localPath = new JoinPath (props.joinPath.asString);
+   let path = props.joinPath;
    let defaultConversationName = EUIStrings.kCohort1ConversationName;
 
-   if ((!amLocal)) {
-      localPath = JoinPath.makeFromTwoParts (props.joinPath.sessionId, EConfigStrings.kCohort1ConversationKey);
+   if ((!path.hasSessionAndConversation) && (!amLocal)) {
+      path = JoinPath.makeFromTwoParts (props.joinPath.sessionId, EConfigStrings.kCohort1ConversationKey);
    }
-   const [joinPath, setJoinPath] = useState<JoinPath>(localPath);
-   const [joinPathText, setJoinPathText] = useState<string>(localPath.asString);   
-   const [canJoin, setCanJoin] = useState<boolean>(localPath.isValid);
+   const [joinPath, setJoinPath] = useState<JoinPath>(path);
+   const [joinPathText, setJoinPathText] = useState<string>(path.asString);   
+   const [canJoin, setCanJoin] = useState<boolean>(path.isValid);
 
    let conversations  = [
       EUIStrings.kCohort1ConversationName,
