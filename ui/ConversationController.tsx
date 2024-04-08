@@ -155,7 +155,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    let validater = new JoinPageValidator();
 
-   if (validater.isJoinAttemptReady (props.localPersona.name, props.sessionKey, props.conversationKey) && 
+   if (validater.isJoinAttemptReady (props.localPersona.email, props.sessionKey, props.conversationKey) && 
       fluidConnection === undefined 
       && !joining) {
 
@@ -330,7 +330,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    let joinValidator = new JoinPageValidator ();
 
-   if (! joinValidator.isJoinAttemptReady (props.localPersona.name, props.sessionKey, props.conversationKey)) {
+   if (! joinValidator.isJoinAttemptReady (props.localPersona.email, props.sessionKey, props.conversationKey)) {
       return (<div></div>);
    }
    else

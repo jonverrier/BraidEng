@@ -29,8 +29,8 @@ let myBotRequestText = "Hello @Braid What is back propagation?";
 describe("AIConnection", function () {
 
    let authors = new Map<string, Persona> ();
-   let person = new Persona (myAuthorId, myAuthorId, EIcon.kPersonPersona, undefined, new Date());   
-   let bot = new Persona (botAuthorId, botAuthorId, EIcon.kLLMPersona, undefined, new Date());
+   let person = new Persona (myAuthorId, myAuthorId, "", EIcon.kPersonPersona, undefined, new Date());   
+   let bot = new Persona (botAuthorId, botAuthorId, "", EIcon.kLLMPersona, undefined, new Date());
    authors.set (person.id, person);
    authors.set (bot.id, bot);
 

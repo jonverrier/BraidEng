@@ -12,7 +12,8 @@ import { EIcon } from '../core/Icons';
 import { SessionKey, ConversationKey } from '../core/Keys';
 
 var myId: string = "1234";
-var myName: string = "Jon";
+var myName = "";
+var myEmail: string = "jon@a.com";
 var myThumbnail: string = "abcd";
 var myLastSeenAt = new Date();
 
@@ -58,7 +59,7 @@ describe("Caucus", function () {
       oldEnv = Environment.override (EEnvironment.kLocal);
 
       this.timeout(10000);
-      persona = new Persona(myId, myName, EIcon.kPersonPersona, myThumbnail, myLastSeenAt);
+      persona = new Persona(myId, myName, myEmail, EIcon.kPersonPersona, myThumbnail, myLastSeenAt);
 
       newConnection = new MessageBotFluidConnection({}, persona);
 

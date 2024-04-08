@@ -62,7 +62,7 @@ export const App = (props: IAppProps) => {
       hashValue = window.location.hash.substring(1);
    
    let joinAttempt = new JoinDetails (hashValue);
-   localUserPersona.name = joinAttempt.email; 
+   localUserPersona.email = joinAttempt.email; 
 
    const [lastMessage, setLastMessage] = useState<string>("");
    const [lastMessageType, setLastMessageType] = useState<EMainPageMessageTypes> (EMainPageMessageTypes.kNothing);
