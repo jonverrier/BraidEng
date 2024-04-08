@@ -2,11 +2,11 @@
 
 export enum EUIStrings {
 
-   kJoinPagePreamble = "To join a conversation with @Braid, you need to enter the key from your contact at Braid, then login with LinkedIn to identify yourself in the conversation.",
+   kJoinPagePreamble = "To join a conversation with @Braid, you need to enter the key from your contact at Braid, pick a conversation to joon, then login with LinkedIn to identify yourself.",
    kJoinConversationKeyPrompt = "Key",
    kJoinConversationKeyPlaceholder = "Key... ",  
-   kJoinConversationDoesNotLookLikeKey = "It does not look like the joining key is valid.",
-   kJoinConversationLooksLikeKeyOk = "It looks like the joining key is valid, you can join the conversation via LinkedIn.",
+   kJoinConversationDoesNotLookLikeKey = "It does not look like the key is valid.",
+   kJoinConversationLooksLikeKeyOk = "It looks like the key is valid, you can join the conversation via LinkedIn.",
    kJoinConversationWithLinkedInPrompt = "Join with LinkedIn... ",  
    kJoinConversationPicker = "Select a conversation to join.",
 
@@ -28,8 +28,8 @@ export enum EUIStrings {
    kCopyJoinKeyButtonPrompt = "Copy the joining URL for this conversation to the clipboard",
    kTrimConversationButtonPrompt = "Delete the conversation history",
    kExitConversationButtonPrompt = "Leave this conversation",   
-   kAiHasSuggestedDocuments = "@Braid has some other suggestions for you to read.",
-   kAiHasNoSuggestedDocuments = "No suggestions at present. Interacting with @Braid will probably kick-start some suggestions.", 
+   kAiHasSuggestedDocuments = "@Braid has a suggestion for you.",
+   kAiHasNoSuggestedDocuments = "No suggestions at present. Interacting with @Braid will generate suggestions.", 
 
    kAiNoGoodSources = "@Braid does not have good backup for this answer. AI can make mistakes. Consider checking important information.",
    kAiContentWarning = "AI can make mistakes. Consider checking important information.",

@@ -120,14 +120,14 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
       <div className={headerRowClasses.root}>
          <AvatarGroup>
             {inlineItems.map((persona) => (
-               <Tooltip content={persona.name} relationship="label" positioning={'below'} key={persona.id}>
-                  <AvatarGroupItem name={persona.name} key={persona.id} />
+               <Tooltip content={persona.email} relationship="label" positioning={'below'} key={persona.id}>
+                  <AvatarGroupItem name={persona.email} key={persona.id} />
                </Tooltip>
             ))}
             {overflowItems && (
                <AvatarGroupPopover indicator="icon">
                   {overflowItems.map((persona) => (
-                     <AvatarGroupItem name={persona.name} key={persona.id} />
+                     <AvatarGroupItem name={persona.email} key={persona.id} />
                   ))}
                </AvatarGroupPopover>
             )}

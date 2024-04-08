@@ -94,26 +94,51 @@ export class MessageBotFluidConnection extends FluidConnection {
 
       if (! isStored ) {
 
-         let botPersona = new Persona (EConfigStrings.kLLMGuid, EConfigStrings.kLLMName, EIcon.kLLMPersona, undefined, new Date());
+         let botPersona = new Persona (EConfigStrings.kLLMGuid, EConfigStrings.kLLMName, "", EIcon.kLLMPersona, undefined, new Date());
          participantCaucus.add (botPersona.id, botPersona);            
       }
    }
+
+   // Glare is when two drivers point their headlights at each other. 
+   // The Glare check is a way to resolve priority - in this case we let the id that is lexically lowe 'win'
+   private localWinsGlareCheck (idMe: string, idOther: string) {
+      if (idMe < idOther) 
+         return true;
+      return false;
+   }
+
 
    private checkAddAddSelfToAudience (participantCaucus: CaucusOf<Persona>): void {
 
       let isStored = participantCaucus.has(this._localUser.id);
 
-      if (! isStored ) {
+      if (! isStored ) {      
+         
+         // We look at all participants looking for someine with the same email as us. 
+         // If we find one, we do a 'glare' comparison to consistently pick a winner, and the loser of the
+         // 'glare' comparison sets their details to those of the winner. 
+         let current = participantCaucus.currentAsArray();
+         let found = false;
 
-         // Connect our own user ID to the participant caucus      
-         participantCaucus.add (this._localUser.id, this._localUser);            
+         for (let i = 0; i < current.length && !found; i++) {
+            if ((this._localUser.email === current[i].email ) && 
+               (!this.localWinsGlareCheck (this._localUser.id, current[i].id))) {
+               found = true;
+               this._localUser.assign (current[i]);
+            }
+         }
+
+         if (!found) {
+            // Connect our own user ID to the participant caucus      
+            participantCaucus.add (this._localUser.id, this._localUser);             
+         }
       } 
       else {
-         // Check the right name is stored - name changes as the user types it in the joining form
+         // Check the right name is stored - name changes when the user logs in 
          let stored = participantCaucus.get(this._localUser.id);         
-         if (stored.name !== this._localUser.name) {
+         if ((stored.name !== this._localUser.name) || (stored.email !== this._localUser.email)) {
             participantCaucus.add (this._localUser.id, this._localUser);                 
-         }      
+         }        
       }
    }   
 }

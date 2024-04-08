@@ -28,6 +28,7 @@ function callAtob(data_: string, forceShim: boolean): string {
 export class Persona extends MDynamicStreamable {
    private _id: string;
    private _name: string;
+   private _email: string;
    private _icon: EIcon;
    private _thumbnailB64: string | undefined;
    private _lastSeenAt: Date;
@@ -41,11 +42,12 @@ export class Persona extends MDynamicStreamable {
     * Create a Persona object
     * @param id_ - id to use to generate uniqueness 
     * @param name_ - plain text user name.
+    * @param amail_ - email address (unique)
     * @param icon_ - icon to use, from the enum list
     * @param thumbNailB64_ - encoded thumbnail image, can be undefined
     * @param lastSeenAt_ - timestamp for last interaction seen by the framework
     */
-   public constructor(id_: string | undefined, name_: string | undefined, icon: EIcon, thumbNailB64_: string | undefined, lastSeenAt_: Date);
+   public constructor(id_: string | undefined, name_: string | undefined, email_: string | undefined, icon: EIcon, thumbNailB64_: string | undefined, lastSeenAt_: Date);
 
    /**
     * Create a Persona object
@@ -60,7 +62,8 @@ export class Persona extends MDynamicStreamable {
 
       if (arr.length === 0) {
          this._id = keyGenerator.generateKey(); // An new Person has a key
-         this._name = "";                       // But not a name 
+         this._name = "";                       // But not a name or email address
+         this._email = "";
          this._icon = EIcon.kUnknownPersona;
          this._thumbnailB64 = undefined;
          this._lastSeenAt = new Date();
@@ -69,6 +72,7 @@ export class Persona extends MDynamicStreamable {
 
       var localId: string;
       var localName: string;
+      var localEmail: string;      
       var localIcon: EIcon;
       var localThumbNailB64: string;
       var localLastSeenAt: Date;
@@ -76,6 +80,7 @@ export class Persona extends MDynamicStreamable {
       if (arr.length === 1) {
          localId = arr[0]._id
          localName = arr[0]._name;
+         localEmail = arr[0]._email;         
          localIcon = arr[0]._icon;
          localThumbNailB64 = arr[0]._thumbnailB64;
          localLastSeenAt = new Date(arr[0]._lastSeenAt);
@@ -83,9 +88,10 @@ export class Persona extends MDynamicStreamable {
       else { 
          localId = arr[0];
          localName = arr[1];
-         localIcon = arr[2];         
-         localThumbNailB64 = arr[3];
-         localLastSeenAt = new Date (arr[4]);
+         localEmail = arr[2]
+         localIcon = arr[3];         
+         localThumbNailB64 = arr[4];
+         localLastSeenAt = new Date (arr[5]);
       }
 
       if (!Persona.isValidId(localId)) {
@@ -94,12 +100,16 @@ export class Persona extends MDynamicStreamable {
       if (!Persona.isValidName(localName)) {
          throw new InvalidParameterError("Name:" + localName + '.');
       }
+      if (!Persona.isValidEmail(localEmail)) {
+         throw new InvalidParameterError("Email:" + localEmail + '.');
+      }
       if (!Persona.isValidThumbnailB64(localThumbNailB64)) {
          throw new InvalidParameterError("Thumbnail:" + localThumbNailB64 + '.');
       }
 
       this._id = localId;
       this._name = localName;
+      this._email = localEmail;
       this._icon = localIcon;
       this._thumbnailB64 = localThumbNailB64;
       this._lastSeenAt = localLastSeenAt;
@@ -120,7 +130,7 @@ export class Persona extends MDynamicStreamable {
    static _dynamicStreamableFactory: DynamicStreamableFactory = new DynamicStreamableFactory(className, Persona.createDynamicInstance);
    streamOut(): string {
 
-      return JSON.stringify({ id: this._id, name: this._name, icon: this._icon, thumbnailB64: this._thumbnailB64, lastSeenAt: this._lastSeenAt });
+      return JSON.stringify({ id: this._id, name: this._name, email: this._email, icon: this._icon, thumbnailB64: this._thumbnailB64, lastSeenAt: this._lastSeenAt });
    }
 
    streamIn(stream: string): void {
@@ -129,13 +139,23 @@ export class Persona extends MDynamicStreamable {
 
       let icon: EIcon = ((EIcon as any)[obj.icon]);
 
-      if (icon === EIcon.kBotPersona) // Backwards compatibility
+      // Backwards compatibility from when we use the case 'Bot' for the LLM
+      if (icon === EIcon.kBotPersona) 
          icon = EIcon.kLLMPersona;
 
       if (icon === undefined)
          throw new InvalidParameterError("Icon:" + obj.icon + '.');
 
-      this.assign(new Persona (obj.id, obj.name, icon, obj.thumbnailB64, new Date(obj.lastSeenAt)));
+      let name = obj.name;
+      let email = obj.email;
+
+      // Backwards compatibility from when we used the email from LinkedIn in the name attribute
+      if (name && ((! email) || (email.length === 0))) { 
+         email = name;
+         name = "";
+      }
+
+      this.assign(new Persona (obj.id, name, email, icon, obj.thumbnailB64, new Date(obj.lastSeenAt)));
    }
 
    /**
@@ -147,6 +167,9 @@ export class Persona extends MDynamicStreamable {
    get name(): string {
       return this._name;
    }
+   get email(): string {
+      return this._email;
+   }   
    get icon(): EIcon {
       return this._icon;
    }
@@ -180,6 +203,14 @@ export class Persona extends MDynamicStreamable {
       this._name = name_;
    }
 
+   set email(email_: string) {
+      if (!Persona.isValidEmail(email_)) {
+         throw new InvalidParameterError("Email:" + email_ + '.');
+      }
+
+      this._email = email_;
+   }
+
    set icon (icon_: EIcon) {
 
       this._icon = icon_;
@@ -203,7 +234,8 @@ export class Persona extends MDynamicStreamable {
    equals(rhs: Persona): boolean {
       Persona
       return ((this._id === rhs._id) &&
-         (this._name === rhs._name) &&
+         ((this._name === undefined && rhs._name == undefined) || (this._name === rhs._name)) &&
+         ((this._email === undefined && rhs._email == undefined) || (this._email === rhs._email)) &&         
          (this._icon === rhs._icon) &&         
          ((this._thumbnailB64 === undefined && rhs._thumbnailB64 == undefined) || (this._thumbnailB64 === rhs._thumbnailB64)) &&
          (this.areSameDate (this._lastSeenAt, rhs._lastSeenAt)));
@@ -223,6 +255,7 @@ export class Persona extends MDynamicStreamable {
    assign(rhs: Persona): Persona {
       this._id = rhs._id;
       this._name = rhs._name;
+      this._email = rhs._email;
       this._icon = rhs._icon;
       this._thumbnailB64 = rhs._thumbnailB64;
       this._lastSeenAt = new Date (rhs._lastSeenAt);
@@ -269,6 +302,17 @@ export class Persona extends MDynamicStreamable {
    }
 
    /**
+    * test for valid email 
+    * @param email - the string to test
+    */
+      static isValidEmail(email_: string): boolean {
+
+         if (email_ == undefined)
+            return false;
+   
+         return true; // Currently allow anything for email, even empty string. 
+      }
+   /**
     * test for valid thumbnail string 
     * @param thumbnail - the string to test
     */
@@ -295,7 +339,7 @@ export class Persona extends MDynamicStreamable {
       return (false);
    }
 
-   private static _unknown: Persona = new Persona(unknownUuid, "Guest", EIcon.kUnknownPersona, undefined, new Date(0));
+   private static _unknown: Persona = new Persona(unknownUuid, "Guest", "", EIcon.kUnknownPersona, undefined, new Date(0));
 
    /**
     * return persona details for 'unknown'

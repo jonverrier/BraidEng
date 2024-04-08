@@ -196,7 +196,7 @@ export const JoinRow = (props: IJoinPageProps) => {
 
    let joinValidator = new JoinPageValidator ();
 
-   if (joinValidator.isJoinAttemptReady (props.joinPersona.name, props.sessionKey, props.conversationKey)) {
+   if (joinValidator.isJoinAttemptReady (props.joinPersona.email, props.sessionKey, props.conversationKey)) {
       return (<div></div>);
    }
    else {
