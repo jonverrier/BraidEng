@@ -112,7 +112,7 @@ describe("KeyRetriever", function () {
       let oldEnv = Environment.override (EEnvironment.kProduction);
 
       try {
-         var url = EConfigStrings.kRequestJoinKeyUrl;
+         var url = EConfigStrings.kRequestSessionKeyUrl;
 
          let conversation = await validator.requestKey(url, 
             EConfigStrings.kSessionParamName, 

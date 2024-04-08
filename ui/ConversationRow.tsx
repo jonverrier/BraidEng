@@ -92,8 +92,8 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
 
    function onCopy (ev: React.MouseEvent<HTMLButtonElement>) : void {
 
-      // Make a join details with no email address
-      let joinDetails = JoinDetails.makeFromParts ("", props.sessionKey, props.conversationKey);
+      // Make join details with no email address and no name
+      let joinDetails = JoinDetails.makeFromParts ("", "", props.sessionKey, props.conversationKey);
       
       // https://stackoverflow.com/questions/10783322/window-location-url-javascript
 
@@ -120,25 +120,25 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
       <div className={headerRowClasses.root}>
          <AvatarGroup>
             {inlineItems.map((persona) => (
-               <Tooltip content={persona.email} relationship="label" positioning={'below'} key={persona.id}>
-                  <AvatarGroupItem name={persona.email} key={persona.id} />
+               <Tooltip content={persona.name} relationship="label" positioning={'below'} key={persona.id}>
+                  <AvatarGroupItem name={persona.name} key={persona.id} />
                </Tooltip>
             ))}
             {overflowItems && (
                <AvatarGroupPopover indicator="icon">
                   {overflowItems.map((persona) => (
-                     <AvatarGroupItem name={persona.email} key={persona.id} />
+                     <AvatarGroupItem name={persona.name} key={persona.id} />
                   ))}
                </AvatarGroupPopover>
             )}
          </AvatarGroup>  
          <ToolbarDivider />
          <Toolbar aria-label="Conversation control toolbar" >      
-            <Tooltip content={EUIStrings.kCopyJoinKeyButtonPrompt} 
+            <Tooltip content={EUIStrings.kCopyConversationUrlButtonPrompt} 
                relationship="label" positioning={'below'}>
                <ToolbarButton
                   icon={<Copy24Regular />}
-                  aria-label={EUIStrings.kCopyJoinKeyButtonPrompt} 
+                  aria-label={EUIStrings.kCopyConversationUrlButtonPrompt} 
                   disabled={!(props.sessionKey.looksValidSessionKey() && props.conversationKey.looksValidConversationKey())} 
                   onClick={onCopy}
                />                 

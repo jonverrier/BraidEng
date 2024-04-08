@@ -25,7 +25,7 @@ export enum EUIStrings {
    kSendMessagePreamble = "Type a message here. If you want @Braid to reply, put '@Braid' in the message. All messages with the phrase '@Braid' are sent to the language model and AI document store, and no others. All messages can be read by everyone in the chat thread.",
    kSendButtonPrompt = "Send",
    kSendMessagePlaceholder = "Write a message... ",   
-   kCopyJoinKeyButtonPrompt = "Copy the joining URL for this conversation to the clipboard",
+   kCopyConversationUrlButtonPrompt = "Copy the URL for this conversation to the clipboard",
    kTrimConversationButtonPrompt = "Delete the conversation history",
    kExitConversationButtonPrompt = "Leave this conversation",   
    kAiHasSuggestedDocuments = "@Braid has a suggestion for you.",

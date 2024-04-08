@@ -8,8 +8,6 @@ import { SessionKey, ConversationKey } from '../core/Keys';
 import { JoinDetails } from '../core/JoinDetails';
 import { JoinPageValidator } from '../core/JoinPageValidator';
 
-import axios from "axios";
-
 const badUuid = "9a0583f5xca56-421b-8545-aa23032d6c93"
 
 var keyGenerator: IKeyGenerator = new UuidKeyGenerator();
@@ -22,7 +20,7 @@ describe("JoinPageValidator", function () {
       let session = new SessionKey (keyGenerator.generateKey());
       let conversation = new ConversationKey (keyGenerator.generateKey());
 
-      expect(validator.isJoinAttemptReady ("", session, conversation)).toEqual(false);
+      expect(validator.isJoinAttemptReady ("", undefined as unknown as string, session, conversation)).toEqual(false);
    });
 
    it("Needs to detect invalid session key", function () {
@@ -31,7 +29,7 @@ describe("JoinPageValidator", function () {
       let session = new SessionKey (badUuid);
       let conversation = new ConversationKey (keyGenerator.generateKey());
 
-      expect(validator.isJoinAttemptReady ("joe@mail.com", session, conversation)).toEqual(false);
+      expect(validator.isJoinAttemptReady ("joe@mail.com", "Joe", session, conversation)).toEqual(false);
    }); 
 
    it("Needs to detect invalid conversation key", function () {
@@ -40,7 +38,7 @@ describe("JoinPageValidator", function () {
       let session = new SessionKey (keyGenerator.generateKey());
       let conversation = new ConversationKey (badUuid);
 
-      expect(validator.isJoinAttemptReady ("joe@mail.com", session, conversation)).toEqual(false);
+      expect(validator.isJoinAttemptReady ("joe@mail.com", "Joe", session, conversation)).toEqual(false);
    }); 
     
 
@@ -49,7 +47,7 @@ describe("JoinPageValidator", function () {
       let session = new SessionKey (keyGenerator.generateKey());
       let conversation = new ConversationKey (keyGenerator.generateKey());
 
-      expect(validator.isJoinAttemptReady ("joe@mail.com", session, conversation)).toEqual(true);
+      expect(validator.isJoinAttemptReady ("joe@mail.com", "Joe", session, conversation)).toEqual(true);
    });
    
 });

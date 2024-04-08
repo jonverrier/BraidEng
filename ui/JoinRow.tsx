@@ -169,9 +169,9 @@ export const JoinRow = (props: IJoinPageProps) => {
       var url: string;
 
       if (runningInLocalEnv)
-         url = EConfigStrings.kRequestLocalJoinKeyUrl;
+         url = EConfigStrings.kRequestLocalSessionKeyUrl;
       else
-         url = EConfigStrings.kRequestJoinKeyUrl;
+         url = EConfigStrings.kRequestSessionKeyUrl;
 
       retriever.requestKey (url, 
          EConfigStrings.kSessionParamName, 
@@ -196,7 +196,8 @@ export const JoinRow = (props: IJoinPageProps) => {
 
    let joinValidator = new JoinPageValidator ();
 
-   if (joinValidator.isJoinAttemptReady (props.joinPersona.email, props.sessionKey, props.conversationKey)) {
+   if (joinValidator.isJoinAttemptReady (props.joinPersona.email, props.joinPersona.name, 
+                                         props.sessionKey, props.conversationKey)) {
       return (<div></div>);
    }
    else {

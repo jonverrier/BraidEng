@@ -45,7 +45,7 @@ export class ConnectionConfig implements AzureRemoteConnectionConfig {
          this.type = "remote";
 
          let retriever = new KeyRetriever ()
-         var key = await retriever.requestKey (EConfigStrings.kRequestJoinKeyUrl, 
+         var key = await retriever.requestKey (EConfigStrings.kRequestSessionKeyUrl, 
                                                EConfigStrings.kSessionParamName, 
                                                sessionKey);
 
