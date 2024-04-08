@@ -2,7 +2,7 @@
 
 export enum EUIStrings {
 
-   kJoinPagePreamble = "To join a conversation with @Braid, you need to enter the key from your contact at Braid, pick a conversation to joon, then login with LinkedIn to identify yourself.",
+   kJoinPagePreamble = "To join a conversation with @Braid, you need to enter the key from your contact at Braid, pick a conversation to join, then login with LinkedIn to identify yourself.",
    kJoinConversationKeyPrompt = "Key",
    kJoinConversationKeyPlaceholder = "Key... ",  
    kJoinConversationDoesNotLookLikeKey = "It does not look like the key is valid.",
