@@ -9,6 +9,7 @@ import { Message } from '../core/Message';
 import { Interest, NotificationFor } from '../core/NotificationFramework';
 import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
 import { EIcon } from '../core/Icons';
+import { SessionKey, ConversationKey } from '../core/Keys';
 
 var myId: string = "1234";
 var myName: string = "Jon";
@@ -46,7 +47,7 @@ describe("Caucus", function () {
 
    var newConnection: MessageBotFluidConnection;
    var persona: Persona;
-   var id: string; 
+   var id: ConversationKey; 
    var oldEnv : EEnvironment; 
 
    var oldLocation: any = global.location;
@@ -63,7 +64,7 @@ describe("Caucus", function () {
 
       let checked = process.env.JoinKey;
       throwIfUndefined(checked);
-      id = await newConnection.createNew(checked);
+      id = await newConnection.createNew(new SessionKey (checked));
 
       await wait();
    });

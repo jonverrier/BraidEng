@@ -4,11 +4,11 @@
 
 import { InsecureTokenProvider } from "@fluidframework/test-client-utils";
 import { AzureRemoteConnectionConfig, AzureClientProps, ITokenProvider } from "@fluidframework/azure-client";
-import axios from "axios";
 
 import { EEnvironment, Environment } from "./Environment";
 import { KeyRetriever } from "./KeyRetriever";
 import { EConfigStrings } from "./ConfigStrings";
+import { SessionKey } from "./Keys";
 
 var documentUuid: string = "b03724b3-4be0-4491-b0fa-43b01ab80d50";
 
@@ -25,7 +25,7 @@ export class ConnectionConfig implements AzureRemoteConnectionConfig {
 
    }
 
-   async makeTokenProvider(joinKey_: string): Promise<ITokenProvider> {
+   async makeTokenProvider(sessionKey: SessionKey): Promise<ITokenProvider> {
 
       var user: any = { id: documentUuid, name: "@Braid Chat" };
 
@@ -46,8 +46,8 @@ export class ConnectionConfig implements AzureRemoteConnectionConfig {
 
          let retriever = new KeyRetriever ()
          var key = await retriever.requestKey (EConfigStrings.kRequestJoinKeyUrl, 
-                                               EConfigStrings.kRequestKeyParameterName, 
-                                               joinKey_);
+                                               EConfigStrings.kSessionParamName, 
+                                               sessionKey);
 
          this.tokenProvider = new InsecureTokenProvider(key, user);
          

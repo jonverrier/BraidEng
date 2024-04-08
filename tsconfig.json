@@ -20,6 +20,7 @@
    "include": [
       "./core/**/*.ts",
       "./ui/**/*.tsx",
+      "./ui/**/*.ts",      
       "./test/**/*.test.ts",
       "./scripts/**/*.ts"      
    ],

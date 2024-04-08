@@ -29,38 +29,42 @@ import {
    Mail24Regular,
    Send24Regular,
    Copy24Regular,
-   Delete24Regular
+   Delete24Regular, 
+   DoorArrowLeft24Regular
 } from '@fluentui/react-icons';
 
 import { EIcon } from '../core/Icons';
 import { EConfigStrings }  from '../core/ConfigStrings';
-import { JoinPath } from '../core/JoinPath';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
-import { AIConnection } from '../core/AIConnection';
 import { KnowledgeSegment } from '../core/Knowledge';
 import { EUIStrings } from './UIStrings';
 import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
+import { SessionKey, ConversationKey } from '../core/Keys';
 import { JoinDetails } from '../core/JoinDetails';
 import { AnimatedIconButton, EAnimatedIconButtonTypes } from './AnimatedIconButton';
 
 export interface IConversationHeaderProps {
 
-   joinPath: JoinPath;
+   sessionKey: SessionKey;
+   conversationKey: ConversationKey;   
    audience: Map<string, Persona>;
-   onTrimConversation () : void;    
+   onTrimConversation () : void;  
+   onExitConversation () : void;  
 }
 
 export interface IConversationRowProps {
 
    isConnected: boolean;
-   joinPath: JoinPath;
+   sessionKey: SessionKey;
+   conversationKey: ConversationKey;    
    audience: Map<string, Persona>;
    conversation: Array<Message>;
    isBusy: boolean;   
    hasSuggestedContent: boolean;
    onSend (message_: string) : void;   
    onTrimConversation () : void;   
+   onExitConversation () : void;
    onClickUrl (url_: string): void;   
    onAddSuggestedContent (): void;
 }
@@ -73,7 +77,6 @@ const headerRowStyles = makeStyles({
       width: '100%' 
    },
 });
-
 
 export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
 
@@ -90,7 +93,7 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
    function onCopy (ev: React.MouseEvent<HTMLButtonElement>) : void {
 
       // Make a join details with no email address
-      let joinDetails = JoinDetails.makeFromTwoParts ("", props.joinPath);
+      let joinDetails = JoinDetails.makeFromParts ("", props.sessionKey, props.conversationKey);
       
       // https://stackoverflow.com/questions/10783322/window-location-url-javascript
 
@@ -98,7 +101,7 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
       '//' +
       window.location.host +                  // => "example.com:3000"
       window.location.pathname +              // => "/pathname/
-      '#' + joinDetails.asString;
+      '#' + joinDetails.toString();
 
       navigator.clipboard.writeText (newUrl);
    }       
@@ -106,7 +109,12 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
    function onTrimConversation (ev: React.MouseEvent<HTMLButtonElement>) : void {
 
       props.onTrimConversation();
-   }       
+   } 
+
+   function onExitConversation (ev: React.MouseEvent<HTMLButtonElement>) : void {
+
+      props.onExitConversation();
+   }           
 
    return (
       <div className={headerRowClasses.root}>
@@ -131,7 +139,7 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
                <ToolbarButton
                   icon={<Copy24Regular />}
                   aria-label={EUIStrings.kCopyJoinKeyButtonPrompt} 
-                  disabled={!(props.joinPath.isValid)} 
+                  disabled={!(props.sessionKey.looksValidSessionKey() && props.conversationKey.looksValidConversationKey())} 
                   onClick={onCopy}
                />                 
             </Tooltip>           
@@ -140,10 +148,19 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
                <ToolbarButton
                   icon={<Delete24Regular />}
                   aria-label={EUIStrings.kTrimConversationButtonPrompt} 
-                  disabled={!(props.joinPath.isValid)} 
+                  disabled={!(props.sessionKey.looksValidSessionKey() && props.conversationKey.looksValidConversationKey())} 
                   onClick={onTrimConversation}
                />  
-            </Tooltip>                              
+            </Tooltip>       
+            <Tooltip content={EUIStrings.kExitConversationButtonPrompt} 
+               relationship="label" positioning={'below'}>
+               <ToolbarButton
+                  icon={<DoorArrowLeft24Regular />}
+                  aria-label={EUIStrings.kExitConversationButtonPrompt} 
+                  disabled={!(props.sessionKey.looksValidSessionKey() && props.conversationKey.looksValidConversationKey())} 
+                  onClick={onExitConversation}
+               />  
+            </Tooltip>                                   
          </Toolbar>           
       </div>
    );
@@ -221,9 +238,12 @@ export const ConversationRow = (props: IConversationRowProps) => {
          <div className={embeddedRowClasses.root}>      
             <div className={embeddedColumnClasses.root}>                     
 
-               <ConversationHeaderRow joinPath={props.joinPath} 
+               <ConversationHeaderRow 
+                  sessionKey={props.sessionKey} 
+                  conversationKey={props.conversationKey}
                   audience={props.audience} 
-                  onTrimConversation={props.onTrimConversation}>                    
+                  onTrimConversation={props.onTrimConversation}      
+                  onExitConversation={props.onExitConversation}>                                   
                </ConversationHeaderRow>
                
                &nbsp;
@@ -233,7 +253,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
                      {conversation.map (message => { 
                         return (         
                            <SingleMessageView 
-                              sessionKey={props.joinPath.sessionId}
+                              sessionKey={props.sessionKey}
                               message={message} 
                               key={message.id}
                               author={(audience.get (message.authorId) as Persona)}
@@ -265,7 +285,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
 
 export interface ISingleMessageViewProps {
 
-   sessionKey: string;
+   sessionKey: SessionKey;
    message: Message;  
    author: Persona;
    showAiWarning: boolean;
@@ -279,7 +299,7 @@ export interface ISingleMessageViewProps {
 
 export interface IKnowledgeSegmentProps {
 
-   sessionKey: string;
+   sessionKey: SessionKey;
    segment: KnowledgeSegment;  
    key: string;
    onClickUrl (url_: string) : void;    

@@ -7,6 +7,7 @@ import { logApiError } from "./Logging";
 import { EConfigStrings } from './ConfigStrings';
 import { ConnectionError } from "./Errors";
 import { Environment } from "./Environment";
+import { SessionKey } from "./Keys";
 
 export class KeyRetriever {
 
@@ -21,7 +22,7 @@ export class KeyRetriever {
 
    // Makes an Axios call to request the key
    // If running locally, looks for an environment variable
-   async requestKey  (apiUrl_: string, paramName_: string, key_: string) : Promise<string> {
+   async requestKey  (apiUrl_: string, paramName_: string, sessionKey_: SessionKey) : Promise<string> {
      
       let environment = Environment.environment();
 
@@ -44,7 +45,7 @@ export class KeyRetriever {
       try {
          response = await axios.get(apiUrl_, {
             params: {
-               [paramName_]: key_
+               [paramName_]: sessionKey_.toString()
             },
             withCredentials: false
          });

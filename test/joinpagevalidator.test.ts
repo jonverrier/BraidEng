@@ -4,7 +4,7 @@ import { expect } from 'expect';
 import { describe, it } from 'mocha';
 import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
-import { JoinPath } from '../core/JoinPath';
+import { SessionKey, ConversationKey } from '../core/Keys';
 import { JoinDetails } from '../core/JoinDetails';
 import { JoinPageValidator } from '../core/JoinPageValidator';
 
@@ -19,87 +19,41 @@ describe("JoinPageValidator", function () {
    it("Needs to detect invalid name", function () {
 
       let validator = new JoinPageValidator();
-      let key = new JoinPath (keyGenerator.generateKey() + '/' + keyGenerator.generateKey());
+      let session = new SessionKey (keyGenerator.generateKey());
+      let conversation = new ConversationKey (keyGenerator.generateKey());
 
-      expect(validator.isJoinAttemptReady ("", key)== false).toEqual(true);
+      expect(validator.isJoinAttemptReady ("", session, conversation)).toEqual(false);
    });
 
-   it("Needs to detect invalid key", function () {
+   it("Needs to detect invalid session key", function () {
 
       let validator = new JoinPageValidator();
-      let key = new JoinPath (badUuid + '/' + keyGenerator.generateKey())
+      let session = new SessionKey (badUuid);
+      let conversation = new ConversationKey (keyGenerator.generateKey());
 
-      expect(validator.isJoinAttemptReady ("", key)== false).toEqual(true);
+      expect(validator.isJoinAttemptReady ("joe@mail.com", session, conversation)).toEqual(false);
    }); 
 
-   it("Needs to detect valid name and key", function () {
+   it("Needs to detect invalid conversation key", function () {
 
       let validator = new JoinPageValidator();
-      let key = new JoinPath (keyGenerator.generateKey() + '/' + keyGenerator.generateKey());
+      let session = new SessionKey (keyGenerator.generateKey());
+      let conversation = new ConversationKey (badUuid);
 
-      expect(validator.isJoinAttemptReady ("Jon", key)== true).toEqual(true);
+      expect(validator.isJoinAttemptReady ("joe@mail.com", session, conversation)).toEqual(false);
    }); 
+    
+
+   it("Needs to detect valid components", function () {
+      let validator = new JoinPageValidator();
+      let session = new SessionKey (keyGenerator.generateKey());
+      let conversation = new ConversationKey (keyGenerator.generateKey());
+
+      expect(validator.isJoinAttemptReady ("joe@mail.com", session, conversation)).toEqual(true);
+   });
    
 });
 
-describe("JoinPath", function () {
-
-   it("Needs to classify empty string", function () {
-
-      let key = new JoinPath("");
-
-      expect(key.isValid == false).toEqual(true);
-   });
-
-   it("Needs to detect invalid single part string", function () {
-
-      let key = new JoinPath("a");
-
-      expect(key.isValid == false).toEqual(true);
-   }); 
-
-   it("Needs to detect invalid double part join path", function () {
-
-      let key = new JoinPath("a/");
-
-      expect(key.isValid == false).toEqual(true);
-   }); 
-
-   it("Needs to detect invalid second part join path", function () {
-
-      let trialInput = keyGenerator.generateKey();
-      let key = new JoinPath(trialInput + '/');
-
-      expect(key.isValid == true).toEqual(true);
-      expect(key.hasSessionOnly == true).toEqual(true);        
-   }); 
-
-   it("Needs to detect valid single part join path", function () {
-
-      let trialInput = keyGenerator.generateKey();
-      let key = new JoinPath(trialInput);
-
-      expect(key.isValid == true).toEqual(true);
-      expect(key.hasSessionOnly == true).toEqual(true);      
-      expect(key.hasSessionAndConversation == false).toEqual(true); 
-      expect(key.sessionId).toEqual(trialInput);   
-      expect(key.conversationId).toEqual("");                 
-   }); 
-
-   it("Needs to detect valid double part join path", function () {
-
-      let trialInput = keyGenerator.generateKey();
-      let key = new JoinPath(trialInput + "/" + trialInput);
-
-      expect(key.isValid == true).toEqual(true);
-      expect(key.hasSessionOnly == false).toEqual(true);      
-      expect(key.hasSessionAndConversation == true).toEqual(true); 
-      expect(key.sessionId).toEqual(trialInput);   
-      expect(key.conversationId).toEqual(trialInput); 
-      expect(key.asString).toEqual(trialInput + "/" + trialInput);       
-   });    
-   
-});
 
 describe("JoinDetails", function () {
 
@@ -107,53 +61,50 @@ describe("JoinDetails", function () {
 
       let details = new JoinDetails("");
 
-      expect(details.isValid == false).toEqual(true);
+      expect(details.isValid()).toEqual(false);
    });
 
-   it("Needs to detect invalid single part string", function () {
+   it("Needs to detect invalid name", function () {
 
-      let details = new JoinDetails("e");
+      let name = "";
+      let session = new SessionKey (keyGenerator.generateKey());
+      let conversation = new ConversationKey (keyGenerator.generateKey());
 
-      expect(details.isValid == false).toEqual(true);
+      let details = new JoinDetails ("&email=" + name + "&session=" + session.toString() + "&conversation=" + conversation.toString());
+
+      expect(details.isValid()).toEqual(false);
+   });
+
+   it("Needs to detect invalid session key", function () {
+
+      let name = "joe@mail.com";
+      let session = new SessionKey (badUuid);
+      let conversation = new ConversationKey (keyGenerator.generateKey());
+
+      let details = new JoinDetails ("&email=" + name + "&session=" + session.toString() + "&conversation=" + conversation.toString());
+
+      expect(details.isValid()).toEqual(false);
    }); 
 
-   it("Needs to detect invalid double part string", function () {
+   it("Needs to detect invalid conversation key", function () {
 
-      let details = new JoinDetails("&email=a@b.com&joinpath=/");
+      let name = "joe@mail.com";
+      let session = new SessionKey (keyGenerator.generateKey());
+      let conversation = new ConversationKey (badUuid);
 
-      expect(details.isValid == false).toEqual(true);
-   }); 
+      let details = new JoinDetails ("&email=" + name + "&session=" + session.toString() + "&conversation=" + conversation.toString());
 
-   it("Needs to detect invalid second part string", function () {
-
-      let trialInput = keyGenerator.generateKey();
-      let key = new JoinPath(trialInput + '/');
-      let details = new JoinDetails("&email=a@b.com&joinpath=" + key.asString);
-
-      expect(details.isValid == true).toEqual(true);
-      expect(details.joinPath.hasSessionOnly == true).toEqual(true);      
-   }); 
-
-   it("Needs to detect valid single part join path", function () {
-
-      let trialInput = keyGenerator.generateKey();
-      let key = new JoinPath(trialInput);
-      let details = new JoinDetails ("&email=a@b.com&joinpath=" + key.asString);
-
-      //expect(details.isValid == true).toEqual(true);
-      expect(details.email).toEqual('a@b.com');   
-      expect(details.joinPath.asString).toEqual(key.asString);                 
-   }); 
-
-   it("Needs to detect valid double part join path", function () {
-
-      let trialInput = keyGenerator.generateKey();
-      let key = new JoinPath(trialInput + "/" + trialInput);
-      let details = new JoinDetails ("&email=a@b.com&joinpath=" + key.asString);      
-
-      //expect(details.isValid == true).toEqual(true);
-      expect(details.email).toEqual('a@b.com');   
-      expect(details.joinPath.asString).toEqual(key.asString);      
-   });    
+      expect(details.isValid()).toEqual(false);
+   });  
    
+   it("Needs to detect all valid parts", function () {
+
+      let name = "joe@mail.com";
+      let session = new SessionKey (keyGenerator.generateKey());
+      let conversation = new ConversationKey (keyGenerator.generateKey());
+
+      let details = new JoinDetails ("&email=" + name + "&session=" + session.toString() + "&conversation=" + conversation.toString());
+
+      expect(details.isValid()).toEqual(true);
+   });     
 });

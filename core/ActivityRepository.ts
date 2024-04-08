@@ -15,6 +15,7 @@ import { KeyRetriever } from "./KeyRetriever";
 import { logDbError, logApiError } from "./Logging";
 import { ActivityRecord } from './ActivityRecord';
 import { UrlActivityRecord } from "./UrlActivityRecord";
+import { SessionKey } from "./Keys";
 
 export interface IActivityRepository {
 
@@ -22,25 +23,25 @@ export interface IActivityRepository {
    loadRecent (count : number) : Promise<Array<ActivityRecord>>;
 }
 
-export function getRecordRepository (joinKey: string) : IActivityRepository {
-   return new ActivityRepository(joinKey);   
+export function getRecordRepository (sessionKey_: SessionKey) : IActivityRepository {
+   return new ActivityRepository(sessionKey_);   
 }
 
 // ActivityRecord - email of a person and a datestamp. Will have many derived classes according to different activity types. 
 export class ActivityRepository implements IActivityRepository {
 
    private _dbkey: string | undefined;
-   private _joinKey: string;
+   private _sessionKey: SessionKey;
    private _timer: NodeJS.Timeout | undefined;
 
    /**
     * Create an ActivityRepository object 
-    * @param joinKey - joining key
+    * @param sessionKey_ - joining key
     */
-   public constructor(joinKey: string) {
+   public constructor(sessionKey_: SessionKey) {
 
       this._dbkey = undefined;
-      this._joinKey = joinKey;
+      this._sessionKey = sessionKey_;
       this._timer = undefined;
    }
 
@@ -51,7 +52,7 @@ export class ActivityRepository implements IActivityRepository {
       }
    }
 
-   async connect (joinKey : string) : Promise<string | undefined> {
+   async connect (sessionKey_ : SessionKey) : Promise<string | undefined> {
       let retriever = new KeyRetriever();
       var url: string;
 
@@ -73,8 +74,8 @@ export class ActivityRepository implements IActivityRepository {
       let done = new Promise<string | undefined>(function(resolve, reject) {
          
          retriever.requestKey (url, 
-            EConfigStrings.kRequestKeyParameterName, 
-            joinKey)
+            EConfigStrings.kSessionParamName, 
+            sessionKey_)
          .then ((key) => {
             self._dbkey = key;
             resolve (key);
@@ -93,7 +94,7 @@ export class ActivityRepository implements IActivityRepository {
       let self = this;
 
       if (!self._dbkey) {
-         await self.connect(self._joinKey);
+         await self.connect(self._sessionKey);
       }
 
       let done = new Promise<boolean>(function(resolve, reject) {
@@ -135,7 +136,7 @@ export class ActivityRepository implements IActivityRepository {
       let self = this;
 
       if (!self._dbkey) {
-         await self.connect(self._joinKey);
+         await self.connect(self._sessionKey);
       }
 
       let done = new Promise<Array<ActivityRecord>>(function(resolve, reject) {

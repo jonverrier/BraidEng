@@ -12,7 +12,8 @@ export enum EConfigStrings {
    kRequestLocalJoinKeyUrl = "http://localhost:1337/api/joinkey",
    kRequestLocalAiKeyUrl = "http://localhost:1337/api/aikey",  
    kRequestLocalDbKeyUrl = "http://localhost:1337/api/dbkey",      
-   kRequestKeyParameterName = "JoinKey",
+   kLoginRelativeUrl= "/api/login",
+   kHomeRelativeUrl= "/aibot.html",   
    
    kAzureTenantId = "45155576-770f-47cc-92dc-9d3328dbf837",
    kAzureProductionFluidHost = "https://eu.fluidrelay.azure.com",
@@ -30,7 +31,8 @@ export enum EConfigStrings {
    kErrorConnectingToKeyAPI = "Error connecting to Braid server.",
    kErrorConnectingToAiAPI = "Error connecting to AI server.",
 
-   kJoinPathParamName = "joinpath",
+   kSessionParamName = "session",
+   kConversationParamName = "conversation",   
    kEmailParamName = "email",
 
    kCohort1ConversationKey = "d94c8521-b234-4679-8b8f-93bcc0a221b7",
@@ -48,7 +50,7 @@ export enum EConfigNumbers {
 // This is used for local running only, as in browser we cannot access environment variables
 // NEVER PUT PRODUCTION SECRETS IN HERE
 let KStubEnvironmentVariables = {
-   JoinKey : "49b65194-26e1-4041-ab11-4078229f478a",
+   SessionKey : "49b65194-26e1-4041-ab11-4078229f478a",
    ConversationKey : "abcde"
 };
 

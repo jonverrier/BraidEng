@@ -27,6 +27,7 @@ export enum EUIStrings {
    kSendMessagePlaceholder = "Write a message... ",   
    kCopyJoinKeyButtonPrompt = "Copy the joining URL for this conversation to the clipboard",
    kTrimConversationButtonPrompt = "Delete the conversation history",
+   kExitConversationButtonPrompt = "Leave this conversation",   
    kAiHasSuggestedDocuments = "@Braid has some other suggestions for you to read.",
    kAiHasNoSuggestedDocuments = "No suggestions at present. Interacting with @Braid will probably kick-start some suggestions.", 
 
