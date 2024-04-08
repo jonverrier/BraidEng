@@ -12,14 +12,14 @@ import {
 // Local
 import { Persona } from '../core/Persona';
 import { EIcon } from '../core/Icons';
-import { JoinPath } from '../core/JoinPath';
 import { JoinDetails } from '../core/JoinDetails';
 import { EUIStrings } from './UIStrings';
 import { innerColumnStyles } from './ColumnStyles';
 import { EMainPageMessageTypes, MainPageMessageRow } from './MainPageMessage';
 import { JoinRow } from './JoinRow';
 import { ConversationControllerRow } from './ConversationController';
-import { EEnvironment, Environment } from '../core/Environment';
+import { SessionKey, ConversationKey } from '../core/Keys';
+import { EConfigStrings } from '../core/ConfigStrings';
 
 export interface IAppProps {
 
@@ -66,21 +66,23 @@ export const App = (props: IAppProps) => {
 
    const [lastMessage, setLastMessage] = useState<string>("");
    const [lastMessageType, setLastMessageType] = useState<EMainPageMessageTypes> (EMainPageMessageTypes.kNothing);
-   const [joinPath, setJoinPath] = useState<JoinPath>(joinAttempt.joinPath);
+   const [sessionKey, setSessionKey] = useState<SessionKey>(joinAttempt.session);
+   const [conversationKey, setConversationKey] = useState<ConversationKey>(joinAttempt.conversation);
 
    const pageOuterClasses = pageOuterStyles();
    const innerColumnClasses = innerColumnStyles();
 
-   function onConnect (joinPath_: JoinPath) : void  {
+   function onConnect (sessionKey_: SessionKey, conversationKey_: ConversationKey) : void  {
       
       setLastMessage ("");
       setLastMessageType (EMainPageMessageTypes.kNothing);      
 
-      setJoinPath (joinPath_);
+      setSessionKey (sessionKey_);
+      setConversationKey (conversationKey_);
 
       // Start the login process by redirecting to the login API
-      let query = JoinDetails.makeAsString ("", joinPath_);
-      location.replace ("/api/login" + '?' + query);
+      let query = JoinDetails.toString ("", sessionKey_, conversationKey_);
+      location.replace (EConfigStrings.kLoginRelativeUrl + '?' + query);
    }
 
    function onConnectError (hint_: string) : void  {
@@ -94,8 +96,9 @@ export const App = (props: IAppProps) => {
       setLastMessage (EUIStrings.kJoinApiError);
       setLastMessageType (EMainPageMessageTypes.kError);
 
-      // Clear the join key - takes up back to the join page.
-      setJoinPath (new JoinPath (""));
+      // Clear the join keys - takes us back to the join page.
+      setSessionKey (new SessionKey (""));
+      setConversationKey (new ConversationKey (""));      
    }
    
    function onAiError (hint_: string) : void  {
@@ -121,14 +124,16 @@ export const App = (props: IAppProps) => {
                      onDismiss={onDismissMessage}/>
       
                   <ConversationControllerRow 
-                     joinPath={joinPath}
+                     sessionKey={sessionKey}
+                     conversationKey={conversationKey}
                      localPersona={localUserPersona}
                      onFluidError={onFluidError}
                      onAiError={onAiError}>                           
                   </ConversationControllerRow>      
 
                   <JoinRow 
-                     joinPath={joinPath} 
+                     sessionKey={sessionKey} 
+                     conversationKey={conversationKey}
                      joinPersona={localUserPersona}                     
                      onConnect={onConnect} 
                      onConnectError={onConnectError}>                     

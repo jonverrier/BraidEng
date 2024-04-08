@@ -9,6 +9,7 @@ import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 import { KeyRetriever } from '../core/KeyRetriever';
 import { EConfigStrings, KStubEnvironmentVariables } from '../core/ConfigStrings';
 import { EEnvironment, Environment } from '../core/Environment';
+import { SessionKey } from '../core/Keys';
 
 const badUuid = "9a0583f5xca56-421b-8545-aa23032d6c93"
 
@@ -27,7 +28,9 @@ describe("KeyRetriever", function () {
       try {
          var url = 'https://madeuphost.com/api/key';
 
-         let conversation = await retriever.requestKey(url, EConfigStrings.kRequestKeyParameterName, keyGenerator.generateKey());
+         let conversation = await retriever.requestKey(url, 
+            EConfigStrings.kSessionParamName, 
+            new SessionKey(keyGenerator.generateKey()));
       }
       catch (err) {
          caught = true;
@@ -54,7 +57,9 @@ describe("KeyRetriever", function () {
       try {
          var url = 'https://madeuphost.com/api/key';
 
-         let conversation = await retriever.requestKey(url, EConfigStrings.kRequestKeyParameterName, keyGenerator.generateKey());
+         let conversation = await retriever.requestKey(url, 
+            EConfigStrings.kSessionParamName, 
+            new SessionKey (keyGenerator.generateKey()));
       }
       catch (err) {
          console.log (err);
@@ -82,7 +87,9 @@ describe("KeyRetriever", function () {
       try {
          var url = 'https://madeuphost.com/api/key';
 
-         let conversation = await retriever.requestKey(url, EConfigStrings.kRequestKeyParameterName, keyGenerator.generateKey());
+         let conversation = await retriever.requestKey(url, 
+            EConfigStrings.kSessionParamName, 
+            new SessionKey (keyGenerator.generateKey()));
       }
       catch (err) {
          console.log (err);
@@ -107,7 +114,9 @@ describe("KeyRetriever", function () {
       try {
          var url = EConfigStrings.kRequestJoinKeyUrl;
 
-         let conversation = await validator.requestKey(url, EConfigStrings.kRequestKeyParameterName, KStubEnvironmentVariables.JoinKey);
+         let conversation = await validator.requestKey(url, 
+            EConfigStrings.kSessionParamName, 
+            new SessionKey (KStubEnvironmentVariables.SessionKey));
       }
       catch (err) {
          caught = true;

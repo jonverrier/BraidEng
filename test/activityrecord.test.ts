@@ -3,7 +3,8 @@
 import { MDynamicStreamable } from '../core/StreamingFramework';
 import { ActivityRecord} from '../core/ActivityRecord';
 import { UrlActivityRecord } from '../core/UrlActivityRecord';
-import { IActivityRepository, getRecordRepository } from '../core/ActivityRepository';
+import { SessionKey } from '../core/Keys';
+import { getRecordRepository } from '../core/ActivityRepository';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -270,7 +271,7 @@ describe("ActivityRepository", function () {
       
    let joinKey = process.env.JoinKey;
    throwIfUndefined (joinKey);
-   let repository = getRecordRepository(joinKey);
+   let repository = getRecordRepository(new SessionKey (joinKey));
 
    it("Needs to save a record", async function () {
 

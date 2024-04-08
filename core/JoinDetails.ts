@@ -1,6 +1,8 @@
 // Copyright (c) 2024 Braid Technologies Ltd
 import { EConfigStrings } from "./ConfigStrings";
-import { JoinPath } from "./JoinPath";
+import { SessionKey, ConversationKey } from "./Keys";
+import { Environment, EEnvironment } from './Environment';
+
 var qs = require('qs');
 
 function validateEmail(email_: string) : boolean {
@@ -13,52 +15,63 @@ function validateEmail(email_: string) : boolean {
 
 export class JoinDetails {
 
-   private _isValid: boolean;
    private _email: string;
-   private _joinPath: JoinPath;
+   private _session: SessionKey;
+   private _conversation: ConversationKey;   
 
    /**
-    * Create a JoinDetails object. A join details is in the format 'email=xxx@yyy.com&joinpath=guid/guid' . The email is used to uniquely identify the joiner, and the joinpath 
-    * specifies a key to use for basic security and a path to the actual conversation (a Fluid UUID)
-    * It can be valid with a string that looks like an email address, and a joinkey that is either partically specifiied (key only) or full specified (join key + IS for container)
+    * Create a JoinDetails object. A join details is in the format 'email=xxx@yyy.com&session=guid&conversation=guid' . The email is used to uniquely identify the joiner, the session 
+    * specifies a key to use for basic security, conversation is a Fluid UUID
+    * It can be valid with a string that looks like an email address, and a session and conversation keys that look like UUIDs
     */
    constructor(trialInput_: string) {
-
-      this._isValid = false;        
-      this._joinPath = new JoinPath("");
+   
+      this._session = new SessionKey("");
+      this._conversation = new ConversationKey("");      
       this._email = "";
 
       let parsed = qs.parse (trialInput_); 
 
       this._email = parsed.email ? parsed.email : "";
-      this._joinPath = parsed.joinpath ? new JoinPath (parsed.joinpath) : new JoinPath ("");
-
-      this._isValid = this._joinPath.isValid && validateEmail (this._email);    
+      this._session = parsed.session ? new SessionKey (parsed.session) : new SessionKey ("");
+      this._conversation = parsed.conversation ? new ConversationKey (parsed.conversation) : new ConversationKey ("");  
    }   
    
    /**
    * set of 'getters' for private variables
    */
-   get isValid(): boolean {
-      return this._isValid;
-   } 
    get email(): string  {
       return this._email;
    }
-   get joinPath(): JoinPath  {
-      return this._joinPath;
+   get session(): SessionKey  {
+      return this._session;
    }
-   get asString(): string  {
-      return JoinDetails.makeAsString (this._email, this._joinPath);
+   get conversation(): ConversationKey  {
+      return this._conversation;
+   }   
+   toString(): string  {
+      return JoinDetails.toString (this._email, this._session, this._conversation);
    }
 
-   static makeAsString (email_: string, joinPath_: JoinPath) : string {
-      return '&' + EConfigStrings.kEmailParamName + '=' +  email_ + '&' + EConfigStrings.kJoinPathParamName + '=' + joinPath_.asString;
+   isValid(): boolean {
+      let environment = Environment.environment();
+
+      // If we are running locally, allow empty conversation key -> this creates a new conversation
+      if ((environment === EEnvironment.kLocal) && this._conversation.toString().length === 0)
+         return this._session.looksValidSessionKey() && validateEmail (this._email);
+
+      return (this._session.looksValidSessionKey() && this._conversation.looksValidConversationKey() && validateEmail (this._email));          
+   } 
+
+   static toString (email_: string, session_: SessionKey, conversation_: ConversationKey) : string {
+      return '&' + EConfigStrings.kEmailParamName + '=' +  email_ 
+         + '&' + EConfigStrings.kSessionParamName + '=' + session_.toString() 
+         + '&' + EConfigStrings.kConversationParamName + '=' + conversation_.toString();
    }
 
-   static makeFromTwoParts (email_: string, joinPath_: JoinPath) {
+   static makeFromParts (email_: string, session_: SessionKey, conversation_: ConversationKey) {
 
-      return new JoinDetails (JoinDetails.makeAsString (email_, joinPath_));
+      return new JoinDetails (JoinDetails.toString (email_, session_, conversation_));
    }
   
 }

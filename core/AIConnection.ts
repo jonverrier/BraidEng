@@ -12,6 +12,7 @@ import { ConnectionError, AssertionFailedError } from "./Errors";
 import { KeyRetriever } from "./KeyRetriever";
 import { Environment, EEnvironment } from "./Environment";
 import { KnowledgeEnrichedMessage, KnowledgeRepository, kDefaultKnowledgeSegmentCount, kDefaultMinimumCosineSimilarity} from "./Knowledge";
+import { SessionKey } from "./Keys";
 
 // Actual is 2048, but leave some headroom
 const kMaxTokens : number= 1536;
@@ -207,7 +208,7 @@ export class AIConnection {
 
 export class AIConnector {
    
-   static async connect (joinKey_: string) : Promise<AIConnection> {
+   static async connect (sessionKey_: SessionKey) : Promise<AIConnection> {
 
       let retriever = new KeyRetriever ();
       var url: string;
@@ -218,8 +219,8 @@ export class AIConnector {
          url = EConfigStrings.kRequestAiKeyUrl;
 
       let aiKey = await retriever.requestKey (url, 
-                                       EConfigStrings.kRequestKeyParameterName, 
-                                       joinKey_);
+                                       EConfigStrings.kSessionParamName, 
+                                       sessionKey_);
 
       return new AIConnection (aiKey);
    }

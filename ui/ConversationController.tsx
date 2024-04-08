@@ -10,7 +10,8 @@ import { throwIfUndefined } from '../core/Asserts';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { CaucusOf } from '../core/CaucusFramework';
-import { JoinPath } from '../core/JoinPath';
+import { SessionKey, ConversationKey } from '../core/Keys';
+import { JoinDetails } from '../core/JoinDetails';
 import { JoinPageValidator } from '../core/JoinPageValidator';
 import { ConversationRow } from './ConversationRow';
 import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
@@ -24,7 +25,8 @@ import { UrlActivityRecord } from '../core/UrlActivityRecord';
 
 export interface IConversationControllerProps {
 
-   joinPath: JoinPath;
+   sessionKey: SessionKey;
+   conversationKey: ConversationKey;
    localPersona: Persona; 
    onFluidError (hint_: string) : void;   
    onAiError (hint_: string) : void;        
@@ -43,7 +45,8 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    const [audience, setAudience] = useState<Map<string, Persona>>(new Map<string, Persona>());
    const [fluidConnection, setFluidConnection] = useState<MessageBotFluidConnection | undefined>(undefined);
    const [joining, setJoining] = useState<boolean> (false);
-   const [fullJoinKey, setFullJoinKey] = useState<JoinPath> (props.joinPath);
+   const [sessionKey, setSessionKey] = useState<SessionKey> (props.sessionKey);
+   const [conversationKey, setConversationKey] = useState<ConversationKey> (props.conversationKey);   
    const [isBusy, setIsBusy] = useState<boolean>(false);
    const [suggested, setSuggested] = useState<Message|undefined>(undefined);
 
@@ -99,7 +102,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    }
 
    function initialiseConnectionState (fluidMessagesConnection_: MessageBotFluidConnection, 
-      containerId: string) : void {
+                                       conversationKey_: ConversationKey) : void {
 
       setFluidConnection (fluidMessagesConnection_);  
 
@@ -145,47 +148,45 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       fluidMessagesConnection_.participantCaucus().addObserver (addedObserverInterest);   
       fluidMessagesConnection_.participantCaucus().addObserver (removedObserverInterest);       
       
-      setFullJoinKey (JoinPath.makeFromTwoParts (props.joinPath.sessionId, containerId));  
+      setConversationKey (conversationKey_);  
 
       makeHelpfulStart (fluidMessagesConnection_);              
    }
 
    let validater = new JoinPageValidator();
 
-   if (validater.isJoinAttemptReady (props.localPersona.name, props.joinPath) && 
+   if (validater.isJoinAttemptReady (props.localPersona.name, props.sessionKey, props.conversationKey) && 
       fluidConnection === undefined 
       && !joining) {
 
       setJoining(true);
 
-      let joinKey = props.joinPath;
-
       let fluidMessagesConnection = new MessageBotFluidConnection ( {}, props.localPersona);
       
-      if (joinKey.hasSessionOnly) {
+      if (! (props.conversationKey.looksValidConversationKey())) {
 
-         fluidMessagesConnection.createNew (joinKey.sessionId).then (containerId => {
+         fluidMessagesConnection.createNew (sessionKey).then (conversationKey_ => {
         
-            initialiseConnectionState (fluidMessagesConnection, containerId);
+            initialiseConnectionState (fluidMessagesConnection, conversationKey_);
             setJoining (false);
 
          }).catch ((e : any) => {
          
-            props.onFluidError (e? e.toString() : "Error creating new conversation, " + joinKey.conversationId + ".");
+            props.onFluidError (e? e.toString() : "Error creating new conversation, " + sessionKey.toString() + ".");
             setJoining (false);
          })
       }
-      else if (joinKey.hasSessionAndConversation) {
+      else {
 
-         fluidMessagesConnection.attachToExisting (joinKey.sessionId, joinKey.conversationId).then (containerId => {
+         fluidMessagesConnection.attachToExisting (sessionKey, conversationKey).then (conversationKey_ => {
 
-            initialiseConnectionState (fluidMessagesConnection, joinKey.conversationId);
+            initialiseConnectionState (fluidMessagesConnection, conversationKey_);
          
             setJoining (false);
 
          }).catch ((e: any) => {
          
-            props.onFluidError (e? e.toString() : EUIStrings.kJoinApiError + " :" + joinKey.conversationId + ".");
+            props.onFluidError (e? e.toString() : EUIStrings.kJoinApiError + " :" + conversationKey.toString() + ".");
             setJoining (false);
          })
       }
@@ -209,6 +210,13 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       forceUpdate ();       
    }
 
+   function onExitConversation () : void {
+
+      let query = JoinDetails.toString ("", props.sessionKey, new ConversationKey(""));
+      location.replace (EConfigStrings.kHomeRelativeUrl + '#' + query);   
+      location.reload();    
+   }
+
    function onTrimConversation () : void {
 
       throwIfUndefined (fluidConnection);
@@ -218,7 +226,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    }
 
    function onClickUrl (url_: string) : void {
-      let repository = getRecordRepository(props.joinPath.sessionId);
+      let repository = getRecordRepository(props.sessionKey);
       let email = props.localPersona.name;
       let record = new UrlActivityRecord (undefined, email, new Date(), url_);
       repository.save (record);   
@@ -269,7 +277,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
          setIsBusy(true);
 
-         let connectionPromise = AIConnector.connect (props.joinPath.sessionId);
+         let connectionPromise = AIConnector.connect (props.sessionKey);
 
          connectionPromise.then ( (connection : AIConnection) => {
 
@@ -297,7 +305,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
             });            
 
          }).catch ( (e: any) => {
-            props.onAiError (EUIStrings.kJoinApiError + " :" + props.joinPath.sessionId + ".");
+            props.onAiError (EUIStrings.kJoinApiError + " :" + props.sessionKey.toString() + ".");
             setIsBusy(false);             
          });
       }
@@ -322,21 +330,23 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    let joinValidator = new JoinPageValidator ();
 
-   if (! joinValidator.isJoinAttemptReady (props.localPersona.name, props.joinPath)) {
+   if (! joinValidator.isJoinAttemptReady (props.localPersona.name, props.sessionKey, props.conversationKey)) {
       return (<div></div>);
    }
    else
       return (
          <ConversationRow 
-             isConnected={fullJoinKey.isValid && fullJoinKey.hasSessionAndConversation}
+             isConnected={sessionKey.looksValidSessionKey() && conversationKey.looksValidConversationKey()}
              isBusy = {isBusy}
-             joinPath={fullJoinKey}
+             sessionKey={sessionKey}
+             conversationKey={conversationKey}
              conversation={conversation}
              audience={audience} 
              hasSuggestedContent={suggested ? true: false}
              onSend={onSend} 
              onAddSuggestedContent={onAddSuggestedContent}
              onTrimConversation={onTrimConversation}
+             onExitConversation={onExitConversation}             
              onClickUrl={onClickUrl}
              >
          </ConversationRow>

@@ -5,6 +5,7 @@ import { Message} from '../core/Message';
 import { KnowledgeSegment } from '../core/Knowledge';
 import { Persona} from '../core/Persona';
 import { EIcon } from '../core/Icons';
+import { SessionKey } from '../core/Keys';
 import { KStubEnvironmentVariables} from '../core/ConfigStrings'; 
 import { EEnvironment, Environment } from '../core/Environment';
 import { AIConnection, AIConnector } from '../core/AIConnection';
@@ -174,7 +175,7 @@ describe("AIConnector", function () {
 
       let caught = false;
       try {
-         let connection = await AIConnector.connect (KStubEnvironmentVariables.JoinKey);
+         let connection = await AIConnector.connect (new SessionKey(KStubEnvironmentVariables.SessionKey));
       }
       catch (e) {
          caught = true;
@@ -190,7 +191,7 @@ describe("AIConnector", function () {
       let oldEnv = Environment.override (EEnvironment.kProduction);
 
       try {
-         let connection = await AIConnector.connect (KStubEnvironmentVariables.JoinKey);
+         let connection = await AIConnector.connect (new SessionKey(KStubEnvironmentVariables.SessionKey));
       }
       catch (err) {
          caught = true;
@@ -209,7 +210,7 @@ describe("AIConnector", function () {
       let oldEnv = Environment.override (EEnvironment.kProduction);
 
       try {
-         let connection = await AIConnector.connect ("thiswillfail");
+         let connection = await AIConnector.connect (new SessionKey ("thiswillfail"));
       }
       catch (err) {
          caught = true;
