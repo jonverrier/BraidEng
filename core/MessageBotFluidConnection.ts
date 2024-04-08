@@ -120,9 +120,15 @@ export class MessageBotFluidConnection extends FluidConnection {
          let current = participantCaucus.currentAsArray();
          let found = false;
 
-         for (let i = 0; i < current.length && !found; i++) {
+         for (let i = 0; i < current.length && !found; i++) {        
             if ((this._localUser.email === current[i].email ) && 
-               (!this.localWinsGlareCheck (this._localUser.id, current[i].id))) {
+               (!this.localWinsGlareCheck (this._localUser.id, current[i].id))) { 
+               
+               // last case is a backwards compatibility hack - we added participants with no name but low UUIDs that keep winning the glare test                     
+               if ((current[i].name === undefined) || (current[i].name.length === 0)) {
+                  current[i].name = this._localUser.name;
+                  participantCaucus.amend (current[i].id, current[i]);
+               }
                found = true;
                this._localUser.assign (current[i]);
             }
