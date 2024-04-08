@@ -63,7 +63,7 @@ describe("Caucus", function () {
 
       newConnection = new MessageBotFluidConnection({}, persona);
 
-      let checked = process.env.JoinKey;
+      let checked = process.env.SessionKey;
       throwIfUndefined(checked);
       id = await newConnection.createNew(new SessionKey (checked));
 

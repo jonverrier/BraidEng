@@ -269,9 +269,9 @@ describe("ActivityRepository", function () {
       this.timeout(10000);
    });
       
-   let joinKey = process.env.JoinKey;
-   throwIfUndefined (joinKey);
-   let repository = getRecordRepository(new SessionKey (joinKey));
+   let sessionKey = process.env.SessionKey;
+   throwIfUndefined (sessionKey);
+   let repository = getRecordRepository(new SessionKey (sessionKey));
 
    it("Needs to save a record", async function () {
 

@@ -11,9 +11,9 @@ export class JoinPageValidator {
    }   
 
    // Looks at the name and keys provided, and returns true if the data looks ready to join a conversation, else false.
-   isJoinAttemptReady  (email_: string, session_: SessionKey, conversation_: ConversationKey) : boolean {
+   isJoinAttemptReady  (email_: string, name_: string, session_: SessionKey, conversation_: ConversationKey) : boolean {
 
-      let details = JoinDetails.makeFromParts (email_, session_, conversation_);    
+      let details = JoinDetails.makeFromParts (email_, name_, session_, conversation_);    
 
       return details.isValid();
    }

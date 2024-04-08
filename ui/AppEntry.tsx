@@ -63,6 +63,7 @@ export const App = (props: IAppProps) => {
    
    let joinAttempt = new JoinDetails (hashValue);
    localUserPersona.email = joinAttempt.email; 
+   localUserPersona.name = joinAttempt.name;
 
    const [lastMessage, setLastMessage] = useState<string>("");
    const [lastMessageType, setLastMessageType] = useState<EMainPageMessageTypes> (EMainPageMessageTypes.kNothing);
@@ -81,7 +82,8 @@ export const App = (props: IAppProps) => {
       setConversationKey (conversationKey_);
 
       // Start the login process by redirecting to the login API
-      let query = JoinDetails.toString ("", sessionKey_, conversationKey_);
+      // with no email address and no name bcs thats what we get from login
+      let query = JoinDetails.toString ("", "", sessionKey_, conversationKey_);
       location.replace (EConfigStrings.kLoginRelativeUrl + '?' + query);
    }
 

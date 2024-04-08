@@ -16,6 +16,7 @@ function validateEmail(email_: string) : boolean {
 export class JoinDetails {
 
    private _email: string;
+   private _name: string;
    private _session: SessionKey;
    private _conversation: ConversationKey;   
 
@@ -29,10 +30,12 @@ export class JoinDetails {
       this._session = new SessionKey("");
       this._conversation = new ConversationKey("");      
       this._email = "";
+      this._name = "";
 
       let parsed = qs.parse (trialInput_); 
 
       this._email = parsed.email ? parsed.email : "";
+      this._name = parsed.name ? parsed.name: "";
       this._session = parsed.session ? new SessionKey (parsed.session) : new SessionKey ("");
       this._conversation = parsed.conversation ? new ConversationKey (parsed.conversation) : new ConversationKey ("");  
    }   
@@ -43,6 +46,9 @@ export class JoinDetails {
    get email(): string  {
       return this._email;
    }
+   get name(): string  {
+      return this._name;
+   }   
    get session(): SessionKey  {
       return this._session;
    }
@@ -50,7 +56,7 @@ export class JoinDetails {
       return this._conversation;
    }   
    toString(): string  {
-      return JoinDetails.toString (this._email, this._session, this._conversation);
+      return JoinDetails.toString (this._email, this._name, this._session, this._conversation);
    }
 
    isValid(): boolean {
@@ -63,15 +69,16 @@ export class JoinDetails {
       return (this._session.looksValidSessionKey() && this._conversation.looksValidConversationKey() && validateEmail (this._email));          
    } 
 
-   static toString (email_: string, session_: SessionKey, conversation_: ConversationKey) : string {
+   static toString (email_: string, name_: string, session_: SessionKey, conversation_: ConversationKey) : string {
       return '&' + EConfigStrings.kEmailParamName + '=' +  email_ 
+         + '&' + EConfigStrings.kNameParamName + '=' +  name_ 
          + '&' + EConfigStrings.kSessionParamName + '=' + session_.toString() 
          + '&' + EConfigStrings.kConversationParamName + '=' + conversation_.toString();
    }
 
-   static makeFromParts (email_: string, session_: SessionKey, conversation_: ConversationKey) {
+   static makeFromParts (email_: string, name_: string, session_: SessionKey, conversation_: ConversationKey) {
 
-      return new JoinDetails (JoinDetails.toString (email_, session_, conversation_));
+      return new JoinDetails (JoinDetails.toString (email_, name_, session_, conversation_));
    }
   
 }

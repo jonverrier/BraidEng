@@ -6,10 +6,10 @@ export enum EConfigStrings {
    kApiLogCategory = "API",
    kDbLogCategory = "DB",   
 
-   kRequestJoinKeyUrl = "https://braidapps.io/api/joinkey",
+   kRequestSessionKeyUrl = "https://braidapps.io/api/joinkey",
    kRequestAiKeyUrl = "https://braidapps.io/api/aikey",   
    kRequestDbKeyUrl = "https://braidapps.io/api/dbkey",
-   kRequestLocalJoinKeyUrl = "http://localhost:1337/api/joinkey",
+   kRequestLocalSessionKeyUrl = "http://localhost:1337/api/joinkey",
    kRequestLocalAiKeyUrl = "http://localhost:1337/api/aikey",  
    kRequestLocalDbKeyUrl = "http://localhost:1337/api/dbkey",      
    kLoginRelativeUrl= "/api/login",
@@ -34,6 +34,7 @@ export enum EConfigStrings {
    kSessionParamName = "session",
    kConversationParamName = "conversation",   
    kEmailParamName = "email",
+   kNameParamName = "name",
 
    kCohort1ConversationKey = "d94c8521-b234-4679-8b8f-93bcc0a221b7",
    kCohort1Team1ConversationKey = "1591d257-f836-4faf-bdb7-703b02539b95",   
