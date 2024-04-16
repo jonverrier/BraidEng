@@ -5,9 +5,11 @@ import { Message} from '../core/Message';
 import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 import { KnowledgeSegment } from '../core/Knowledge';
+import { logApiError } from '../core/Logging';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
+import axios from "axios";
 
 var keyGenerator: IKeyGenerator = new UuidKeyGenerator();
 
@@ -221,4 +223,51 @@ describe("Message", function () {
       expect(messageWithSources.isDirty).toEqual(false);       
    });    
 
+});
+
+describe("MessageAPI", function () {
+
+   it("Needs to call local server API.", async function () {
+
+      let ok = false;
+
+      try {
+         let resp = await axios.get('http://localhost:1337/api/message', {
+            params: {
+               session: process.env.SessionKey
+            },
+            withCredentials: false
+         });
+
+         ok = true;
+      }
+      catch(error: any) {  
+
+         logApiError ("Error calling local message API:", error);       
+      };  
+
+      expect(ok).toEqual(true);
+   });  
+   
+   it("Needs to call production server API.", async function () {
+
+      let ok = false;
+
+      try {
+         let resp = await axios.get('https://braidapps.io/api/message', {
+            params: {
+               session: process.env.SessionKey
+            },
+            withCredentials: false
+         });
+
+         ok = true;
+      }
+      catch(error: any) {  
+
+         logApiError ("Error calling production message API:", error);       
+      };  
+
+      expect(ok).toEqual(true);
+   });    
 });
