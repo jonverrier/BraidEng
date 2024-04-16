@@ -131,8 +131,7 @@ describe("KeyRetriever", function () {
 
       let retriever = new KeyRetriever(); 
 
-      expect(retriever.isBusy()).toEqual(false);   
-         
+      expect(retriever.isBusy()).toEqual(false);            
    });    
  
 });
