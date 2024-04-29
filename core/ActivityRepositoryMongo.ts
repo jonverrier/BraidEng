@@ -1,10 +1,6 @@
 // Copyright (c) 2024 Braid Technologies Ltd
 
 // 3rd party imports
-//import * as Realm from "realm-web";
-//const {
-//   BSON: { ObjectId },
-// } = Realm;
 import axios from "axios";
 
 
@@ -16,19 +12,10 @@ import { logDbError, logApiError } from "./Logging";
 import { ActivityRecord } from './ActivityRecord';
 import { UrlActivityRecord } from "./UrlActivityRecord";
 import { SessionKey } from "./Keys";
-
-export interface IActivityRepository {
-
-   save (record : ActivityRecord) : Promise<boolean>;
-   loadRecent (count : number) : Promise<Array<ActivityRecord>>;
-}
-
-export function getRecordRepository (sessionKey_: SessionKey) : IActivityRepository {
-   return new ActivityRepository(sessionKey_);   
-}
+import { IActivityRepository } from "./IActivityRepository";
 
 // ActivityRecord - email of a person and a datestamp. Will have many derived classes according to different activity types. 
-export class ActivityRepository implements IActivityRepository {
+export class ActivityRepositoryMongo implements IActivityRepository {
 
    private _dbkey: string | undefined;
    private _sessionKey: SessionKey;
