@@ -4,7 +4,7 @@ import { MDynamicStreamable } from '../core/StreamingFramework';
 import { ActivityRecord} from '../core/ActivityRecord';
 import { UrlActivityRecord } from '../core/UrlActivityRecord';
 import { SessionKey } from '../core/Keys';
-import { getRecordRepository } from '../core/ActivityRepository';
+import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';

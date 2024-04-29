@@ -20,7 +20,7 @@ import { AIConnection, AIConnector } from '../core/AIConnection';
 import { EUIStrings } from './UIStrings';
 import { EConfigNumbers, EConfigStrings } from '../core/ConfigStrings';
 import { KnowledgeEnrichedMessage, KnowledgeSegment, KnowledgeRepository } from '../core/Knowledge';
-import { getRecordRepository } from '../core/ActivityRepository';
+import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 import { UrlActivityRecord } from '../core/UrlActivityRecord';
 
 export interface IConversationControllerProps {

@@ -8,10 +8,10 @@ export enum EConfigStrings {
 
    kRequestSessionKeyUrl = "https://braidapps.io/api/joinkey",
    kRequestAiKeyUrl = "https://braidapps.io/api/aikey",   
-   kRequestDbKeyUrl = "https://braidapps.io/api/dbkey",
+   kRequestDbKeyUrl = "https://braidapps.io/api/mdbkey",
    kRequestLocalSessionKeyUrl = "http://localhost:1337/api/joinkey",
    kRequestLocalAiKeyUrl = "http://localhost:1337/api/aikey",  
-   kRequestLocalDbKeyUrl = "http://localhost:1337/api/dbkey",      
+   kRequestLocalDbKeyUrl = "http://localhost:1337/api/mdbkey",      
    kLoginRelativeUrl= "/api/login",
    kHomeRelativeUrl= "/aibot.html",   
    
