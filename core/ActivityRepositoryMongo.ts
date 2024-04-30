@@ -44,9 +44,9 @@ export class ActivityRepositoryMongo implements IActivityRepository {
       var url: string;
 
       if (Environment.environment() === EEnvironment.kLocal)
-         url = EConfigStrings.kRequestLocalDbKeyUrl;
+         url = EConfigStrings.kRequestLocalMongoDbKeyUrl;
       else
-         url = EConfigStrings.kRequestDbKeyUrl;
+         url = EConfigStrings.kRequestMongoDbKeyUrl;
       
       let self = this;
 

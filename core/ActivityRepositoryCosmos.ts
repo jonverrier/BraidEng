@@ -90,9 +90,9 @@ export class ActivityRepositoryCosmos implements IActivityRepository {
       var url: string;
 
       if (Environment.environment() === EEnvironment.kLocal)
-         url = EConfigStrings.kRequestLocalCosmosDbPutKeyUrl;
+         url = EConfigStrings.kRequestLocalCosmosDbKeyUrl;
       else
-         url = EConfigStrings.kRequestCosmosDbPutKeyUrl;
+         url = EConfigStrings.kRequestCosmosDbKeyUrl;
       
       let self = this;
 

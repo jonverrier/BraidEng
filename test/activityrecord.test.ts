@@ -5,6 +5,7 @@ import { ActivityRecord} from '../core/ActivityRecord';
 import { UrlActivityRecord } from '../core/UrlActivityRecord';
 import { SessionKey } from '../core/Keys';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
+import { ActivityRepositoryCosmos } from '../core/ActivityRepositoryCosmos';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -290,5 +291,38 @@ describe("ActivityRepository", function () {
 
       expect(true).toEqual(true);     
    });  
+
+});
+
+describe("ActivityRepositoryCosmos", function () {
+
+   this.timeout(10000);
+
+   beforeEach(async () => {
+
+      this.timeout(10000);
+   });
+      
+   let sessionKey = process.env.SessionKey;
+   throwIfUndefined (sessionKey);
+   let repository = new ActivityRepositoryCosmos (new SessionKey (sessionKey));
+
+   it("Needs to save a record", async function () {
+
+      var activity = new UrlActivityRecord(undefined, "jonathanverrier@hotmail.com", new Date(), 
+                                 "https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md");
+
+      let saved = await repository.save (activity);
+
+      expect(saved).toEqual(true);     
+   });
+
+
+   /* it("Needs to load a record", async function () {
+
+      let loaded = await repository.loadRecent (3);
+
+      expect(true).toEqual(true);     
+   });  */
 
 });
