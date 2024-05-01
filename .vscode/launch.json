@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "stopOnEntry": false,
-            "args": [ "-r", "ts-node/register", "${workspaceRoot}/test/message*.ts", "--no-timeouts"],
+            "args": [ "-r", "ts-node/register", "${workspaceRoot}/test/activity*.ts", "--no-timeouts"],
             "cwd": "${workspaceRoot}"
         }
     ]

@@ -65,6 +65,11 @@ export class UrlActivityRecord extends ActivityRecord {
       return urlActivityRecordClassName;
    }
 
+   static className(): string {
+
+      return urlActivityRecordClassName;
+   }
+
    static createDynamicInstance(): MDynamicStreamable {
       return new UrlActivityRecord();
    }

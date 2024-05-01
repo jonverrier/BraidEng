@@ -9,7 +9,7 @@ export enum EConfigStrings {
    kRequestSessionKeyUrl = "https://braidapps.io/api/joinkey",
    kRequestAiKeyUrl = "https://braidapps.io/api/aikey",   
    kRequestMongoDbKeyUrl = "https://braidapps.io/api/mdbkey",
-   kRequestCosmosDbKeyUrl = "https://braidapps.io/api/sdbkey",   
+   kRequestCosmosDbKeyUrl = "https://braidapps.io/api/cdbkey",   
    kRequestLocalSessionKeyUrl = "http://localhost:1337/api/joinkey",
    kRequestLocalAiKeyUrl = "http://localhost:1337/api/aikey",  
    kRequestLocalMongoDbKeyUrl = "http://localhost:1337/api/mdbkey",    

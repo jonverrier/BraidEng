@@ -5,20 +5,22 @@ import { ActivityRecord} from '../core/ActivityRecord';
 import { UrlActivityRecord } from '../core/UrlActivityRecord';
 import { SessionKey } from '../core/Keys';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
-import { ActivityRepositoryCosmos } from '../core/ActivityRepositoryCosmos';
+import { ActivityRepositoryMongo } from '../core/ActivityRepositoryMongo';
+import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
 import { throwIfUndefined } from '../core/Asserts';
 
+const keyGenerator = new UuidKeyGenerator();
 
 var myId: string = "1234";
 var myEmail: string = "Jon";
-var myHappenedAt = new Date();
+var myHappenedAt = ActivityRecord.makeDateUTC (new Date());
 
 var someoneElsesId: string = "5678";
 var someoneElsesEmail: string = "Barry";
-var someoneElsesHappenedAt = new Date();
+var someoneElsesHappenedAt = ActivityRecord.makeDateUTC (new Date());
 
 describe("ActivityRecord", function () {
 
@@ -104,7 +106,7 @@ describe("ActivityRecord", function () {
 
       activityNew.id = someoneElsesId;
       activityNew.email = someoneElsesEmail;
-      activityNew.happenedAt = someoneElsesHappenedAt;
+      activityNew.happenedAt = ActivityRecord.makeDateUTC (someoneElsesHappenedAt);
 
       expect(activity2.equals (activityNew)).toEqual(true);
    });
@@ -276,7 +278,8 @@ describe("ActivityRepository", function () {
 
    it("Needs to save a record", async function () {
 
-      var activity = new UrlActivityRecord(undefined, "jonathanverrier@hotmail.com", new Date(), 
+      var activity = new UrlActivityRecord(keyGenerator.generateKey(), 
+                                 "jonathanverrier@hotmail.com", new Date(), 
                                  "https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md");
 
       let saved = await repository.save (activity);
@@ -294,7 +297,7 @@ describe("ActivityRepository", function () {
 
 });
 
-describe("ActivityRepositoryCosmos", function () {
+describe("ActivityRepositoryMongo", function () {
 
    this.timeout(10000);
 
@@ -305,11 +308,12 @@ describe("ActivityRepositoryCosmos", function () {
       
    let sessionKey = process.env.SessionKey;
    throwIfUndefined (sessionKey);
-   let repository = new ActivityRepositoryCosmos (new SessionKey (sessionKey));
+   let repository = new ActivityRepositoryMongo (new SessionKey (sessionKey));
 
    it("Needs to save a record", async function () {
 
-      var activity = new UrlActivityRecord(undefined, "jonathanverrier@hotmail.com", new Date(), 
+      var activity = new UrlActivityRecord(keyGenerator.generateKey(), 
+                                 "jonathanverrier@hotmail.com", new Date(), 
                                  "https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md");
 
       let saved = await repository.save (activity);
@@ -318,11 +322,11 @@ describe("ActivityRepositoryCosmos", function () {
    });
 
 
-   /* it("Needs to load a record", async function () {
+   it("Needs to load a record", async function () {
 
       let loaded = await repository.loadRecent (3);
 
       expect(true).toEqual(true);     
-   });  */
+   });  
 
 });

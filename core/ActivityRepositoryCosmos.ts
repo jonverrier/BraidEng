@@ -16,7 +16,7 @@ import { SessionKey } from "./Keys";
 import { IActivityRepository } from "./IActivityRepository";
 import { throwIfUndefined } from "./Asserts";
 
-const partitionKey = "6ea3299d987b4b33a1c0b079a833206f";
+const defaultPartitionKey = "6ea3299d987b4b33a1c0b079a833206f";
 
 var crypto = require("crypto");  
   
@@ -42,22 +42,21 @@ function getAuthorizationTokenUsingMasterKey(verb: string, resourceType: string,
     return encoded;
 }
 
-function activityToken(verb: string, time: string) { 
+function activityToken(verb: string, time: string, key: string) { 
 
-   let key = process.env.CosmosApiKey;
    throwIfUndefined(key);
    return getAuthorizationTokenUsingMasterKey( verb, "docs", "dbs/BraidLms/colls/Activity", time, 
                                                key);
 }
 
-function postActivityToken(time: string) { 
+function makePostActivityToken(time: string, key: string) { 
 
-   return activityToken( "post", time);
+   return activityToken( "post", time, key);
 }
 
-function getActivityToken(time: string) { 
+function makeGetActivityToken(time: string, key: string) { 
 
-   return activityToken( "get", time);
+   return activityToken( "get", time, key);
 }
 
 // ActivityRecord - email of a person and a datestamp. Will have many derived classes according to different activity types. 
@@ -133,17 +132,18 @@ export class ActivityRepositoryCosmos implements IActivityRepository {
       let done = new Promise<boolean>(function(resolve, reject) {
 
          let time = new Date().toUTCString();
-         let stream = record.streamOut ();
+         let stream = record.flatten ();
          let document = JSON.parse(stream);
-         let key = postActivityToken(time); // self._dbkey;
+         document.data = JSON.parse(document.data);
 
-         let obj = {
-            id: "1234",
-            partition: "1234"
-         };
+         throwIfUndefined(self._dbkey); // Keep compiler happy, should not be able to get here with actual undefined key. 
+         let key = makePostActivityToken(time, self._dbkey); 
+
+         document.partition = defaultPartitionKey; // Dont need real partitions until 10 GB ... 
+         document.id = document.data.id; // Need to copy ID up from activity object, since MDynamicallyStreamable streams only the class name. 
 
          axios.post('https://braidlms.documents.azure.com/dbs/BraidLms/colls/Activity/docs', 
-         obj,
+         document,
          {
             headers: {                  
                "Authorization": key,
@@ -153,7 +153,7 @@ export class ActivityRepositoryCosmos implements IActivityRepository {
                "x-ms-version" : "2018-12-31",
                "Cache-Control": "no-cache",
                "x-ms-documentdb-is-upsert" : "True",
-               "x-ms-documentdb-partitionkey" : "[\"1234\"]",
+               "x-ms-documentdb-partitionkey" : "[\"" + defaultPartitionKey + "\"]", 
                "x-ms-consistency-level" : "Eventual"
             }              
          })
@@ -182,33 +182,46 @@ export class ActivityRepositoryCosmos implements IActivityRepository {
 
       let done = new Promise<Array<ActivityRecord>>(function(resolve, reject) {
 
-         let key = self._dbkey;
+         let time = new Date().toUTCString();
+         throwIfUndefined(self._dbkey); // Keep compiler happy, should not be able to get here with actual undefined key. 
+         let key = makePostActivityToken(time, self._dbkey);         
+         let query = "SELECT * FROM Activity a WHERE a.className = @className ORDER BY a.happenedAt DESC OFFSET 0 LIMIT " + count.toString();
 
-         axios.post('https://eu-west-1.aws.data.mongodb-api.com/app/braidlmsclient-fsivu/endpoint/data/v1/action/find', 
-         {   
-            "dataSource": "mongodb-atlas",
-            "database": "BraidLms",
-            "collection": "Activity",
-            "sort": { "happenedAt": -1 },
-            "limit": count     
-          },
-          {
-             headers: {                  
-               "Content-Type": "application/ejson",                  
-               "Accept": "application/json",
-               'Authorization': `Bearer ${key}`               
+         axios.post('https://braidlms.documents.azure.com/dbs/BraidLms/colls/Activity/docs', 
+         {
+            "query": query,  
+            "parameters": [  
+              {  
+                "name": "@className",  
+                "value": UrlActivityRecord.className()
+              }
+            ]  
+         },
+         {
+            headers: {                  
+               "Authorization": key,
+               "Content-Type": "application/query+json",    
+               "Accept": "application/json",               
+               "x-ms-date": time,
+               "x-ms-version" : "2018-12-31",
+               "Cache-Control": "no-cache",
+               "x-ms-documentdb-partitionkey" : "[\"" + defaultPartitionKey + "\"]", 
+               "x-ms-consistency-level" : "Eventual",
+               "x-ms-documentdb-isquery" : "True"
             }              
          })
          .then((resp : any) => {
 
-            let responseRecords = resp.data.documents;
+            console.log (resp.data);
+
+            let responseRecords = resp.data.Documents;
             let records = new Array<ActivityRecord>();
 
             for (let i = 0; i < responseRecords.length; i++) {
-               let record = new UrlActivityRecord(responseRecords[i]._id,
-                  responseRecords[i].email, 
-                  responseRecords[i].happenedAt, 
-                  responseRecords[i].url);
+               let record = new UrlActivityRecord(responseRecords[i].id,
+                  responseRecords[i].data.email, 
+                  responseRecords[i].data.happenedAt, 
+                  responseRecords[i].data.url);
                records.push (record);
             }
 
@@ -217,7 +230,7 @@ export class ActivityRepositoryCosmos implements IActivityRepository {
          .catch((error: any) => {   
 
             logDbError ("Error calling database:", error);   
-            resolve(new Array<ActivityRecord> ());     
+            reject(new Array<ActivityRecord> ());     
          });  
       });
    

@@ -88,6 +88,7 @@ export class ActivityRepositoryMongo implements IActivityRepository {
 
          let stream = record.streamOut ();
          let document = JSON.parse(stream);
+         delete document.id; // Let Mongo put a new ID on for insert
          let key = self._dbkey;
 
          axios.post('https://eu-west-1.aws.data.mongodb-api.com/app/braidlmsclient-fsivu/endpoint/data/v1/action/insertOne', 
@@ -151,7 +152,8 @@ export class ActivityRepositoryMongo implements IActivityRepository {
             let records = new Array<ActivityRecord>();
 
             for (let i = 0; i < responseRecords.length; i++) {
-               let record = new UrlActivityRecord(responseRecords[i]._id,
+               let record = new UrlActivityRecord(
+                  responseRecords[i]._id.toString(),
                   responseRecords[i].email, 
                   responseRecords[i].happenedAt, 
                   responseRecords[i].url);
@@ -163,7 +165,7 @@ export class ActivityRepositoryMongo implements IActivityRepository {
          .catch((error: any) => {   
 
             logDbError ("Error calling database:", error);   
-            resolve(new Array<ActivityRecord> ());     
+            reject(new Array<ActivityRecord> ());     
          });  
       });
    
