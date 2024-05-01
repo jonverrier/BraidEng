@@ -409,7 +409,7 @@ export class KnowledgeRepository  {
       let segmentCandidate : KnowledgeSegment | undefined = undefined;
       let haveUrl = true;
 
-      // If e do not have a history, provide a helpful start point 
+      // If we do not have a history, provide a helpful start point 
       if (!url_) {
          haveUrl = false;
          url_ = "https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md";         

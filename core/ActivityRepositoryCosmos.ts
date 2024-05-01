@@ -2,8 +2,6 @@
 
 // 3rd party imports
 import axios from "axios";
-import { DefaultAzureCredential, ClientSecretCredential } from "@azure/identity";
-import { CosmosClient } from '@azure/cosmos';
 
 // Internal imports
 import { Environment, EEnvironment } from "./Environment";
@@ -18,8 +16,9 @@ import { throwIfUndefined } from "./Asserts";
 
 const defaultPartitionKey = "6ea3299d987b4b33a1c0b079a833206f";
 
-var crypto = require("crypto");  
-  
+var crypto = require("crypto-browserify");  
+export var stream = require("stream-browserify");  
+
 function getAuthorizationTokenUsingMasterKey(verb: string, resourceType: string, resourceId: string, date: string, masterKey: string) {  
 
     var key = Buffer.from(masterKey, "base64");  

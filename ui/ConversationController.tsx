@@ -227,6 +227,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    }
 
    function onClickUrl (url_: string) : void {
+      
       let repository = getRecordRepository(props.sessionKey);
       let email = props.localPersona.name;
       let record = new UrlActivityRecord (undefined, email, new Date(), url_);

@@ -1,6 +1,8 @@
 
 //var nodeExternals = require('webpack-node-externals');
 
+const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
+
 module.exports = {
    devtool: 'source-map',
    entry: "./ui/AppEntry.tsx",
@@ -12,6 +14,9 @@ module.exports = {
       devtoolModuleFilenameTemplate: '[resource-path]',  // removes the webpack:/// prefix
       libraryTarget: 'window'
    },
+   plugins: [
+      new NodePolyfillPlugin()
+   ],   
    resolve: {
       extensions: ['.tsx', '.ts', '.js']
    },

@@ -280,7 +280,7 @@ describe("ActivityRepository", function () {
 
       var activity = new UrlActivityRecord(keyGenerator.generateKey(), 
                                  "jonathanverrier@hotmail.com", new Date(), 
-                                 "https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md");
+                                 "https://test.cosmos");
 
       let saved = await repository.save (activity);
 
@@ -314,7 +314,7 @@ describe("ActivityRepositoryMongo", function () {
 
       var activity = new UrlActivityRecord(keyGenerator.generateKey(), 
                                  "jonathanverrier@hotmail.com", new Date(), 
-                                 "https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md");
+                                 "https://test.mongo");
 
       let saved = await repository.save (activity);
 
