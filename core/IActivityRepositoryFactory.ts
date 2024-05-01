@@ -4,9 +4,10 @@
 import { SessionKey } from "./Keys";
 import { IActivityRepository } from "./IActivityRepository";
 import { ActivityRepositoryMongo } from "./ActivityRepositoryMongo";
+import { ActivityRepositoryCosmos } from "./ActivityRepositoryCosmos";
 
 export function getRecordRepository (sessionKey_: SessionKey) : IActivityRepository {
-   return new ActivityRepositoryMongo(sessionKey_);   
+   return new ActivityRepositoryCosmos(sessionKey_);   
 }
 
 

@@ -2,9 +2,10 @@
 
 import { InvalidParameterError } from './Errors';
 import { MDynamicStreamable, DynamicStreamableFactory } from "./StreamingFramework";
+import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 
 const activityRecordClassName = "ActivityRecord";
-
+const keyGenerator = new UuidKeyGenerator();
 
 // ActivityRecord - email of a person and a datestamp. Will have many derived classes according to different activity types. 
 export class ActivityRecord extends MDynamicStreamable {
@@ -37,9 +38,9 @@ export class ActivityRecord extends MDynamicStreamable {
       super();
 
       if (arr.length === 0) {
-         this._id = undefined; // A new ActivityRecord has no key as that is assgned in the DB 
+         this._id = keyGenerator.generateKey(); // A new ActivityRecord has a key
          this._email = "";     // But not a name 
-         this._happenedAt = new Date();
+         this._happenedAt = ActivityRecord.makeDateUTC (new Date());
          return;
       }
 
@@ -67,7 +68,7 @@ export class ActivityRecord extends MDynamicStreamable {
 
       this._id = localId;
       this._email = localEmail;
-      this._happenedAt = localHappenedAt;
+      this._happenedAt = ActivityRecord.makeDateUTC (localHappenedAt);     
    }
 
    /**
@@ -85,7 +86,8 @@ export class ActivityRecord extends MDynamicStreamable {
    static _dynamicStreamableFactory: DynamicStreamableFactory = new DynamicStreamableFactory(activityRecordClassName, ActivityRecord.createDynamicInstance);
    streamOut(): string {
 
-      return JSON.stringify({ id: this._id, email: this._email, happenedAt: this._happenedAt });
+      return JSON.stringify({ id: this._id, email: this._email, 
+         happenedAt: this._happenedAt.toUTCString() });   // US UTC as Cosmos DB does not really understand dates. 
    }
 
    streamIn(stream: string): void {
@@ -129,7 +131,7 @@ export class ActivityRecord extends MDynamicStreamable {
 
    set happenedAt(happenedAt_: Date) {
 
-      this._happenedAt = new Date(happenedAt_);
+      this._happenedAt = ActivityRecord.makeDateUTC (happenedAt_);
    }
 
    /**
@@ -144,7 +146,11 @@ export class ActivityRecord extends MDynamicStreamable {
    }
 
    areSameDate (lhs: Date, rhs : Date) : boolean {
-      if (lhs.getTime() === rhs.getTime()) {
+
+      let l = lhs.getTime();
+      let r = rhs.getTime();
+
+      if (l === r) {
          return true;
       }
       return false;
@@ -186,5 +192,11 @@ export class ActivityRecord extends MDynamicStreamable {
          return false;
 
       return true; // Currently allow anything, even empty string. 
+   }
+
+   static makeDateUTC(rhs: Date) : Date {
+      let d = new Date (rhs);
+      d.setMilliseconds(0); // MSecs are not used in UTC, and Cosmos DB recommends UTC
+      return d;
    }
 }

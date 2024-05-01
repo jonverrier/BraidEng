@@ -55,11 +55,11 @@ export class KeyRetriever {
          
          this.activeCallCount--;
    
-         logApiError (EConfigStrings.kErrorConnectingToKeyAPI, e);           
+         logApiError (EConfigStrings.kErrorConnectingToKeyAPI + ":" + apiUrl_, e);           
       }
 
       if (!response || !response.data)
-         throw new ConnectionError(EConfigStrings.kErrorConnectingToKeyAPI);      
+         throw new ConnectionError(EConfigStrings.kErrorConnectingToKeyAPI + ":" + apiUrl_);      
       
       return response.data as string;
    }    
