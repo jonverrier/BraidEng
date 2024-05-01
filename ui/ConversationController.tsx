@@ -22,6 +22,7 @@ import { EConfigNumbers, EConfigStrings } from '../core/ConfigStrings';
 import { KnowledgeEnrichedMessage, KnowledgeSegment, KnowledgeRepository } from '../core/Knowledge';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 import { UrlActivityRecord } from '../core/UrlActivityRecord';
+import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 
 export interface IConversationControllerProps {
 
@@ -228,9 +229,11 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    function onClickUrl (url_: string) : void {
       
+      let keyGenerator = new UuidKeyGenerator();
+
       let repository = getRecordRepository(props.sessionKey);
       let email = props.localPersona.name;
-      let record = new UrlActivityRecord (undefined, email, new Date(), url_);
+      let record = new UrlActivityRecord (keyGenerator.generateKey(), email, new Date(), url_);
       repository.save (record);   
       
       let suggested = KnowledgeRepository.lookForSuggestedContent (url_);
