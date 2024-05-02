@@ -36,7 +36,7 @@ export class ConversationKey {
    private _conversationId: string;
 
    /**
-    * Create a SessionKey object. A join key is a GUID - this class just makes a type wrapper round a string. 
+    * Create a ConversationKey object. A ConversationKey is a GUID - this class just makes a type wrapper round a string. 
     */
    constructor(trialInput_: string) {
 

@@ -7,9 +7,10 @@ import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 const activityRecordClassName = "ActivityRecord";
 const keyGenerator = new UuidKeyGenerator();
 
-// ActivityRecord - email of a person and a datestamp. Will have many derived classes according to different activity types. 
+// ActivityRecord - conversation ID, email of a person and a datestamp. Will have many derived classes according to different activity types. 
 export class ActivityRecord extends MDynamicStreamable {
    private _id: string | undefined;
+   private _conversationId: string | undefined;
    private _email: string;
    private _happenedAt: Date;
 
@@ -22,9 +23,10 @@ export class ActivityRecord extends MDynamicStreamable {
     * Create a ActivityRecord object
     * @param id_ - id to use to generate uniqueness 
     * @param email_ - plain text email.
+    * @param conversationId_ - ID of the conversation in which the event occurred
     * @param happenedAt_ - timestamp for last interaction seen by the framework
     */
-   public constructor(id_: string | undefined, email_: string, happenedAt_: Date);
+   public constructor(id_: string | undefined, conversationId_: string | undefined, email_: string, happenedAt_: Date);
 
    /**
     * Create a ActivityRecord object
@@ -39,34 +41,42 @@ export class ActivityRecord extends MDynamicStreamable {
 
       if (arr.length === 0) {
          this._id = keyGenerator.generateKey(); // A new ActivityRecord has a key
+         this._conversationId = undefined;
          this._email = "";     // But not a name 
          this._happenedAt = ActivityRecord.makeDateUTC (new Date());
          return;
       }
 
       var localId: string;
+      var localConversationId; 
       var localEmail: string;
       var localHappenedAt: Date;
 
       if (arr.length === 1) {
-         localId = arr[0]._id
+         localId = arr[0]._id;
+         localConversationId = arr[0]._conversationId;
          localEmail = arr[0]._email;
          localHappenedAt = new Date(arr[0]._happenedAt);
       }
       else { 
          localId = arr[0];
-         localEmail = arr[1];
-         localHappenedAt = new Date (arr[2]);
+         localConversationId = arr[1];         
+         localEmail = arr[2];
+         localHappenedAt = new Date (arr[3]);
       }
 
       if (!ActivityRecord.isValidId(localId)) {
-         throw new InvalidParameterError("Id:" + localId + '.');
-      }      
+         throw new InvalidParameterError("iD:" + localId + '.');
+      }    
+      if (!ActivityRecord.isValidConversationId(localConversationId)) {
+         throw new InvalidParameterError("conversationId:" + localConversationId + '.');
+      }        
       if (!ActivityRecord.isValidEmail(localEmail)) {
-         throw new InvalidParameterError("Email:" + localEmail + '.');
+         throw new InvalidParameterError("email:" + localEmail + '.');
       }
 
       this._id = localId;
+      this._conversationId = localConversationId;
       this._email = localEmail;
       this._happenedAt = ActivityRecord.makeDateUTC (localHappenedAt);     
    }
@@ -86,7 +96,7 @@ export class ActivityRecord extends MDynamicStreamable {
    static _dynamicStreamableFactory: DynamicStreamableFactory = new DynamicStreamableFactory(activityRecordClassName, ActivityRecord.createDynamicInstance);
    streamOut(): string {
 
-      return JSON.stringify({ id: this._id, email: this._email, 
+      return JSON.stringify({ id: this._id, conversationId: this._conversationId, email: this._email, 
          happenedAt: this._happenedAt.toUTCString() });   // US UTC as Cosmos DB does not really understand dates. 
    }
 
@@ -94,7 +104,7 @@ export class ActivityRecord extends MDynamicStreamable {
 
       const obj = JSON.parse(stream);
 
-      this.assign(new ActivityRecord (obj.id, obj.email, new Date(obj.happenedAt)));
+      this.assign(new ActivityRecord (obj.id, obj.conversationId, obj.email, new Date(obj.happenedAt)));
    }
 
    /**
@@ -103,6 +113,9 @@ export class ActivityRecord extends MDynamicStreamable {
    get id(): string | undefined {
       return this._id;
    }
+   get conversationId(): string | undefined {
+      return this._conversationId;
+   }   
    get email(): string {
       return this._email;
    }
@@ -119,6 +132,14 @@ export class ActivityRecord extends MDynamicStreamable {
          throw new InvalidParameterError("Id:" + id_ + '.');
       }         
       this._id = id_;
+   }
+
+   set conversationId(conversationId_: string) {
+         
+      if (!ActivityRecord.isValidConversationId(conversationId_)) {
+         throw new InvalidParameterError("conversationId:" + conversationId_ + '.');
+      }        
+      this._conversationId = conversationId_;
    }
 
    set email (email_: string) {
@@ -141,6 +162,7 @@ export class ActivityRecord extends MDynamicStreamable {
     */
    equals(rhs: ActivityRecord): boolean {
       return ((((typeof this._id === "undefined") && (typeof rhs._id === "undefined")) || (this._id === rhs._id)) &&
+         (((typeof this._conversationId === "undefined") && (typeof rhs._conversationId === "undefined")) || (this._conversationId === rhs._conversationId)) &&      
          (this._email === rhs._email) &&
          (this.areSameDate (this._happenedAt, rhs._happenedAt)));
    }
@@ -162,6 +184,7 @@ export class ActivityRecord extends MDynamicStreamable {
     */
    assign(rhs: ActivityRecord): ActivityRecord {
       this._id = rhs._id;
+      this._conversationId = rhs._conversationId;
       this._email = rhs._email;
       this._happenedAt = new Date (rhs._happenedAt);
 
@@ -177,6 +200,20 @@ export class ActivityRecord extends MDynamicStreamable {
          return true;
 
       if (id_ && id_.length > 0) // if the id exists, must be > zero length
+         return true;
+
+      return (false);
+   }
+
+   /**
+    * test for valid id 
+    * @param id - the string to test
+    */
+   static isValidConversationId(conversationId_: string): boolean {
+      if (!conversationId_) // undefined keys are allowed if user object has not been originated from or saved anywhere persistent
+         return true;
+
+      if (conversationId_ && conversationId_.length > 0) // if the id exists, must be > zero length
          return true;
 
       return (false);

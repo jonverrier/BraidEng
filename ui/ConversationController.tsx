@@ -22,6 +22,7 @@ import { EConfigNumbers, EConfigStrings } from '../core/ConfigStrings';
 import { KnowledgeEnrichedMessage, KnowledgeSegment, KnowledgeRepository } from '../core/Knowledge';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 import { UrlActivityRecord } from '../core/UrlActivityRecord';
+import { MessageActivityRecord } from '../core/MessageActivityRecord';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 
 export interface IConversationControllerProps {
@@ -233,7 +234,9 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       let repository = getRecordRepository(props.sessionKey);
       let email = props.localPersona.name;
-      let record = new UrlActivityRecord (keyGenerator.generateKey(), email, new Date(), url_);
+      let record = new UrlActivityRecord (keyGenerator.generateKey(), 
+         props.conversationKey.toString(),
+         email, new Date(), url_);
       repository.save (record);   
       
       let suggested = KnowledgeRepository.lookForSuggestedContent (url_);
@@ -268,7 +271,16 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       // Update the timestamp of the person who posted it
       let storedPerson = fluidMessagesConnection.participantCaucus().get (props.localPersona.id);
       storedPerson.lastSeenAt = message.sentAt;
-      fluidMessagesConnection.participantCaucus().add (storedPerson.id, storedPerson);      
+      fluidMessagesConnection.participantCaucus().add (storedPerson.id, storedPerson);    
+      
+      // Save it to the DB - asyc
+      let keyGenerator = new UuidKeyGenerator();      
+      let repository = getRecordRepository(props.sessionKey);
+      let email = props.localPersona.name;
+      let record = new MessageActivityRecord (keyGenerator.generateKey(), 
+         props.conversationKey.toString(),
+         email, new Date(), messageText_);
+      repository.save (record);       
 
       // Save state and force a refresh
       let messageArray = fluidMessagesConnection.messageCaucus().currentAsArray();      

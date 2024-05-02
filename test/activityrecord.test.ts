@@ -3,6 +3,7 @@
 import { MDynamicStreamable } from '../core/StreamingFramework';
 import { ActivityRecord} from '../core/ActivityRecord';
 import { UrlActivityRecord } from '../core/UrlActivityRecord';
+import { MessageActivityRecord } from '../core/MessageActivityRecord';
 import { SessionKey } from '../core/Keys';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 import { ActivityRepositoryMongo } from '../core/ActivityRepositoryMongo';
@@ -15,10 +16,12 @@ import { throwIfUndefined } from '../core/Asserts';
 const keyGenerator = new UuidKeyGenerator();
 
 var myId: string = "1234";
+var myConversationId = "1234;"
 var myEmail: string = "Jon";
 var myHappenedAt = ActivityRecord.makeDateUTC (new Date());
 
 var someoneElsesId: string = "5678";
+var someoneElsesConversationId = "1234;"
 var someoneElsesEmail: string = "Barry";
 var someoneElsesHappenedAt = ActivityRecord.makeDateUTC (new Date());
 
@@ -26,9 +29,9 @@ describe("ActivityRecord", function () {
 
    var activity1: ActivityRecord, activity2: ActivityRecord, activityErr:ActivityRecord;
 
-   activity1 = new ActivityRecord(myId, myEmail, myHappenedAt);
+   activity1 = new ActivityRecord(myId, myConversationId, myEmail, myHappenedAt);
 
-   activity2 = new ActivityRecord(someoneElsesId, someoneElsesEmail, someoneElsesHappenedAt);
+   activity2 = new ActivityRecord(someoneElsesId, someoneElsesConversationId, someoneElsesEmail, someoneElsesHappenedAt);
 
    it("Needs to construct an empty object", function () {
 
@@ -41,7 +44,18 @@ describe("ActivityRecord", function () {
 
       var caught: boolean = false;
       try {
-         var activityErr: ActivityRecord = new ActivityRecord(undefined, myId, myHappenedAt);
+         var activityErr: ActivityRecord = new ActivityRecord(undefined, myConversationId, myId, myHappenedAt);
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).toEqual(false);
+   });
+
+   it("Needs to allow undefined conversation ID", function () {
+
+      var caught: boolean = false;
+      try {
+         var activityErr: ActivityRecord = new ActivityRecord(myId, undefined, myId, myHappenedAt);
       } catch (e) {
          caught = true;
       }
@@ -52,7 +66,18 @@ describe("ActivityRecord", function () {
 
       var caught: boolean = false;
       try {
-         var activityErr: ActivityRecord = new ActivityRecord(1 as unknown as string, myId, myHappenedAt);
+         var activityErr: ActivityRecord = new ActivityRecord(1 as unknown as string, myConversationId, myId, myHappenedAt);
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).toEqual(true);
+   });
+
+   it("Needs to detect invalid conversation ID", function () {
+
+      var caught: boolean = false;
+      try {
+         var activityErr: ActivityRecord = new ActivityRecord(myId, 1 as unknown as string, myId, myHappenedAt);
       } catch (e) {
          caught = true;
       }
@@ -63,7 +88,7 @@ describe("ActivityRecord", function () {
 
       var caught: boolean = false;
       try {
-         var activityErr: ActivityRecord = new ActivityRecord(myId, undefined as unknown as string, myHappenedAt);
+         var activityErr: ActivityRecord = new ActivityRecord(myId, myConversationId, undefined as unknown as string, myHappenedAt);
       } catch (e) {
          caught = true;
       }
@@ -73,7 +98,7 @@ describe("ActivityRecord", function () {
 
    it("Needs to compare for equality and inequality", function () {
 
-      var activityNew: ActivityRecord = new ActivityRecord(activity1.id, activity1.email, activity1.happenedAt);
+      var activityNew: ActivityRecord = new ActivityRecord(activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt);
 
       expect(activity1.equals(activity1)).toEqual(true);
       expect(activity1.equals(activityNew)).toEqual(true);
@@ -82,7 +107,7 @@ describe("ActivityRecord", function () {
    
    it("Needs to detect inequality on date", function () {
 
-      var activityNew: ActivityRecord = new ActivityRecord(activity1.id, activity1.email, new Date());
+      var activityNew: ActivityRecord = new ActivityRecord(activity1.id, activity1.conversationId, activity1.email, new Date());
 
       expect(activity1.equals(activityNew)).toEqual(false);
    });
@@ -102,7 +127,7 @@ describe("ActivityRecord", function () {
 
    it("Needs to correctly change attributes", function () {
 
-      var activityNew: ActivityRecord = new ActivityRecord(activity1.id, activity1.email, activity1.happenedAt);
+      var activityNew: ActivityRecord = new ActivityRecord(activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt);
 
       activityNew.id = someoneElsesId;
       activityNew.email = someoneElsesEmail;
@@ -139,7 +164,7 @@ describe("ActivityRecord", function () {
 
       var stream: string = activity1.streamOut();
 
-      var activityNew: ActivityRecord = new ActivityRecord(activity1.id, activity1.email, activity1.happenedAt);
+      var activityNew: ActivityRecord = new ActivityRecord(activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt);
       activityNew.streamIn(stream);
 
       expect(activity1.equals(activityNew)).toEqual(true);
@@ -167,9 +192,9 @@ describe("UrlActivityRecord", function () {
 
    var activity1: UrlActivityRecord, activity2: UrlActivityRecord, activityErr:UrlActivityRecord;
 
-   activity1 = new UrlActivityRecord(myId, myEmail, myHappenedAt, myUrl);
+   activity1 = new UrlActivityRecord(myId, myConversationId, myEmail, myHappenedAt, myUrl);
 
-   activity2 = new UrlActivityRecord(someoneElsesId, someoneElsesEmail, someoneElsesHappenedAt, someoneElsesUrl);
+   activity2 = new UrlActivityRecord(someoneElsesId, someoneElsesConversationId, someoneElsesEmail, someoneElsesHappenedAt, someoneElsesUrl);
 
    it("Needs to construct an empty object", function () {
 
@@ -183,7 +208,7 @@ describe("UrlActivityRecord", function () {
 
       var caught: boolean = false;
       try {
-         var activityErr: UrlActivityRecord = new UrlActivityRecord(myId, myEmail, myHappenedAt, undefined as unknown as string);
+         var activityErr: UrlActivityRecord = new UrlActivityRecord(myId, myConversationId, myEmail, myHappenedAt, undefined as unknown as string);
       } catch (e) {
          caught = true;
       }
@@ -193,7 +218,7 @@ describe("UrlActivityRecord", function () {
 
    it("Needs to compare for equality and inequality", function () {
 
-      var activityNew: UrlActivityRecord = new UrlActivityRecord(activity1.id, activity1.email, activity1.happenedAt, activity1.url);
+      var activityNew: UrlActivityRecord = new UrlActivityRecord(activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt, activity1.url);
 
       expect(activity1.equals(activity1)).toEqual(true);
       expect(activity1.equals(activityNew)).toEqual(true);
@@ -215,7 +240,7 @@ describe("UrlActivityRecord", function () {
 
    it("Needs to correctly change attributes", function () {
 
-      var activityNew: UrlActivityRecord = new UrlActivityRecord(activity1.id, activity1.email, activity1.happenedAt, activity1.url);
+      var activityNew: UrlActivityRecord = new UrlActivityRecord(activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt, activity1.url);
 
       activityNew.id = someoneElsesId;
       activityNew.email = someoneElsesEmail;
@@ -241,7 +266,7 @@ describe("UrlActivityRecord", function () {
 
       var stream: string = activity1.streamOut();
 
-      var activityNew: UrlActivityRecord = new UrlActivityRecord(activity1.id, activity1.email, activity1.happenedAt, activity1.url);
+      var activityNew: UrlActivityRecord = new UrlActivityRecord(activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt, activity1.url);
       activityNew.streamIn(stream);
 
       expect(activity1.equals(activityNew)).toEqual(true);
@@ -262,6 +287,107 @@ describe("UrlActivityRecord", function () {
 
 });
 
+var myMessage: string = "message";
+var someoneElsesMessage: string = "other message";
+
+describe("MessageActivityRecord", function () {
+
+   var activity1: MessageActivityRecord, activity2: MessageActivityRecord, activityErr:MessageActivityRecord;
+
+   activity1 = new MessageActivityRecord(myId, myConversationId, myEmail, myHappenedAt, myMessage);
+
+   activity2 = new MessageActivityRecord(someoneElsesId, someoneElsesConversationId, someoneElsesEmail, someoneElsesHappenedAt, someoneElsesMessage);
+
+   it("Needs to construct an empty object", function () {
+
+      var activityEmpty = new MessageActivityRecord();
+
+      expect(activityEmpty.message).toEqual("");     
+   });
+
+
+   it("Needs to detect invalid message", function () {
+
+      var caught: boolean = false;
+      try {
+         var activityErr: MessageActivityRecord = new MessageActivityRecord(myId, myConversationId, myEmail, myHappenedAt, undefined as unknown as string);
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).toEqual(true);
+   });
+
+
+   it("Needs to compare for equality and inequality", function () {
+
+      var activityNew: MessageActivityRecord = new MessageActivityRecord(activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt, activity1.message);
+
+      expect(activity1.equals(activity1)).toEqual(true);
+      expect(activity1.equals(activityNew)).toEqual(true);
+      expect(activity1.equals(activity2)).toEqual(false);
+   });
+
+
+   it("Needs to correctly store attributes", function () {
+         
+      expect(activity1.message === myMessage).toEqual(true);
+   });
+
+   it("Needs to copy construct", function () {
+
+      let activity2: MessageActivityRecord = new MessageActivityRecord(activity1);
+
+      expect(activity1.equals(activity2) === true).toEqual(true);
+   });
+
+   it("Needs to correctly change attributes", function () {
+
+      var activityNew: MessageActivityRecord = new MessageActivityRecord(activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt, activity1.message);
+
+      activityNew.id = someoneElsesId;
+      activityNew.email = someoneElsesEmail;
+      activityNew.happenedAt = someoneElsesHappenedAt;
+      activityNew.message = someoneElsesMessage;      
+
+      expect(activity2.equals (activityNew)).toEqual(true);
+   });
+
+   it("Needs to throw errors on change message attribute", function () {
+
+      var caught: boolean = false;
+      try {
+         activity1.message = undefined as unknown as string;
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).toEqual(true);
+
+   });
+
+   it("Needs to convert to and from JSON()", function () {
+
+      var stream: string = activity1.streamOut();
+
+      var activityNew: MessageActivityRecord = new MessageActivityRecord(activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt, activity1.message);
+      activityNew.streamIn(stream);
+
+      expect(activity1.equals(activityNew)).toEqual(true);
+   });
+
+   it("Needs to dynamically create ActivityRecord to and from JSON()", function () {
+
+      var stream: string = activity1.flatten();
+
+      var activityNew: MessageActivityRecord = new MessageActivityRecord();
+
+      expect(activity1.equals(activityNew)).toEqual(false);
+
+      activityNew = MDynamicStreamable.resurrect(stream) as MessageActivityRecord;
+
+      expect(activity1.equals(activityNew)).toEqual(true);
+   });
+
+});
 
 describe("ActivityRepository", function () {
 
@@ -278,7 +404,7 @@ describe("ActivityRepository", function () {
 
    it("Needs to save a record", async function () {
 
-      var activity = new UrlActivityRecord(keyGenerator.generateKey(), 
+      var activity = new UrlActivityRecord(keyGenerator.generateKey(), "madeupconversationKey", 
                                  "jonathanverrier@hotmail.com", new Date(), 
                                  "https://test.cosmos");
 
@@ -290,7 +416,7 @@ describe("ActivityRepository", function () {
 
    it("Needs to load a record", async function () {
 
-      let loaded = await repository.loadRecent (3);
+      let loaded = await repository.loadRecentUrlActivity (3);
 
       expect(true).toEqual(true);     
    });  
@@ -312,7 +438,7 @@ describe("ActivityRepositoryMongo", function () {
 
    it("Needs to save a record", async function () {
 
-      var activity = new UrlActivityRecord(keyGenerator.generateKey(), 
+      var activity = new UrlActivityRecord(keyGenerator.generateKey(), "madeupconversationKey",
                                  "jonathanverrier@hotmail.com", new Date(), 
                                  "https://test.mongo");
 
@@ -324,7 +450,7 @@ describe("ActivityRepositoryMongo", function () {
 
    it("Needs to load a record", async function () {
 
-      let loaded = await repository.loadRecent (3);
+      let loaded = await repository.loadRecentUrlActivity (3);
 
       expect(true).toEqual(true);     
    });  

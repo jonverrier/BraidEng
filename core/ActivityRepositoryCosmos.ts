@@ -4,15 +4,18 @@
 import axios from "axios";
 
 // Internal imports
+import { throwIfUndefined } from "./Asserts";
+import { InvalidParameterError } from "./Errors";
 import { Environment, EEnvironment } from "./Environment";
 import { EConfigStrings } from "./ConfigStrings";
 import { KeyRetriever } from "./KeyRetriever";
 import { logDbError, logApiError } from "./Logging";
+import { DynamicStreamableFactory } from "./StreamingFramework";
 import { ActivityRecord } from './ActivityRecord';
 import { UrlActivityRecord } from "./UrlActivityRecord";
+import { MessageActivityRecord } from "./MessageActivityRecord";
 import { SessionKey } from "./Keys";
 import { IActivityRepository } from "./IActivityRepository";
-import { throwIfUndefined } from "./Asserts";
 
 const defaultPartitionKey = "6ea3299d987b4b33a1c0b079a833206f";
 
@@ -171,7 +174,37 @@ export class ActivityRepositoryCosmos implements IActivityRepository {
       return done;
    }
 
-   async loadRecent (count : number) : Promise<Array<ActivityRecord>> {
+   async loadRecentUrlActivity (count : number) : Promise<Array<ActivityRecord>> {
+      return this.loadRecent (count, UrlActivityRecord.className());
+   }
+
+   async loadRecentMessages (count : number) : Promise<Array<ActivityRecord>> {
+      return this.loadRecent (count, MessageActivityRecord.className());
+   }
+
+   createFromDb (record: any) : ActivityRecord {
+
+      switch (record.className) {
+         case UrlActivityRecord.className():
+            return new UrlActivityRecord(record.id,
+               record._conversationId,
+               record.data.email, 
+               record.data.happenedAt, 
+               record.data.url);
+
+         case MessageActivityRecord.className():
+            return new MessageActivityRecord(record.id,
+               record._conversationId,
+               record.data.email, 
+               record.data.happenedAt, 
+               record.data.message);   
+               
+         default:
+            throw new InvalidParameterError(record);
+      }
+   }
+
+   async loadRecent (count : number, className: string) : Promise<Array<ActivityRecord>> {
       
       let self = this;
 
@@ -192,7 +225,7 @@ export class ActivityRepositoryCosmos implements IActivityRepository {
             "parameters": [  
               {  
                 "name": "@className",  
-                "value": UrlActivityRecord.className()
+                "value": className
               }
             ]  
          },
@@ -217,11 +250,9 @@ export class ActivityRepositoryCosmos implements IActivityRepository {
             let records = new Array<ActivityRecord>();
 
             for (let i = 0; i < responseRecords.length; i++) {
-               let record = new UrlActivityRecord(responseRecords[i].id,
-                  responseRecords[i].data.email, 
-                  responseRecords[i].data.happenedAt, 
-                  responseRecords[i].data.url);
-               records.push (record);
+
+               let obj = self.createFromDb (responseRecords[i]);
+               records.push (obj);
             }
 
             resolve(records);

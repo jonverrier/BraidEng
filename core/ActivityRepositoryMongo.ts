@@ -5,14 +5,19 @@ import axios from "axios";
 
 
 // Internal imports
+import { throwIfUndefined } from "./Asserts";
+import { InvalidParameterError } from "./Errors";
 import { Environment, EEnvironment } from "./Environment";
 import { EConfigStrings } from "./ConfigStrings";
 import { KeyRetriever } from "./KeyRetriever";
 import { logDbError, logApiError } from "./Logging";
+import { DynamicStreamableFactory } from "./StreamingFramework";
 import { ActivityRecord } from './ActivityRecord';
 import { UrlActivityRecord } from "./UrlActivityRecord";
+import { MessageActivityRecord } from "./MessageActivityRecord";
 import { SessionKey } from "./Keys";
 import { IActivityRepository } from "./IActivityRepository";
+
 
 // ActivityRecord - email of a person and a datestamp. Will have many derived classes according to different activity types. 
 export class ActivityRepositoryMongo implements IActivityRepository {
@@ -89,6 +94,7 @@ export class ActivityRepositoryMongo implements IActivityRepository {
          let stream = record.streamOut ();
          let document = JSON.parse(stream);
          delete document.id; // Let Mongo put a new ID on for insert
+         document.className = record.className(); // Save the class name as we store multiple types of derived class
          let key = self._dbkey;
 
          axios.post('https://eu-west-1.aws.data.mongodb-api.com/app/braidlmsclient-fsivu/endpoint/data/v1/action/insertOne', 
@@ -119,7 +125,39 @@ export class ActivityRepositoryMongo implements IActivityRepository {
       return done;
    }
 
-   async loadRecent (count : number) : Promise<Array<ActivityRecord>> {
+   async loadRecentUrlActivity (count : number) : Promise<Array<ActivityRecord>> {
+      return this.loadRecent (count, UrlActivityRecord.className());
+   }
+
+   async loadRecentMessages (count : number) : Promise<Array<ActivityRecord>> {
+      return this.loadRecent (count, MessageActivityRecord.className());
+   }
+
+   createFromDb (record: any) : ActivityRecord {
+
+      switch (record.className) {
+         case UrlActivityRecord.className():
+            return new UrlActivityRecord(
+               record._id.toString(),
+               record._conversationId,
+               record.email, 
+               record.happenedAt, 
+               record.url);
+
+         case MessageActivityRecord.className():
+            return new MessageActivityRecord(
+               record._id.toString(),
+               record._conversationId,
+               record.email, 
+               record.happenedAt, 
+               record.message); 
+               
+         default:
+            throw new InvalidParameterError(record);
+      }
+   }   
+
+   async loadRecent (count : number, className: string) : Promise<Array<ActivityRecord>> {
       
       let self = this;
 
@@ -152,12 +190,8 @@ export class ActivityRepositoryMongo implements IActivityRepository {
             let records = new Array<ActivityRecord>();
 
             for (let i = 0; i < responseRecords.length; i++) {
-               let record = new UrlActivityRecord(
-                  responseRecords[i]._id.toString(),
-                  responseRecords[i].email, 
-                  responseRecords[i].happenedAt, 
-                  responseRecords[i].url);
-               records.push (record);
+               let obj = self.createFromDb (responseRecords[i]);
+               records.push (obj);
             }
 
             resolve(records);
