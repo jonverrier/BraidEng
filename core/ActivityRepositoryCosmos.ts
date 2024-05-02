@@ -161,7 +161,6 @@ export class ActivityRepositoryCosmos implements IActivityRepository {
          })
          .then((resp : any) => {
 
-            console.log (resp.data);
             resolve(true);
          })
          .catch((error: any) => {   
@@ -243,8 +242,6 @@ export class ActivityRepositoryCosmos implements IActivityRepository {
             }              
          })
          .then((resp : any) => {
-
-            console.log (resp.data);
 
             let responseRecords = resp.data.Documents;
             let records = new Array<ActivityRecord>();
