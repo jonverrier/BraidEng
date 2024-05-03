@@ -14,8 +14,8 @@ import { Environment, EEnvironment } from "./Environment";
 import { KnowledgeEnrichedMessage, KnowledgeRepository, kDefaultKnowledgeSegmentCount, kDefaultMinimumCosineSimilarity} from "./Knowledge";
 import { SessionKey } from "./Keys";
 
-// Actual is 2048, but leave some headroom
-const kMaxTokens : number= 1536;
+// We allow for the equivalent of 10 minutes of chat. 10 mins * 60 words = 600 words = 2400 tokens. 
+const kMaxTokens : number= 4096;
 
 export class AIConnection {
 
@@ -67,7 +67,7 @@ export class AIConnection {
 
       let enriched = KnowledgeRepository.lookUpMostSimilar (embedding, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);
 
-      return new KnowledgeEnrichedMessage (response.data.choices[0].message.content as string, enriched.segments);
+      return new KnowledgeEnrichedMessage (response.data.choices[0].message.content as string, enriched.chunks);
    }    
 
       // Makes an Axios call to call web endpoint
@@ -154,8 +154,8 @@ export class AIConnection {
             let entry = { role: 'assistant', content: message.text };
             builtQuery.push (entry);     
 
-            for (let j = 0; j < message.segments.length; j++) {
-               let entry = { role: 'assistant', content: message.segments[j].summary };
+            for (let j = 0; j < message.chunks.length; j++) {
+               let entry = { role: 'assistant', content: message.chunks[j].summary };
                builtQuery.push (entry);
             }                   
          }         

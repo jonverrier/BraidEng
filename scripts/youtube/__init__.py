@@ -1,4 +1,4 @@
 from .download_transcripts import download_transcripts
-from .enrich_transcript_buckets import enrich_transcript_buckets
+from .enrich_transcript_chunks import enrich_transcript_chunks
 from .enrich_transcript_summaries import enrich_transcript_summaries
 from .enrich_transcript_embeddings import enrich_transcript_embeddings

@@ -1,6 +1,6 @@
 'use strict';
 // Copyright Braid Technologies ltd, 2024
-import { KnowledgeSegment, KnowledgeSegmentFinder, KnowledgeEnrichedMessage, 
+import { KnowledgeChunk, KnowledgeChunkFinder, KnowledgeEnrichedMessage, 
    kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount, lookLikeSameSource, KnowledgeRepository} from '../core/Knowledge';
 
 import { expect } from 'expect';
@@ -21,22 +21,22 @@ var someoneElsesRelevance = 0.0;
 
 describe("KnowledgeSource", function () {
 
-   var ks1: KnowledgeSegment, ks2: KnowledgeSegment, ksErr:KnowledgeSegment;
+   var ks1: KnowledgeChunk, ks2: KnowledgeChunk, ksErr:KnowledgeChunk;
 
-   ks1 = new KnowledgeSegment(myUrl, mySummary, myAda, myTimeStamp, myRelevance);
+   ks1 = new KnowledgeChunk(myUrl, mySummary, myAda, myTimeStamp, myRelevance);
 
-   ks2 = new KnowledgeSegment(someoneElsesUrl, someoneElsesSummary, someoneElseAda, someoneElsesTimeStamp, someoneElsesRelevance);
+   ks2 = new KnowledgeChunk(someoneElsesUrl, someoneElsesSummary, someoneElseAda, someoneElsesTimeStamp, someoneElsesRelevance);
 
    it("Needs to construct an empty object", function () {
 
-      var ksEmpty = new KnowledgeSegment();
+      var ksEmpty = new KnowledgeChunk();
 
       expect(ksEmpty.summary).toEqual("");     
    });
 
    it("Needs to compare for equality and inequality", function () {
 
-      var ksNew: KnowledgeSegment = new KnowledgeSegment(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
+      var ksNew: KnowledgeChunk = new KnowledgeChunk(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
 
       expect(ks1.equals(ks1)).toEqual(true);
       expect(ks1.equals(ksNew)).toEqual(true);
@@ -46,7 +46,7 @@ describe("KnowledgeSource", function () {
    
    it("Needs to detect inequality on date", function () {
 
-      var ksNew: KnowledgeSegment = new KnowledgeSegment(ks1.url, ks1.summary, ks1.ada_v2, new Date(), ks1.relevance);
+      var ksNew: KnowledgeChunk = new KnowledgeChunk(ks1.url, ks1.summary, ks1.ada_v2, new Date(), ks1.relevance);
 
       expect(ks1.equals(ksNew)).toEqual(false);
    });
@@ -60,14 +60,14 @@ describe("KnowledgeSource", function () {
 
    it("Needs to copy construct", function () {
 
-      let ks2: KnowledgeSegment = new KnowledgeSegment(ks1);
+      let ks2: KnowledgeChunk = new KnowledgeChunk(ks1);
 
       expect(ks1.equals(ks2) === true).toEqual(true);
    });
 
    it("Needs to correctly change attributes", function () {
 
-      var ksNew: KnowledgeSegment = new KnowledgeSegment(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
+      var ksNew: KnowledgeChunk = new KnowledgeChunk(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
 
       ksNew.url = someoneElsesUrl;
       ksNew.summary = someoneElsesSummary;
@@ -82,7 +82,7 @@ describe("KnowledgeSource", function () {
 
       var stream: string = ks1.streamOut();
 
-      var ksNew: KnowledgeSegment = new KnowledgeSegment(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
+      var ksNew: KnowledgeChunk = new KnowledgeChunk(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
       ksNew.streamIn(stream);
     
       expect(ks1.equals(ksNew)).toEqual(true);
@@ -94,15 +94,15 @@ describe("KnowledgeSourceBuilder", function () {
 
    it("Needs to construct an empty object", function () {
 
-      let ksEmpty = new KnowledgeSegmentFinder(kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);
+      let ksEmpty = new KnowledgeChunkFinder(kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);
 
-      expect(ksEmpty.segments.length).toEqual(0);     
+      expect(ksEmpty.chunks.length).toEqual(0);     
    });
 
    it("Needs to compare for equality and inequality", function () {
 
-      let ksEmpty = new KnowledgeSegmentFinder(kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);      
-      let matchesNew = new KnowledgeSegmentFinder(-1, 3);        
+      let ksEmpty = new KnowledgeChunkFinder(kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);      
+      let matchesNew = new KnowledgeChunkFinder(-1, 3);        
 
       expect(ksEmpty.equals(ksEmpty)).toEqual(true);     
       expect(ksEmpty.equals(matchesNew)).toEqual(false);
@@ -110,7 +110,7 @@ describe("KnowledgeSourceBuilder", function () {
 
    it("Needs to correctly store attributes", function () {
          
-      let ksEmpty = new KnowledgeSegmentFinder(kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);          
+      let ksEmpty = new KnowledgeChunkFinder(kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);          
       expect(ksEmpty.similarityThreshold === kDefaultMinimumCosineSimilarity).toEqual(true);
       expect(ksEmpty.howMany === kDefaultKnowledgeSegmentCount).toEqual(true);
    });
@@ -118,13 +118,13 @@ describe("KnowledgeSourceBuilder", function () {
 
 describe("KnowledgeEnrichedMessage", function () {
 
-   let ks1 = new KnowledgeSegment(myUrl, mySummary, myAda, myTimeStamp, myRelevance);
-   let sources1 = new Array<KnowledgeSegment> ();
+   let ks1 = new KnowledgeChunk(myUrl, mySummary, myAda, myTimeStamp, myRelevance);
+   let sources1 = new Array<KnowledgeChunk> ();
    sources1.push (ks1);
    let enriched1 = new KnowledgeEnrichedMessage (mySummary, sources1);
 
-   let ks2 = new KnowledgeSegment(someoneElsesUrl, someoneElsesSummary, someoneElseAda, someoneElsesTimeStamp, someoneElsesRelevance);
-   let sources2 = new Array<KnowledgeSegment> ();
+   let ks2 = new KnowledgeChunk(someoneElsesUrl, someoneElsesSummary, someoneElseAda, someoneElsesTimeStamp, someoneElsesRelevance);
+   let sources2 = new Array<KnowledgeChunk> ();
    sources2.push (ks2);  
    let enriched2 = new KnowledgeEnrichedMessage (someoneElsesSummary, sources2);    
 

@@ -19,7 +19,7 @@ import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } fr
 import { AIConnection, AIConnector } from '../core/AIConnection';
 import { EUIStrings } from './UIStrings';
 import { EConfigNumbers, EConfigStrings } from '../core/ConfigStrings';
-import { KnowledgeEnrichedMessage, KnowledgeSegment, KnowledgeRepository } from '../core/Knowledge';
+import { KnowledgeEnrichedMessage, KnowledgeChunk, KnowledgeRepository } from '../core/Knowledge';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 import { UrlActivityRecord } from '../core/UrlActivityRecord';
 import { MessageActivityRecord } from '../core/MessageActivityRecord';
@@ -308,7 +308,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
                response.text = result_.message;
                response.sentAt = new Date();
                response.responseToId = message.id;
-               response.segments = result_.segments; // Add KnowledgeSegments
+               response.chunks = result_.segments; // Add KnowledgeSegments
 
                // Push it to shared data
                addMessage (fluidMessagesConnection, response);
