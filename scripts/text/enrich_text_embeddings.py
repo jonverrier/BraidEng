@@ -36,44 +36,32 @@ def normalize_text(s, sep_token=" \n "):
     stop=stop_after_attempt(20),
     retry=retry_if_not_exception_type(openai.InvalidRequestError),
 )
-def get_text_embedding(text: str):
+def get_text_embedding(config, text: str):
     """get the embedding for a text"""
 
-    embedding = get_embedding(text, engine="text-embedding-ada-002", timeout=100)
+    embedding = get_embedding(text, 
+                              engine=config.azureEmbedDeploymentName, 
+                              deployment_id=config.azureEmbedDeploymentName,
+                              model=config.azureEmbedDeploymentName,
+                              timeout=config.openAiRequestTimeout)
     return embedding
 
 
-def process_queue(progress, task, q, tokenizer, logger, output_chunks):
+def process_queue(config, progress, task, q, output_chunks):
     """process the queue"""
-
-    truncateText = ""
 
     while not q.empty():
         chunk = q.get()
 
         if "ada_v2" in chunk:
-            output_chunks.append(chunk.copy())
-            continue
-
-        truncateText = chunk["text"]
-
-        while len(tokenizer.encode(truncateText)) > 8191:
-            truncateText = truncateText[0:int (len(truncateText) / 2)]
-
-        text = normalize_text(truncateText)
-        chunk["text"] = text
-
-        embedding = get_text_embedding(text)
-        if embedding is None:
-            output_chunks.append(chunk.copy())
-            continue
-
-        chunk["ada_v2"] = embedding.copy()
-
-        output_chunks.append(chunk.copy())
+           output_chunks.append(chunk.copy())
+        else:
+           embedding = get_text_embedding(config, chunk["summary"])
+           chunk["ada_v2"] = embedding.copy()
+           output_chunks.append(chunk.copy())
+           
         progress.update(task, advance=1)
         q.task_done()
-        time.sleep(0.2)
 
 
 def enrich_text_embeddings(config, markdownDestinationDir): 
@@ -87,7 +75,7 @@ def enrich_text_embeddings(config, markdownDestinationDir):
    openai.api_version = config.apiVersion 
    
    if not markdownDestinationDir:
-      logger.error("Transcript folder not provided")
+      logger.error("Markdown folder not provided")
       exit(1)
 
    tokenizer = tiktoken.get_encoding("cl100k_base")
@@ -115,7 +103,7 @@ def enrich_text_embeddings(config, markdownDestinationDir):
       # create multiple threads to process the queue
       threads = []
       for i in range(config.processingThreads):
-         t = threading.Thread(target=process_queue, args=(progress, task1, q, tokenizer, logger, output_chunks))
+         t = threading.Thread(target=process_queue, args=(config, progress, task1, q, output_chunks))
          t.start()
          threads.append(t)
 

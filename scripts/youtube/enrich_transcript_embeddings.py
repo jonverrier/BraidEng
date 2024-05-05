@@ -6,7 +6,6 @@ import os
 import json
 import threading
 import queue
-import time
 import openai
 from openai.embeddings_utils import get_embedding
 import tiktoken
@@ -38,42 +37,32 @@ def normalize_text(s, sep_token=" \n "):
     stop=stop_after_attempt(20),
     retry=retry_if_not_exception_type(openai.InvalidRequestError),
 )
-def get_text_embedding(text: str):
+def get_text_embedding(config, text: str):
     """get the embedding for a text"""
 
-    embedding = get_embedding(text, engine="text-embedding-ada-002", timeout=60)
+    embedding = get_embedding(text, 
+                              engine=config.azureEmbedDeploymentName, 
+                              deployment_id=config.azureEmbedDeploymentName,
+                              model=config.azureEmbedDeploymentName,
+                              timeout=config.openAiRequestTimeout)
     return embedding
 
 
-def process_queue(progress, task, q, output_chunks, logger):
+def process_queue(config, progress, task, q, output_chunks):
     """process the queue"""
+
     while not q.empty():
         chunk = q.get()
 
         if "ada_v2" in chunk:
-            output_chunks.append(chunk.copy())
-            continue
+           output_chunks.append(chunk.copy())        
+        else:
+           embedding = get_text_embedding(config, chunk["summary"])
+           chunk["ada_v2"] = embedding.copy()
+           output_chunks.append(chunk.copy())
 
-        logger.debug(chunk["title"])
-        text = chunk["text"]
-
-        if len(tokenizer.encode(text)) > 8191:
-            continue
-
-        text = normalize_text(text)
-        chunk["text"] = text
-
-        embedding = get_text_embedding(text)
-        if embedding is None:
-            output_chunks.append(chunk.copy())
-            continue
-
-        chunk["ada_v2"] = embedding.copy()
-
-        output_chunks.append(chunk.copy())
         progress.update(task, advance=1)
         q.task_done()
-        time.sleep(0.2)
 
 # convert time '00:01:20' to seconds
 def convert_time_to_seconds(value):
@@ -123,7 +112,7 @@ def enrich_transcript_embeddings (config, transcriptDestinationDir):
       # create multiple threads to process the queue
       threads = []
       for i in range(config.processingThreads):
-         t = threading.Thread(target=process_queue, args=(progress, task1, q, output_chunks, logger))
+         t = threading.Thread(target=process_queue, args=(config, progress, task1, q, output_chunks))
          t.start()
          threads.append(t)
 

@@ -47,8 +47,8 @@ def chatgpt_summary(config, text, logger):
     ]
 
     response = openai.ChatCompletion.create(
-        #AZURE VERSION WAS engine=AZURE_OPENAI_MODEL_DEPLOYMENT_NAME,
-        model="gpt-3.5-turbo",
+        deployment_id=config.azureDeploymentName,
+        model=config.modelName,
         messages=messages,
         temperature=0.7,
         max_tokens=config.maxTokens,
@@ -75,37 +75,31 @@ def process_queue(config, progress, task, q, counter, logger, output_chunks):
     """process the queue"""
     while not q.empty():
 
-        segment = q.get()
+        chunk = q.get()
 
-        text = segment.get("text")
+        text = chunk.get("text")
 
-        # Think about this some more. Idea is to reduce processing time
-        # text_hash = hash(text)
+        existing = chunk.get("summary")
 
-        # # check if there is a summary already in the segment and the hash is the same
-        # # If found then don't generate a new summary
-        # if "summary" in segment and "text_hash" in segment and text_hash == segment["text_hash"]:
-        #     output_chunks.append(segment.copy())
-        #     q.task_done()
-        #     continue
+        if (not existing or existing.len == 0):
 
-        # get a summary of the text using chatgpt
-        try:
-            summary = chatgpt_summary(config, text, logger)
-        except openai.InvalidRequestError as invalid_request_error:
-            logger.warning("Error: %s", invalid_request_error)
-            summary = text
-        except Exception as e:
-            logger.warning("Error: %s", e)
-            summary = text
+           # get a summary of the text using chatgpt
+           try:
+              summary = chatgpt_summary(config, text, logger)
+           except openai.InvalidRequestError as invalid_request_error:
+              logger.warning("Error: %s", invalid_request_error)
+              summary = text
+           except Exception as e:
+              logger.warning("Error: %s", e)
+              summary = text
+
+           # add the summary to the segment dictionary
+           chunk["summary"] = summary
 
         count = counter.increment()
         progress.update(task, advance=1)
 
-        # add the summary and text hash to the segment dictionary
-        segment["summary"] = summary
-
-        output_chunks.append(segment.copy())
+        output_chunks.append(chunk.copy())
         q.task_done()
 
 # convert time '00:01:20' to seconds

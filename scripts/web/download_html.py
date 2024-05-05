@@ -185,7 +185,7 @@ def build_page_list (sourceUrl, q, minimumPageTokenCount, logger, recurse):
     
 def download_html (sourceUrl, siteName, recurse, htmlDesitinationDir, minimumPageTokenCount): 
    
-   logging.basicConfig(level=logging.DEBUG)
+   logging.basicConfig(level=logging.WARNING)
    logger = logging.getLogger(__name__)
 
    PROCESSING_THREADS = 1

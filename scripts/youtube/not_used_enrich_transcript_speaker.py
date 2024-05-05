@@ -109,7 +109,7 @@ def get_speaker_info(text):
     arguments = None
 
     response_1 = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model=config.modelName,
         messages=[
             {
                 "role": "system",

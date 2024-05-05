@@ -40,18 +40,22 @@ webUrls = [
 ["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter7/1", True],
 ["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter8/1", True],
 ["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter9/1", True],
-["Open AI Cockbook", "https://cookbook.openai.com/", True],
+["Open AI Cookbook", "https://cookbook.openai.com/", True],
 ["State of Open Source AI - 2023 Edition", "https://book.premai.io/state-of-open-source-ai/", True],
+["Scaled Agile Framework 6.0", "https://scaledagileframework.com/", True],
+["Design Kit", "https://www.designkit.org/methods.html", True]
 ]
-
-for item in webUrls:
-   download_html (item[1], item[0], item[2], HTML_DESTINATION_DIR, 100)
-
-# Keep this comment as example of how to just process one file for debugging
-#download_html ("https://huyenchip.com/2023/04/11/llm-engineering.html", "Building LLM applications for production (huyenchip.com)", True, HTML_DESTINATION_DIR, 100)
 
 config = ApiConfiguration()
 
+for item in webUrls:
+   download_html (item[1], item[0], item[2], HTML_DESTINATION_DIR, config.discardIfBelow)
+
+# Keep this comment as example of how to just process one file for debugging
+#download_html ("https://huyenchip.com/2023/04/11/llm-engineering.html", "Building LLM applications for production (huyenchip.com)", 
+#               True, HTML_DESTINATION_DIR, config.discardIfBelow)
+#download_html ("https://www.designkit.org/methods.html", "Design Kit", 
+#               True, HTML_DESTINATION_DIR, config.discardIfBelow)
 enrich_text_chunks(config, HTML_DESTINATION_DIR) 
 enrich_text_summaries(config, HTML_DESTINATION_DIR)
 enrich_text_embeddings(config, HTML_DESTINATION_DIR)

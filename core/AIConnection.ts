@@ -38,14 +38,18 @@ export class AIConnection {
 
       var response : any = null;
 
-      await axios.post('https://api.openai.com/v1/chat/completions', {
-         messages: allMessages,
-         model: "gpt-3.5-turbo",
+      // OPENAI POST ('https://api.openai.com/v1/chat/completions', {
+      // AZURE POST https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/chat/completions?api-version={api-version}
+
+      await axios.post('https://braidlms.openai.azure.com/openai/deployments/braidlms/chat/completions?api-version={2024-02-01}', {
+         prompt: allMessages,
+         // OPENAI model: "gpt-3.5-turbo",         
       },
       {
          headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this._key}`
+            // OpenAI - 'Authorization': `Bearer ${this._key}`
+            'api-key': '${this._key}'
          }
       })
       .then((resp : any) => {
@@ -77,14 +81,18 @@ export class AIConnection {
    
       var response : any = null;
    
-      await axios.post('https://api.openai.com/v1/embeddings', {
+      // AZURE POST https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/embeddings?api-version={api-version}
+      // OPENAI POST 'https://api.openai.com/v1/embeddings'
+
+      await axios.post('https://braidlms.openai.azure.com/openai/deployments/braidlmse/embeddings?api-version={2024-02-01}', {
          input: input,
-         model: "text-embedding-ada-002",
+         // OPENAI model: "text-embedding-ada-002",       
       },
       {
          headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this._key}`
+            // OpenAI - 'Authorization': `Bearer ${this._key}`
+            'api-key': '${this._key}'            
          }
       })
       .then((resp : any) => {
