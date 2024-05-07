@@ -349,6 +349,19 @@ export class Persona extends MDynamicStreamable {
 
 
    /**
+    * return unknown if the persona cannot be found in the map
+    */
+      static safeAuthorLookup (audience: Map<string, Persona>, authorId: string) : Persona {
+   
+      let initial = audience.get (authorId);
+   
+      if (initial)
+         return initial;
+      else
+         return Persona.unknown()
+   }
+
+   /**
     * test if the persona details are the status 'unknown'
     * @param persona - the persona to test 
     */
