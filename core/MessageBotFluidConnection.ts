@@ -1,5 +1,3 @@
-// Copyright (c) 2024 Braid Technologies Ltd
-
 import { SharedMap } from "fluid-framework";import { Persona } from './Persona';
 import { Message } from './Message';
 import { IConnectionProps, FluidConnection } from './FluidConnection';
@@ -54,13 +52,14 @@ export class MessageBotFluidConnection extends FluidConnection {
       this._participantCaucus = new CaucusOf<Persona>(initialObjects_.participantMap as SharedMap);
       this._messageCaucus = new CaucusOf<Message>(initialObjects_.messageMap as SharedMap, this.compareFn);  
       
-      this.setInitialValues(this._participantCaucus);
+      this.setInitialValues(this._participantCaucus, this._messageCaucus);
 
       let self = this;
 
       setInterval(() => {
          throwIfUndefined(self._participantCaucus);
-         self.checkAddAddSelfToAudience(self._participantCaucus);
+         throwIfUndefined(self._messageCaucus);         
+         self.checkAddAddSelfToAudience(self._participantCaucus, self._messageCaucus);
        }, 10000);
    }
 
@@ -82,12 +81,12 @@ export class MessageBotFluidConnection extends FluidConnection {
       throwIfUndefined (this._participantCaucus);  
       this._participantCaucus.removeAll ();
 
-      this.setInitialValues (this._participantCaucus);
+      this.setInitialValues (this._participantCaucus, this._messageCaucus);
    }
 
-   private setInitialValues (participantCaucus: CaucusOf<Persona>): void {
+   private setInitialValues (participantCaucus: CaucusOf<Persona>,  messageCaucus: CaucusOf<Message>): void {
     
-      this.checkAddAddSelfToAudience (participantCaucus);
+      this.checkAddAddSelfToAudience (participantCaucus, messageCaucus);
 
       // Add the Bot persona if its not already there
       let isStored = participantCaucus.has(EConfigStrings.kLLMGuid);
@@ -108,7 +107,7 @@ export class MessageBotFluidConnection extends FluidConnection {
    }
 
 
-   private checkAddAddSelfToAudience (participantCaucus: CaucusOf<Persona>): void {
+   private checkAddAddSelfToAudience (participantCaucus: CaucusOf<Persona>, messageCaucus: CaucusOf<Message>): void {
 
       let isStored = participantCaucus.has(this._localUser.id);
 
@@ -117,25 +116,36 @@ export class MessageBotFluidConnection extends FluidConnection {
          // We look at all participants looking for someine with the same email as us. 
          // If we find one, we do a 'glare' comparison to consistently pick a winner, and the loser of the
          // 'glare' comparison sets their details to those of the winner. 
-         let current = participantCaucus.currentAsArray();
+         let currentParticipants = participantCaucus.currentAsArray();
          let found = false;
 
-         for (let i = 0; i < current.length && !found; i++) {        
-            if ((this._localUser.email === current[i].email ) && 
-               (!this.localWinsGlareCheck (this._localUser.id, current[i].id))) { 
+         for (let i = 0; i < currentParticipants.length && !found; i++) {        
+            if ((this._localUser.email === currentParticipants[i].email ) && 
+               (!this.localWinsGlareCheck (this._localUser.id, currentParticipants[i].id))) { 
                
                // last case is a backwards compatibility hack - we added participants with no name but low UUIDs that keep winning the glare test                     
-               if ((current[i].name === undefined) || (current[i].name.length === 0)) {
-                  current[i].name = this._localUser.name;
-                  participantCaucus.amend (current[i].id, current[i]);
+               if ((currentParticipants[i].name === undefined) || (currentParticipants[i].name.length === 0)) {
+                  currentParticipants[i].name = this._localUser.name;
+                  participantCaucus.amend (currentParticipants[i].id, currentParticipants[i]);
                }
                found = true;
-               this._localUser.assign (current[i]);
+
+               // Any messages which had us as the auther - need to reset Author ID
+               let currentMessages = messageCaucus.currentAsArray();
+      
+               for (let j = 0; j < currentMessages.length; j++) {    
+                  if (currentMessages[j].authorId === this._localUser.id) {
+                     currentMessages[i].authorId = currentParticipants[i].id;
+                     messageCaucus.amend (currentMessages[i].id, currentMessages[j]);                     
+                  }
+               }
+
+               this._localUser.id = currentParticipants[i].id; // Need to push the new ID back into our local copy
             }
          }
 
          if (!found) {
-            // Connect our own user ID to the participant caucus      
+            // Connect our own user ID to the participant caucus if we are not already in it (or our email is)
             participantCaucus.add (this._localUser.id, this._localUser);             
          }
       } 
