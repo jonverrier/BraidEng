@@ -338,7 +338,7 @@ export class Persona extends MDynamicStreamable {
       return (false);
    }
 
-   private static _unknown: Persona = new Persona(unknownUuid, "Guest", "", EIcon.kUnknownPersona, undefined, new Date(0));
+   private static _unknown: Persona = new Persona(unknownUuid, "Unknown", "", EIcon.kUnknownPersona, undefined, new Date(0));
 
    /**
     * return persona details for 'unknown'
