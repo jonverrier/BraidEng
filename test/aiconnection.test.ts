@@ -20,7 +20,7 @@ let mySentAt = new Date();
 
 let botMessageId: string = "5678";
 let botAuthorId: string = "Bot";
-let botText = "Bye";
+let botText = "Back propogation is a technique used to train nueral networks.";
 var botSentAt = new Date(0);
 
 let myBotRequestId: string = "12345";
@@ -102,17 +102,18 @@ describe("AIConnection", function () {
    it("Needs to generate valid response from Open AI web endpoint", async function () {
 
       let messages = new Array<Message>();
-      messages.length = 3;
+      messages.length = 2;
       messages[0] = personMessage;
       messages[1] = botRequest;
-      messages[2] = botMessage;
+      //messages[2] = botMessage;
+      //messages[2] = botMessage;
 
       let fullQuery = AIConnection.makeOpenAIQuery (messages, authors);
 
       throwIfUndefined(process);
       throwIfUndefined(process.env);
-      throwIfUndefined(process.env.OPENAI_API_KEY);        
-      let caller = new AIConnection(process.env.OPENAI_API_KEY);
+      throwIfUndefined(process.env.AZURE_OPENAI_API_KEY);        
+      let caller = new AIConnection(process.env.AZURE_OPENAI_API_KEY);
 
       let result = await caller.queryAI (botRequest.text, fullQuery);
 

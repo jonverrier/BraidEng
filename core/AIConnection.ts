@@ -40,11 +40,11 @@ export class AIConnection {
 
       // OPENAI POST ('https://api.openai.com/v1/chat/completions', {
       // AZURE POST https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/chat/completions?api-version={api-version}
-      //       POST https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/chat/completions?api-version={api-version}
 
       await axios.post('https://braidlms.openai.azure.com/openai/deployments/braidlms/chat/completions?api-version=2024-02-01', {
-         prompt: allMessages,
-         // OPENAI model: "gpt-3.5-turbo",         
+         messages: allMessages,
+         // OPENAI model: "gpt-3.5-turbo"
+         // OPENAI prompt: allMessages
       },
       {
          headers: {
