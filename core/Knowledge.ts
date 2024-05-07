@@ -20,13 +20,25 @@ function copyRelevance (relevance: number | undefined) : number | undefined {
 }
 
 const youTubeHostname = "www.youtube.com";
+const gitHubHostname = "github.com";
 
 export function isYouTube (url: string) : boolean {
-   let youTubeHostname = "www.youtube.com";
 
    const URLIn = new URL (url);
 
    if (URLIn.hostname === (youTubeHostname)) {
+      return true;
+   }
+   else {
+      return false;
+   }
+}
+
+export function isGitHub (url: string) : boolean {
+
+   const URLIn = new URL (url);
+
+   if (URLIn.hostname === (gitHubHostname)) {
       return true;
    }
    else {
@@ -53,6 +65,9 @@ export function lookLikeSameSource (url1: string, url2: string ) : boolean {
          return false;
 
    }
+
+   // TODO - add logic for Markdown
+
 
    if ((URLLeft.hostname === URLRight.hostname) && (URLLeft.pathname === URLRight.pathname)) {
       return true;
@@ -393,9 +408,12 @@ export class KnowledgeRepository  {
       var chunkIn: KnowledgeChunk | undefined = undefined;
 
       if (isYouTube (url_))
-         chunkIn = YouTubeRespository.lookUpUrl ("https://www.youtube.com/watch?v=l5mG4z343qg&t=00h00m00s");
+         chunkIn = YouTubeRespository.lookUpUrl (url_);
       else
-         chunkIn =  HtmlRespository.lookUpUrl ("https://huyenchip.com/2023/04/11/llm-engineering.html"); 
+      if (isGitHub (url_))
+         chunkIn = MarkdownRespository.lookUpUrl (url_);         
+      else
+         chunkIn =  HtmlRespository.lookUpUrl (url_); 
 
       if (chunkIn) {
          return KnowledgeRepository.lookUpMostSimilar (chunkIn.ada_v2, similarityThresholdLo, howMany);
