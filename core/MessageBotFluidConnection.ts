@@ -130,7 +130,7 @@ export class MessageBotFluidConnection extends FluidConnection {
                   participantCaucus.amend (current[i].id, current[i]);
                }
                found = true;
-               this._localUser.assign (current[i]);
+               this._localUser.id = current[i].id; // Need to push the new ID back into our local copy
             }
          }
 
