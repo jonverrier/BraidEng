@@ -1,5 +1,3 @@
-// Copyright (c) 2024 Braid Technologies Ltd
-
 import { SharedMap } from "fluid-framework";import { Persona } from './Persona';
 import { Message } from './Message';
 import { IConnectionProps, FluidConnection } from './FluidConnection';
