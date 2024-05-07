@@ -70,20 +70,22 @@ describe("AIConnection", function () {
       expect(AIConnection.mightBeMissTypedRequestForLLM(botRequest, authors)).toEqual(false);                 
    });   
 
-   it("Needs to detect reference errors", function () {
+   it("Needs to allow reference errors & return false", function () {
 
       var newMessage = new Message(personMessage);
       newMessage.authorId = "Banana";
   
       let caught = false;
+      let answer = false;
 
       try {
-         AIConnection.isFromLLM(newMessage, authors);
+         answer = AIConnection.isFromLLM(newMessage, authors);
       }
       catch (e) {
          caught = true;
       }
-      expect(caught).toEqual(true);         
+      expect(caught).toEqual(false);      
+      expect(answer).toEqual(false);          
    });   
 
    it("Needs to build request object", function () {

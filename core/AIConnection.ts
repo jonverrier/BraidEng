@@ -178,8 +178,7 @@ export class AIConnection {
     */
    static isFromLLM (message: Message, authors: Map<string, Persona>) : boolean {
 
-      let author = authors.get (message.authorId);
-
+      let author = Persona.safeAuthorLookup (authors, message.authorId);
       throwIfUndefined (author);
 
       return (author.icon === EIcon.kLLMPersona);
@@ -191,7 +190,7 @@ export class AIConnection {
     */
       static isRequestForLLM (message: Message, authors: Map<string, Persona>) : boolean {
 
-      let author = authors.get (message.authorId);
+      let author = Persona.safeAuthorLookup (authors, message.authorId);
       throwIfUndefined (author);
 
       return (author.icon === EIcon.kPersonPersona) && 
@@ -206,7 +205,7 @@ export class AIConnection {
       if (AIConnection.isRequestForLLM (message, authors))
          return false;
 
-      let author = authors.get (message.authorId);
+      let author = Persona.safeAuthorLookup (authors, message.authorId);
       throwIfUndefined (author);
 
       return (author.icon === EIcon.kPersonPersona) && 
