@@ -206,6 +206,16 @@ const conversationContentColumnStyles = makeStyles({
 
 const DefaultSpinner = (props: Partial<SpinnerProps>) => <Spinner {...props} />;
 
+function safeAuthor (audience: Map<string, Persona>, authorId: string) : Persona {
+   
+   let initial = audience.get (authorId);
+
+   if (initial)
+      return initial;
+   else
+      return Persona.unknown()
+}
+
 export const ConversationRow = (props: IConversationRowProps) => {
 
    const embeddedRowClasses = embeddedRowStyles();
@@ -256,7 +266,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
                               sessionKey={props.sessionKey}
                               message={message} 
                               key={message.id}
-                              author={(audience.get (message.authorId) as Persona)}
+                              author={safeAuthor (audience, message.authorId)}
                               showAiWarning={message.authorId === EConfigStrings.kLLMGuid}
                               onClickUrl={props.onClickUrl}                                 
                            />
