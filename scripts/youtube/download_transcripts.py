@@ -11,7 +11,6 @@ import googleapiclient.errors
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import WebVTTFormatter
 
-
 GOOGLE_DEVELOPER_API_KEY = os.environ["GOOGLE_DEVELOPER_API_KEY"]
 
 # Initialize the Google developer API client

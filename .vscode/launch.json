@@ -5,12 +5,24 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "mocha tests",
             "type": "node",
             "request": "launch",
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "stopOnEntry": false,
-            "args": [ "-r", "ts-node/register", "${workspaceRoot}/test/activity*.ts", "--no-timeouts"],
+            "args": [
+                "-r",
+                "ts-node/register",
+                "${workspaceRoot}/test/aiembed*.ts",
+                "--no-timeouts"
+            ],
             "cwd": "${workspaceRoot}"
         }
     ]

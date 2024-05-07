@@ -8,7 +8,7 @@ import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
 import { MDynamicStreamable, DynamicStreamableFactory } from "./StreamingFramework";
 import { areSameDate, areSameDeepArray } from './Utilities';
-import { KnowledgeSegment } from './Knowledge';
+import { KnowledgeChunk } from './Knowledge';
 
 var keyGenerator: IKeyGenerator = new UuidKeyGenerator();
 
@@ -21,7 +21,7 @@ export class Message extends MDynamicStreamable {
    private _responseToId: string | undefined;   
    private _text: string;
    private _sentAt: Date;
-   private _segments: Array<KnowledgeSegment>;
+   private _chunks: Array<KnowledgeChunk>;
    private _tokens: number;
    private _isDirty: boolean;
 
@@ -47,10 +47,10 @@ export class Message extends MDynamicStreamable {
     * @param responseToId_ - id of the message to which it is a response, can be undefined
     * @param text_ - the message body
     * @param sentAt - timestamp for last interaction seen by the framework
-    * @param sources_ - relevent knowledge sources that help understand / provide context for the message. 
+    * @param chunks_ - relevent knowledge sources that help understand / provide context for the message. 
     */
    public constructor(id_: string | undefined, authorId_: string | undefined, responseToId_: string | undefined, text_: string, sentAt: Date,
-                      sources_: Array<KnowledgeSegment>);
+                      chunks_: Array<KnowledgeChunk>);
 
    /**
     * Create a Message object
@@ -69,7 +69,7 @@ export class Message extends MDynamicStreamable {
          this._responseToId = undefined;
          this._text = "";         
          this._sentAt = new Date();
-         this._segments = new Array<KnowledgeSegment> ();
+         this._chunks = new Array<KnowledgeChunk> ();
          this._tokens = 0;
          this._isDirty = true;
          return;
@@ -80,7 +80,7 @@ export class Message extends MDynamicStreamable {
       var localResponseToId: string;
       var localText: string;
       var localSentAt: Date;
-      var localSegments: Array<KnowledgeSegment>;
+      var localChunks: Array<KnowledgeChunk>;
 
       if (arr.length === 1) {
          localId = arr[0]._id
@@ -88,7 +88,7 @@ export class Message extends MDynamicStreamable {
          localResponseToId = arr[0]._responseToId;
          localText = arr[0]._text;         
          localSentAt = new Date(arr[0]._sentAt);
-         localSegments = arr[0]._segments;
+         localChunks = arr[0]._chunks;
       }
       else if (arr.length === 5) {
          localId = arr[0];
@@ -96,7 +96,7 @@ export class Message extends MDynamicStreamable {
          localResponseToId = arr[2];
          localText = arr[3];           
          localSentAt = new Date (arr[4]); 
-         localSegments = new Array<KnowledgeSegment>();         
+         localChunks = new Array<KnowledgeChunk>();         
       }
       else { 
          localId = arr[0];
@@ -104,7 +104,7 @@ export class Message extends MDynamicStreamable {
          localResponseToId = arr[2];
          localText = arr[3];           
          localSentAt = new Date (arr[4]);         
-         localSegments = arr[5];
+         localChunks = arr[5];
       }
 
       if (!Message.isValidId(localId)) {
@@ -116,7 +116,7 @@ export class Message extends MDynamicStreamable {
       this._responseToId = localResponseToId;      
       this._text = localText;
       this._sentAt = localSentAt;
-      this._segments = localSegments;
+      this._chunks = localChunks;
       this._tokens = 0;
       this._isDirty = true;      
    }
@@ -139,25 +139,23 @@ export class Message extends MDynamicStreamable {
       return JSON.stringify({ id: this._id, authorId: this._authorId, 
                             responseToId: this._responseToId, 
                             text: this._text, sentAt: this._sentAt,
-                            segments: this._segments});
+                            chunks: this._chunks});
    }
 
    streamIn(stream: string): void {
 
       const obj = JSON.parse(stream);
 
-      let segments = new Array<KnowledgeSegment> (); 
+      let chunks = new Array<KnowledgeChunk> (); 
+      let objChunks = obj.chunks;
 
-      // Backwards compaitility for some public conversations
-      let objSegments = obj.segments? obj.segments : obj.sources;
-
-      if (objSegments) {
-         for (let i = 0; i < objSegments.length; i++) {
-            let newSource = new KnowledgeSegment (objSegments[i]);
-            segments.push (newSource);
+      if (objChunks) {
+         for (let i = 0; i < objChunks.length; i++) {
+            let newSource = new KnowledgeChunk (objChunks[i]);
+            chunks.push (newSource);
          }      
       }
-      this.assign(new Message (obj.id, obj.authorId, obj.responseToId, obj.text, new Date(obj.sentAt), segments));
+      this.assign(new Message (obj.id, obj.authorId, obj.responseToId, obj.text, new Date(obj.sentAt), chunks));
    }
 
    /**
@@ -178,8 +176,8 @@ export class Message extends MDynamicStreamable {
    get sentAt(): Date {
       return this._sentAt;
    }
-   get segments(): Array<KnowledgeSegment> {
-      return this._segments;
+   get chunks(): Array<KnowledgeChunk> {
+      return this._chunks;
    }
    get isDirty(): boolean {
       return this._isDirty;
@@ -190,9 +188,9 @@ export class Message extends MDynamicStreamable {
 
          let estimatedTokens = tokenizer.estimateTokenCount(this._text);
 
-         if (this._segments) {
-            for (let i = 0; i < this._segments.length; i++) {
-               estimatedTokens += tokenizer.estimateTokenCount(this._segments[i].summary);
+         if (this._chunks) {
+            for (let i = 0; i < this._chunks.length; i++) {
+               estimatedTokens += tokenizer.estimateTokenCount(this._chunks[i].summary);
             }
          }
          this._tokens = estimatedTokens;
@@ -237,8 +235,8 @@ export class Message extends MDynamicStreamable {
       this._sentAt = new Date(sentAt_);
    }
 
-   set segments (segments_: Array<KnowledgeSegment>) {
-      this._segments = segments_;
+   set chunks (chunks_: Array<KnowledgeChunk>) {
+      this._chunks = chunks_;
       this._isDirty = true;      
    }
 
@@ -261,7 +259,7 @@ export class Message extends MDynamicStreamable {
          ((this._responseToId === undefined && rhs._responseToId === undefined) || (this._responseToId === rhs._responseToId)) &&         
          (this._text === rhs._text) &&         
          (areSameDate (this._sentAt, rhs._sentAt)) &&
-         areSameDeepArray (this._segments, rhs._segments));
+         areSameDeepArray (this._chunks, rhs._chunks));
    }
 
    /**
@@ -274,7 +272,7 @@ export class Message extends MDynamicStreamable {
       this._responseToId = rhs._responseToId;      
       this._text = rhs._text;
       this._sentAt = new Date (rhs._sentAt);
-      this._segments = rhs._segments;
+      this._chunks = rhs._chunks;
       this._tokens = 0;
       this._isDirty = true;      
 

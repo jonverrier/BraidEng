@@ -14,8 +14,8 @@ import { Environment, EEnvironment } from "./Environment";
 import { KnowledgeEnrichedMessage, KnowledgeRepository, kDefaultKnowledgeSegmentCount, kDefaultMinimumCosineSimilarity} from "./Knowledge";
 import { SessionKey } from "./Keys";
 
-// Actual is 2048, but leave some headroom
-const kMaxTokens : number= 1536;
+// We allow for the equivalent of 10 minutes of chat. 10 mins * 60 words = 600 words = 2400 tokens. 
+const kMaxTokens : number= 4096;
 
 export class AIConnection {
 
@@ -38,14 +38,19 @@ export class AIConnection {
 
       var response : any = null;
 
-      await axios.post('https://api.openai.com/v1/chat/completions', {
+      // OPENAI POST ('https://api.openai.com/v1/chat/completions', {
+      // AZURE POST https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/chat/completions?api-version={api-version}
+
+      await axios.post('https://braidlms.openai.azure.com/openai/deployments/braidlms/chat/completions?api-version=2024-02-01', {
          messages: allMessages,
-         model: "gpt-3.5-turbo",
+         // OPENAI model: "gpt-3.5-turbo"
+         // OPENAI prompt: allMessages
       },
       {
          headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this._key}`
+            // OpenAI - 'Authorization': `Bearer ${this._key}`
+            'api-key': this._key
          }
       })
       .then((resp : any) => {
@@ -67,7 +72,7 @@ export class AIConnection {
 
       let enriched = KnowledgeRepository.lookUpMostSimilar (embedding, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);
 
-      return new KnowledgeEnrichedMessage (response.data.choices[0].message.content as string, enriched.segments);
+      return new KnowledgeEnrichedMessage (response.data.choices[0].message.content as string, enriched.chunks);
    }    
 
       // Makes an Axios call to call web endpoint
@@ -77,14 +82,18 @@ export class AIConnection {
    
       var response : any = null;
    
-      await axios.post('https://api.openai.com/v1/embeddings', {
+      // AZURE POST https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/embeddings?api-version={api-version}
+      // OPENAI POST 'https://api.openai.com/v1/embeddings'
+
+      await axios.post('https://braidlms.openai.azure.com/openai/deployments/braidlmse/embeddings?api-version=2024-02-01', {
          input: input,
-         model: "text-embedding-ada-002",
+         // OPENAI model: "text-embedding-ada-002",       
       },
       {
          headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this._key}`
+            // OpenAI - 'Authorization': `Bearer ${this._key}`
+            'api-key': this._key           
          }
       })
       .then((resp : any) => {
@@ -154,8 +163,8 @@ export class AIConnection {
             let entry = { role: 'assistant', content: message.text };
             builtQuery.push (entry);     
 
-            for (let j = 0; j < message.segments.length; j++) {
-               let entry = { role: 'assistant', content: message.segments[j].summary };
+            for (let j = 0; j < message.chunks.length; j++) {
+               let entry = { role: 'assistant', content: message.chunks[j].summary };
                builtQuery.push (entry);
             }                   
          }         

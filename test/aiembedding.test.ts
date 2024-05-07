@@ -69,7 +69,7 @@ describe("Embedding", function () {
          kDefaultMinimumCosineSimilarity, 
          kDefaultKnowledgeSegmentCount);
 
-      expect (best.segments.length === kDefaultKnowledgeSegmentCount).toBe (true);
+      expect (best.chunks.length === kDefaultKnowledgeSegmentCount).toBe (true);
 
    }).timeout (2000);
 
@@ -89,7 +89,7 @@ describe("Embedding", function () {
          0, // Deliberately set this low so we always match
          kDefaultKnowledgeSegmentCount);
 
-      expect (best.segments.length === kDefaultKnowledgeSegmentCount).toBe (true);    
+      expect (best.chunks.length === kDefaultKnowledgeSegmentCount).toBe (true);    
 
    }).timeout (2000);   
 
@@ -108,7 +108,7 @@ describe("Embedding", function () {
          0, // Deliberately set this low so we always match
          kDefaultKnowledgeSegmentCount);
 
-      expect (best.segments.length === kDefaultKnowledgeSegmentCount).toBe (true);   
+      expect (best.chunks.length === kDefaultKnowledgeSegmentCount).toBe (true);   
 
    }).timeout (2000);     
 
@@ -127,7 +127,7 @@ describe("Embedding", function () {
          0, // Deliberately set this low so we always match
          kDefaultKnowledgeSegmentCount);
          
-      expect (best.segments.length === kDefaultKnowledgeSegmentCount).toBe (true);    
+      expect (best.chunks.length === kDefaultKnowledgeSegmentCount).toBe (true);    
 
    }).timeout (2000);      
 });

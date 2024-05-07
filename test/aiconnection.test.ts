@@ -2,7 +2,7 @@
 // Copyright Braid Technologies ltd, 2024
 import { throwIfUndefined } from '../core/Asserts';
 import { Message} from '../core/Message';
-import { KnowledgeSegment } from '../core/Knowledge';
+import { KnowledgeChunk } from '../core/Knowledge';
 import { Persona} from '../core/Persona';
 import { EIcon } from '../core/Icons';
 import { SessionKey } from '../core/Keys';
@@ -20,7 +20,7 @@ let mySentAt = new Date();
 
 let botMessageId: string = "5678";
 let botAuthorId: string = "Bot";
-let botText = "Bye";
+let botText = "Back propogation is a technique used to train nueral networks.";
 var botSentAt = new Date(0);
 
 let myBotRequestId: string = "12345";
@@ -102,17 +102,18 @@ describe("AIConnection", function () {
    it("Needs to generate valid response from Open AI web endpoint", async function () {
 
       let messages = new Array<Message>();
-      messages.length = 3;
+      messages.length = 2;
       messages[0] = personMessage;
       messages[1] = botRequest;
-      messages[2] = botMessage;
+      //messages[2] = botMessage;
+      //messages[2] = botMessage;
 
       let fullQuery = AIConnection.makeOpenAIQuery (messages, authors);
 
       throwIfUndefined(process);
       throwIfUndefined(process.env);
-      throwIfUndefined(process.env.OPENAI_API_KEY);        
-      let caller = new AIConnection(process.env.OPENAI_API_KEY);
+      throwIfUndefined(process.env.AZURE_OPENAI_API_KEY);        
+      let caller = new AIConnection(process.env.AZURE_OPENAI_API_KEY);
 
       let result = await caller.queryAI (botRequest.text, fullQuery);
 
@@ -121,22 +122,22 @@ describe("AIConnection", function () {
 
    function makeLongMessage (startingMessage: Message, segmentCount: number) : Message {
 
-      let segments = new Array<KnowledgeSegment>();      
+      let segments = new Array<KnowledgeChunk>();      
 
       // Make a list of knowledge sources, each with 500 tokens
       for (var i = 0; i < segmentCount; i++) {
          
          let accumulatedText = "Hi";
 
-         for (var j = 0; j < 500; j++) {
+         for (var j = 0; j < 4000; j++) {
             accumulatedText = accumulatedText.concat (" token");
          }
-         let ks1 = new KnowledgeSegment("makeUpUrl", accumulatedText, new Array<number>(), undefined, undefined);
+         let ks1 = new KnowledgeChunk("makeUpUrl", accumulatedText, new Array<number>(), undefined, undefined);
          segments.push (ks1);
       }
       
       let newBotRequest = new Message (startingMessage);
-      newBotRequest.segments = segments;
+      newBotRequest.chunks = segments;
 
       return newBotRequest;
    }

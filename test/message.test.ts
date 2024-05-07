@@ -4,7 +4,7 @@ import { MDynamicStreamable } from '../core/StreamingFramework';
 import { Message} from '../core/Message';
 import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
-import { KnowledgeSegment } from '../core/Knowledge';
+import { KnowledgeChunk } from '../core/Knowledge';
 import { logApiError } from '../core/Logging';
 
 import { expect } from 'expect';
@@ -149,12 +149,12 @@ describe("Message", function () {
 
    it("Needs to convert to and from JSON() with KnowledgeSources attached", function () {
 
-      let ks1 = new KnowledgeSegment(message1.id, message1.text, new Array<number>(), undefined, undefined);
+      let ks1 = new KnowledgeChunk(message1.id, message1.text, new Array<number>(), undefined, undefined);
       let messageWithSources = new Message (message1);
 
-      let sources = new Array<KnowledgeSegment> ();
+      let sources = new Array<KnowledgeChunk> ();
       sources.push (ks1);
-      messageWithSources.segments = sources;      
+      messageWithSources.chunks = sources;      
       var stream: string = messageWithSources.streamOut();
 
       var messageNew: Message = new Message(message1.id, message1.authorId, message1.responseToId, message1.text, message1.sentAt);
@@ -179,12 +179,12 @@ describe("Message", function () {
 
    it("Needs to dynamically create Message to and from JSON() with KnowledgeSources attached", function () {
 
-      let ks1 = new KnowledgeSegment(message1.id, message1.text, new Array<number>(), undefined, undefined);
+      let ks1 = new KnowledgeChunk(message1.id, message1.text, new Array<number>(), undefined, undefined);
       let messageWithSources = new Message (message1);
 
-      let sources = new Array<KnowledgeSegment> ();
+      let sources = new Array<KnowledgeChunk> ();
       sources.push (ks1);
-      messageWithSources.segments = sources;      
+      messageWithSources.chunks = sources;      
      
       var stream: string = messageWithSources.flatten();
 
@@ -199,7 +199,7 @@ describe("Message", function () {
 
    it("Needs to count with tokens KnowledgeSources attached", function () {
 
-      let ks1 = new KnowledgeSegment(message1.id, message1.text, new Array<number>(), undefined, undefined);
+      let ks1 = new KnowledgeChunk(message1.id, message1.text, new Array<number>(), undefined, undefined);
 
       var messageNew: Message = new Message();  
       expect(messageNew.isDirty).toEqual(true);          
@@ -215,9 +215,9 @@ describe("Message", function () {
       let messageWithSources = new Message (messageNew);
       expect(messageWithSources.isDirty).toEqual(true); 
 
-      let sources = new Array<KnowledgeSegment> ();
+      let sources = new Array<KnowledgeChunk> ();
       sources.push (ks1);
-      messageWithSources.segments = sources;      
+      messageWithSources.chunks = sources;      
       expect(messageWithSources.isDirty).toEqual(true);         
       expect(messageWithSources.tokens > 2).toEqual(true);
       expect(messageWithSources.isDirty).toEqual(false);       
