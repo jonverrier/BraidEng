@@ -1,14 +1,11 @@
-/*! Copyright TXPCo 2022 */
+/*! Copyright TXPCo 2022//
 
+/* 
 // React
 import React from 'react';
 
 // Fluent
 import { makeStyles, tokens, Textarea, TextareaProps, TextareaOnChangeData } from '@fluentui/react-components';
-
-// Local 
-import { TextShape } from './Text';
-import { ICanvasHtmlShapeEditProps, handleBlur, handleCommitKeyDown, moveFocus, calculateDyNeeded } from './CanvasHtmlHelpers';
 
 const textFieldId = "canvasTextArea";
 
@@ -120,3 +117,160 @@ export const CanvasTextEdit = (props: ICanvasHtmlShapeEditProps) => {
       </div>
    );
 }
+
+
+type OnCommit = (shapeId: string, tool: EUIActions, text: string) => void;
+
+//
+ * Parameters passed to any HtmlShape
+ * @param boundary - bounding rectangle for the component
+ * @param initialText - initial test value
+ * @param lineHeight - hight of  aline on the Canvas
+ * @param spaceCharWidth - width of a space character on the Canvas
+//
+export interface ICanvasHtmlShapeProps {
+
+   id: string;
+   boundary: GRect;
+   initialText: string;
+   lineHeight: number;
+   spaceCharWidth: number;
+}
+
+export interface ICanvasHtmlShapesProps extends ICanvasHtmlShapeProps {
+
+   shapes: Map<string, Shape>;
+}
+
+//
+ * Parameters passed to an editable HtmlShape
+ * @param onCommit - function that gets called when edit is finished
+//
+export interface ICanvasHtmlShapeEditProps extends ICanvasHtmlShapeProps {
+
+   onCommit: OnCommit;
+   interactor: HtmlEditInteractor;
+}
+
+//
+ * looks to see if the target element is losing focus to an external element, and if so processes a Commit
+ * @param shapeid - string identifying the shape type
+ * @param event - Focus Event
+ * @param props - generic properties passed to the HTML edit component
+ * @param value - current text value
+//
+export function handleBlur(shapeId: string, event: React.FocusEvent<HTMLDivElement>, props: ICanvasHtmlShapeEditProps, value: string) {
+
+   const currentTarget = event.currentTarget;
+
+   // Check the newly focused element in the next tick of the event loop
+   setTimeout(() => {
+      // Check if the new activeElement is a child of the original container
+      if (!currentTarget.contains(document.activeElement) && (!closed)) {
+         props.onCommit(shapeId, EUIActions.Ok, value);
+      }
+   }, 0);
+};
+
+//
+ * processes a Commit
+ * @param shapeid - string identifying the shape type
+ * @param props - generic properties passed to the HTML edit component
+ * @param value - current text value
+//
+export function handleCommit(shapeId: string, action: EUIActions, props: ICanvasHtmlShapeEditProps, value: string): void {
+
+   props.onCommit(shapeId, action, value);
+};
+
+//
+ * looks to see if the user has pressed 'escape' or Ctrl-enter, and if so processes a Commit
+ * @param shapeid - string identifying the shape type* 
+ * @param event - Keyboard Event
+ * @param props - generic properties passed to the HTML edit component
+ * @param value - current text value
+//
+export function handleCommitKeyDown(shapeId: string, event: React.KeyboardEvent<HTMLElement>, props: ICanvasHtmlShapeEditProps, value: string) {
+
+   var processed: boolean = false;
+
+   switch (event.key) {
+
+      case 'Escape':
+         handleCommit(shapeId, EUIActions.Cancel, props, value);
+         processed = true;
+         break;
+
+      case 'Enter':
+         if (event.ctrlKey) {
+            handleCommit(shapeId, EUIActions.Ok, props, value);
+            processed = true;
+         }
+         break;
+
+      default:
+         break;
+   }
+
+   if (processed) {
+      event.stopPropagation();
+      event.preventDefault();
+   }
+};
+
+//
+ * Move focus to the text element, suppressing scrolling & highlighting
+ * @param textFieldId - id of the text element
+//
+export function moveFocus (textFieldId: string): void {
+
+   let textAreaDiv = document.getElementById(textFieldId);
+   if (textAreaDiv) {
+      let opts = { preventScroll: true, focusVisible: false };
+      textAreaDiv.focus(opts);
+   }
+};
+
+//
+ * Measure the height we need for the given text, ideally by measuring in a Canvas, with a fallback for down-level browsers
+ * @param props - generic properties passed to the HTML edit component
+ * @param value - current text value
+//
+export function calculateDyNeeded (props: ICanvasHtmlShapeEditProps, value: string): number {
+
+   var dyNeeded: number;
+
+   if (typeof OffscreenCanvas !== "undefined") {
+
+      let offScreenCanvas = new OffscreenCanvas(props.boundary.dx, props.boundary.dy);
+      let offscreenContext = offScreenCanvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
+      offscreenContext.font = "18pt Short Stack, cursive";
+
+      dyNeeded = wrapText(offscreenContext, value,
+         props.boundary.x,
+         props.boundary.y,
+         props.boundary.dx,
+         props.lineHeight,
+         props.spaceCharWidth,
+         false);
+
+      // Tidy up
+      offScreenCanvas = null
+      offscreenContext = null;
+   }
+   else {
+
+      // Fallback for downlevel browsers - estimate using fixed width font assumption
+      dyNeeded = wrapText(null, value,
+         props.boundary.x,
+         props.boundary.y,
+         props.boundary.dx,
+         props.lineHeight,
+         props.spaceCharWidth,
+         false);
+   }
+
+   return dyNeeded;
+}
+
+*/

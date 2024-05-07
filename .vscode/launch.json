@@ -20,7 +20,7 @@
             "args": [
                 "-r",
                 "ts-node/register",
-                "${workspaceRoot}/test/activity*.ts",
+                "${workspaceRoot}/test/aiembed*.ts",
                 "--no-timeouts"
             ],
             "cwd": "${workspaceRoot}"
