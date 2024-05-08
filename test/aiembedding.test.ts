@@ -10,6 +10,7 @@ import { AIConnector } from "../core/AIConnection";
 
 import { LiteEmbedding } from "../core/EmbeddingFormats";
 import liteYouTubeEmbeddings from '../core/youtube_embeddings_lite.json';
+import liteGitHubEmbeddings from '../core/markdown_embeddings_lite.json';
 import { KnowledgeRepository, cosineSimilarity, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount } from "../core/Knowledge";
 
 
@@ -54,18 +55,20 @@ describe("Embedding", function () {
       expect (bestMatch === 100).toBe (true);
    }).timeout (2000);
 
-   it("Needs to find closest match for a query", async function () {
+   it("Needs to find closest match for an existing document", async function () {
       
       let embeddings = new Array<LiteEmbedding>();
-      embeddings = liteYouTubeEmbeddings as Array<LiteEmbedding>;
+      embeddings = liteGitHubEmbeddings as Array<LiteEmbedding>;
 
-      let query = embeddings[100].summary;
+      let embed = KnowledgeRepository.lookUpSimilarfromUrl ("https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md",
+         kDefaultMinimumCosineSimilarity, 
+         kDefaultKnowledgeSegmentCount);      
 
       const client = new AIConnector();
       let connection = await AIConnector.connect (new SessionKey (KStubEnvironmentVariables.SessionKey));      
 
-      const embedding = await connection.createEmbedding (query);
-      let best = KnowledgeRepository.lookUpMostSimilar (embedding, 
+      let best = KnowledgeRepository.lookUpMostSimilar (embed.chunks[0].ada_v2, 
+         embed.chunks[0].url,
          kDefaultMinimumCosineSimilarity, 
          kDefaultKnowledgeSegmentCount);
 
@@ -86,6 +89,7 @@ describe("Embedding", function () {
 
       const embedding = await connection.createEmbedding (query);
       let best = KnowledgeRepository.lookUpMostSimilar (embedding, 
+         undefined,
          0, // Deliberately set this low so we always match
          kDefaultKnowledgeSegmentCount);
 
@@ -105,6 +109,7 @@ describe("Embedding", function () {
 
       const embedding = await connection.createEmbedding (query);
       let best = KnowledgeRepository.lookUpMostSimilar (embedding, 
+         undefined,
          0, // Deliberately set this low so we always match
          kDefaultKnowledgeSegmentCount);
 
@@ -124,6 +129,7 @@ describe("Embedding", function () {
 
       const embedding = await connection.createEmbedding (query);
       let best = KnowledgeRepository.lookUpMostSimilar (embedding, 
+         undefined,
          0, // Deliberately set this low so we always match
          kDefaultKnowledgeSegmentCount);
          
