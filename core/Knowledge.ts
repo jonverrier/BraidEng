@@ -20,13 +20,25 @@ function copyRelevance (relevance: number | undefined) : number | undefined {
 }
 
 const youTubeHostname = "www.youtube.com";
+const gitHubHostname = "github.com";
 
 export function isYouTube (url: string) : boolean {
-   let youTubeHostname = "www.youtube.com";
 
    const URLIn = new URL (url);
 
    if (URLIn.hostname === (youTubeHostname)) {
+      return true;
+   }
+   else {
+      return false;
+   }
+}
+
+export function isGitHub (url: string) : boolean {
+
+   const URLIn = new URL (url);
+
+   if (URLIn.hostname === (gitHubHostname)) {
       return true;
    }
    else {
@@ -53,6 +65,9 @@ export function lookLikeSameSource (url1: string, url2: string ) : boolean {
          return false;
 
    }
+
+   // TODO - add logic for Markdown
+
 
    if ((URLLeft.hostname === URLRight.hostname) && (URLLeft.pathname === URLRight.pathname)) {
       return true;
@@ -289,23 +304,51 @@ export class KnowledgeChunkFinder {
     * searches current most relevant results to see if the new one should be included.  
     * @param rhs - the object to assign this one from.  
     */
-   private lowestOfCurrent (): number {
+   private lowestOfCurrent (urlIn: string | undefined): number {
 
       if (this._chunks.length === 0)
          return -1;
 
       let lowestRelevance = this._chunks[0].relevance;
       let lowestIndex = 0;
+      let sameSource = false;
+      let sameIndex = -1;
 
-      for (let i = 1; i < this._chunks.length; i++) {
+      if (urlIn) {
+         for (let i = 1; i < this._chunks.length; i++) {
+            if (lookLikeSameSource (urlIn, this._chunks[i].url)) {
+               sameSource = true;
+               sameIndex = i;
+            }
+         }
+      }
 
-         let comp = this._chunks[i].relevance;
+      if (sameSource) {
+         // If we have an entry from the same source, replace if the new one looks better
+         let comp = this._chunks[sameIndex].relevance;
 
          if (typeof comp !== 'undefined' && typeof lowestRelevance !== 'undefined') {
           
-            if (comp < lowestRelevance) {
-               lowestRelevance = comp;
-               lowestIndex = i;
+            let current = this._chunks[sameIndex].relevance;
+
+            if ((typeof comp !== 'undefined' && typeof current !== 'undefined') 
+               && (comp < current )) {
+               lowestIndex = sameIndex;
+            }
+         }
+      }
+      else {
+         // Else replace the lowest relevance entry
+         for (let i = 1; i < this._chunks.length; i++) {
+
+            let comp = this._chunks[i].relevance;
+
+            if (typeof comp !== 'undefined' && typeof lowestRelevance !== 'undefined') {
+          
+               if (comp < lowestRelevance) {
+                  lowestRelevance = comp;
+                  lowestIndex = i;
+               }
             }
          }
       }
@@ -316,13 +359,13 @@ export class KnowledgeChunkFinder {
    /**
     * searches current most relevant results to see if the new one should be included.  
     * @param candidate - the object to test  
+    * @param url - optionally, the URL of the source we started with. Use this to avoid picking duplicates. 
     */
-   replaceIfBeatsCurrent (candidate: KnowledgeChunk): boolean {
+   replaceIfBeatsCurrent (candidate: KnowledgeChunk, urlIn: string | undefined): boolean {
 
-      // First check if its just the same source e.g. different chunk of a Youtube video
-      for (let i = 0; i < this._chunks.length; i++) {
-         if (lookLikeSameSource (candidate.url, this._chunks[i].url))
-            return false;
+      // If we have a reference source, check if its just the same source as our reference e.g. different chunk of a Youtube video
+      if (urlIn && lookLikeSameSource (candidate.url, urlIn)) {
+         return false;
       }
 
       // If the array can grow we just add the new candidate
@@ -333,8 +376,9 @@ export class KnowledgeChunkFinder {
          return true;
       }
 
-      // Else we do a search an insert new if it is below current
-      let lowestIndex = this.lowestOfCurrent();
+      // Else we do a search and insert the new one if it is better than a current candidate
+      // TODO  - avoid lots of duplicates from same source
+      let lowestIndex = this.lowestOfCurrent(urlIn);
       let currentLowest = this._chunks[lowestIndex];
 
       if (typeof currentLowest.relevance !== 'undefined' 
@@ -373,32 +417,37 @@ export function cosineSimilarity(vector1: number[], vector2: number[]): number {
 
 export class KnowledgeRepository  {
 
-   static lookUpMostSimilar (embedding: Array<number>, similarityThresholdLo: number, howMany: number) : KnowledgeChunkFinder {
+   static lookUpMostSimilar (embedding: Array<number>, url: string | undefined, 
+      similarityThresholdLo: number, howMany: number) : KnowledgeChunkFinder {
 
-      let bestSources = new KnowledgeChunkFinder(similarityThresholdLo, howMany);
+      let chunks = new KnowledgeChunkFinder(similarityThresholdLo, howMany);
 
-      YouTubeRespository.lookUpMostSimilar (embedding, bestSources);
-      MarkdownRespository.lookUpMostSimilar (embedding, bestSources);  
-      HtmlRespository.lookUpMostSimilar (embedding, bestSources); 
+      YouTubeRespository.lookUpMostSimilar (embedding, url, chunks);
+      MarkdownRespository.lookUpMostSimilar (embedding, url, chunks);  
+      HtmlRespository.lookUpMostSimilar (embedding, url, chunks); 
 
-      return bestSources;
+      return chunks;
    }   
 
    /**
     * lookUpSimilarfromUrl 
     * look to see of we have similar content from other sources
     */   
-   static lookUpSimilarfromUrl (url_: string, similarityThresholdLo: number, howMany: number) : KnowledgeChunkFinder {
+   static lookUpSimilarfromUrl (url: string, similarityThresholdLo: number, howMany: number) : KnowledgeChunkFinder {
       
       var chunkIn: KnowledgeChunk | undefined = undefined;
 
-      if (isYouTube (url_))
-         chunkIn = YouTubeRespository.lookUpUrl ("https://www.youtube.com/watch?v=l5mG4z343qg&t=00h00m00s");
+      if (isYouTube (url))
+         chunkIn = YouTubeRespository.lookUpUrl (url);
       else
-         chunkIn =  HtmlRespository.lookUpUrl ("https://huyenchip.com/2023/04/11/llm-engineering.html"); 
+      if (isGitHub (url))
+         chunkIn = MarkdownRespository.lookUpUrl (url);         
+      else
+         chunkIn =  HtmlRespository.lookUpUrl (url); 
 
       if (chunkIn) {
-         return KnowledgeRepository.lookUpMostSimilar (chunkIn.ada_v2, similarityThresholdLo, howMany);
+         return KnowledgeRepository.lookUpMostSimilar (chunkIn.ada_v2, url, 
+                                                       similarityThresholdLo, howMany);
       }
 
       return new KnowledgeChunkFinder(kDefaultMinimumCosineSimilarity, howMany);
@@ -440,25 +489,55 @@ export class KnowledgeRepository  {
    }
 }
 
+type MakeUrlFn = (a: LiteEmbedding) => string;
+
+function lookUpMostSimilar (repository: Array<LiteEmbedding>, 
+   embedding: Array<number>, urlIn: string | undefined, 
+   builder: KnowledgeChunkFinder,
+   fn : MakeUrlFn ): void {
+
+      for (let i = 0; i < repository.length; i++) {
+
+         let url = fn (repository[i]); 
+         let relevance = Number (cosineSimilarity (embedding, repository[i].ada_v2).toPrecision(2));
+
+         let candidate = new KnowledgeChunk (url, repository[i].summary, repository[i].ada_v2, undefined, relevance);
+         let changed = builder.replaceIfBeatsCurrent (candidate, urlIn);
+      }         
+}
+
+function lookupUrl (repository: Array<LiteEmbedding>, 
+   urlIn: string | undefined, 
+   fn : MakeUrlFn ): KnowledgeChunk | undefined {
+
+      for (let i = 0; i < repository.length; i++) {
+
+         let url = fn (repository[i]);
+         if (url === urlIn) {
+            let candidate = new KnowledgeChunk (url, repository[i].summary, repository[i].ada_v2, undefined, undefined);
+            return candidate;
+         }
+      }   
+
+      return undefined;     
+}
+
 /**
  * YouTubeRespository 
  * Facade over imported JSON - at some point move to vector DB blah blah
  */
 class YouTubeRespository  {
    
-   static lookUpMostSimilar (embedding: Array<number>, builder: KnowledgeChunkFinder): void {
+   static makeUrl (embedding: LiteEmbedding) : string {
+      return makeYouTubeUrl (embedding.sourceId, embedding.start, embedding.seconds);        
+   }
+
+   static lookUpMostSimilar (embedding: Array<number>, url: string | undefined, builder: KnowledgeChunkFinder): void {
 
       let embeddings = new Array<LiteEmbedding>();
       embeddings = liteYouTubeEmbeddings as Array<LiteEmbedding>;
 
-      for (let i = 0; i < embeddings.length; i++) {
-
-         let url = makeYouTubeUrl (embeddings[i].sourceId, embeddings[i].start, embeddings[i].seconds);
-         let relevance = Number (cosineSimilarity (embedding, embeddings[i].ada_v2).toPrecision(2));
-
-         let candidate = new KnowledgeChunk (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, relevance);
-         let changed = builder.replaceIfBeatsCurrent (candidate);
-      }      
+      lookUpMostSimilar (embeddings, embedding, url, builder, YouTubeRespository.makeUrl); 
    }
 
    static lookUpUrl (url_: string) : KnowledgeChunk | undefined {
@@ -466,16 +545,7 @@ class YouTubeRespository  {
       let embeddings = new Array<LiteEmbedding>();
       embeddings = liteYouTubeEmbeddings as Array<LiteEmbedding>;
 
-      for (let i = 0; i < embeddings.length; i++) {
-
-         let url = makeYouTubeUrl (embeddings[i].sourceId, embeddings[i].start, embeddings[i].seconds);
-         if (url === url_) {
-            let candidate = new KnowledgeChunk (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, undefined);
-            return candidate;
-         }
-      }  
-
-      return undefined;
+      return lookupUrl (embeddings, url_, YouTubeRespository.makeUrl);
    }
    
 }
@@ -486,54 +556,40 @@ class YouTubeRespository  {
  */
 class MarkdownRespository  {
    
-   static lookUpMostSimilar (embedding: Array<number>, builder: KnowledgeChunkFinder): void {
+   static makeUrl (embedding: LiteEmbedding) : string {
+      return makeGithubUrl (embedding.sourceId);        
+   }
+
+   static lookUpMostSimilar (embedding: Array<number>, url: string | undefined, builder: KnowledgeChunkFinder): void {
 
       let embeddings = new Array<LiteEmbedding>();
       embeddings = liteMarkdownEmbeddings as Array<LiteEmbedding>;
-
-      for (let i = 0; i < embeddings.length; i++) {
-
-         let url = makeGithubUrl (embeddings[i].sourceId);
-         let relevance = Number (cosineSimilarity (embedding, embeddings[i].ada_v2).toPrecision(2));
-
-         let candidate = new KnowledgeChunk (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, relevance);
-         let changed = builder.replaceIfBeatsCurrent (candidate);
-      }      
+   
+      lookUpMostSimilar (embeddings, embedding, url, builder, MarkdownRespository.makeUrl);      
    }
+
    static lookUpUrl (url_: string) : KnowledgeChunk | undefined {
 
       let embeddings = new Array<LiteEmbedding>();
       embeddings = liteMarkdownEmbeddings as Array<LiteEmbedding>;
 
-      for (let i = 0; i < embeddings.length; i++) {
-
-         let url = makeGithubUrl (embeddings[i].sourceId);
-         if (url === url_) {
-            let candidate = new KnowledgeChunk (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, undefined);
-            return candidate;
-         }
-      }  
-
-      return undefined;
+      return lookupUrl (embeddings, url_, MarkdownRespository.makeUrl);
    }   
    
 }
 
 class HtmlRespository  {
    
-   static lookUpMostSimilar (embedding: Array<number>, builder: KnowledgeChunkFinder): void {
+   static makeUrl (embedding: LiteEmbedding) : string {
+      return makeWebUrl (embedding.sourceId);        
+   }
+
+   static lookUpMostSimilar (embedding: Array<number>,  url: string | undefined, builder: KnowledgeChunkFinder): void {
 
       let embeddings = new Array<LiteEmbedding>();
       embeddings = liteHtmlEmbeddings as Array<LiteEmbedding>;
 
-      for (let i = 0; i < embeddings.length; i++) {
-
-         let url = makeWebUrl (embeddings[i].sourceId);
-         let relevance = Number (cosineSimilarity (embedding, embeddings[i].ada_v2).toPrecision(2));
-
-         let candidate = new KnowledgeChunk (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, relevance);
-         let changed = builder.replaceIfBeatsCurrent (candidate);
-      }      
+      lookUpMostSimilar (embeddings, embedding, url, builder, HtmlRespository.makeUrl);    
    }
 
    static lookUpUrl (url_: string) : KnowledgeChunk | undefined {
@@ -541,16 +597,7 @@ class HtmlRespository  {
       let embeddings = new Array<LiteEmbedding>();
       embeddings = liteHtmlEmbeddings as Array<LiteEmbedding>;
 
-      for (let i = 0; i < embeddings.length; i++) {
-
-         let url = makeWebUrl (embeddings[i].sourceId);
-         if (url === url_) {
-            let candidate = new KnowledgeChunk (url, embeddings[i].summary, embeddings[i].ada_v2, undefined, undefined);
-            return candidate;
-         }
-      }  
-
-      return undefined;
+      return lookupUrl (embeddings, url_, HtmlRespository.makeUrl);
    }   
    
 }
