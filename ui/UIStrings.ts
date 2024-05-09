@@ -22,7 +22,7 @@ export enum EUIStrings {
    kJoinApiError = "Sorry, we were not able to connect to the conversation.",
    kAiApiError = "Sorry, we were not able to connect to the AI.",   
 
-   kSendMessagePreamble = "Type a message below. If you want @Braid to reply, put '@Braid' in the message.",
+   kSendMessagePreamble = "Type a message below. If you want @Braid to reply, put '@Braid' in the message. Treat your messages as public and do not enter confidential information. ",
    kSendButtonPrompt = "Send",
    kSendMessagePrompt = "Message",   
    kSendMessagePlaceholder = "Write a message... ",  
