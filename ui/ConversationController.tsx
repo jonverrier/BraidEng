@@ -250,6 +250,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       let fluidMessagesConnection : MessageBotFluidConnection = fluidConnection;
 
       throwIfUndefined (suggested);      
+      suggested.sentAt = new Date(); // Need to reset date so it goes at the end. 
       addMessage (fluidMessagesConnection, suggested); 
 
       setSuggested (undefined);

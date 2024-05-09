@@ -6,6 +6,8 @@ export enum EConfigStrings {
    kApiLogCategory = "API",
    kDbLogCategory = "DB",   
 
+   kFontNameForTextWrapCalculation = "12pt Segoe UI",
+
    kRequestSessionKeyUrl = "https://braidapps.io/api/joinkey",
    kRequestAiKeyUrl = "https://braidapps.io/api/aikey",   
    kRequestMongoDbKeyUrl = "https://braidapps.io/api/mdbkey",
@@ -47,7 +49,9 @@ export enum EConfigStrings {
 
 export enum EConfigNumbers {
    kHelpfulPromptDelayMsecs = 3000,
-   kHelpfulPromptMinimumGapMins = 10
+   kHelpfulPromptMinimumGapMins = 10,
+   kMessagePromptBorderAllowance = 28,
+   kMessagePromptMaxCharacters = 2048
 }
 
 // This is used for local running only, as in browser we cannot access environment variables
