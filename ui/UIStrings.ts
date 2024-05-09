@@ -22,9 +22,11 @@ export enum EUIStrings {
    kJoinApiError = "Sorry, we were not able to connect to the conversation.",
    kAiApiError = "Sorry, we were not able to connect to the AI.",   
 
-   kSendMessagePreamble = "Type a message here. If you want @Braid to reply, put '@Braid' in the message. Messages containing the phrase '@Braid' are sent to the language model. All messages can be read by everyone in the chat thread.",
+   kSendMessagePreamble = "Type a message below. If you want @Braid to reply, put '@Braid' in the message.",
    kSendButtonPrompt = "Send",
-   kSendMessagePlaceholder = "Write a message... ",   
+   kSendMessagePrompt = "Message",   
+   kSendMessagePlaceholder = "Write a message... ",  
+   kMessageTextPrompt = "Ctrl+Enter to send.",
    kCopyConversationUrlButtonPrompt = "Copy the URL for this conversation to the clipboard",
    kTrimConversationButtonPrompt = "Delete the conversation history",
    kExitConversationButtonPrompt = "Leave this conversation",   

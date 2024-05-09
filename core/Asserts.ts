@@ -7,6 +7,6 @@ export const throwIfUndefined: <T, >(x: T | undefined) => asserts x is T = x => 
 }
 
 export const throwIfNull: <T, >(x: T | null) => asserts x is T = x => {
-   if (typeof x === null) throw new AssertionFailedError ("Object is null.");
+   if (x === null) throw new AssertionFailedError ("Object is null.");
 }
 

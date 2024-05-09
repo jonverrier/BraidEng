@@ -43,6 +43,7 @@ import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
 import { SessionKey, ConversationKey } from '../core/Keys';
 import { JoinDetails } from '../core/JoinDetails';
 import { AnimatedIconButton, EAnimatedIconButtonTypes } from './AnimatedIconButton';
+import { MessagePrompt } from './MessagePrompt';
 
 export interface IConversationHeaderProps {
 
@@ -383,13 +384,6 @@ const linkStyles = makeStyles({
    },
 });
 
-const fadedLinkStyles = makeStyles({
-   root: {    
-      color: '#595959',
-      marginRight: '10px'    
-   },
-});
-
 const greenStyles = makeStyles({
    root: {    
       color: 'green'    
@@ -402,18 +396,6 @@ const amberStyles = makeStyles({
    },
 });
 
-const fadedGreenStyles = makeStyles({
-   root: {    
-      color: '#006622'    
-   },
-});
-
-const fadedAmberStyles = makeStyles({
-   root: {    
-      color: '#663d00'    
-   },
-});
-
 const segmentStyles = makeStyles({
    root: {    
       display: 'flex',
@@ -422,13 +404,11 @@ const segmentStyles = makeStyles({
    },
 });
 
-const fadedSegmentStyles = makeStyles({
-   root: {    
-      display: 'flex',
-      flexDirection: 'row',
-      alignItems: 'left',
-      color: "#595959"        
-   },
+const buttonStyles = makeStyles({
+   root: {
+      flexGrow: '0',
+      flexShrink: '0'      
+   }
 });
 
 export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
@@ -533,7 +513,7 @@ const SendButton: React.FC<ButtonProps> = (props) => {
    );
  };
 
- const messageInputGroupStyles = makeStyles({
+ const inputGroupStyles = makeStyles({
    root: {    
       display: 'flex',
       flexDirection: 'column',      
@@ -542,7 +522,7 @@ const SendButton: React.FC<ButtonProps> = (props) => {
    },
 });
 
-const messageInputRowStyles = makeStyles({
+const inputRowStyles = makeStyles({
    root: {    
       display: 'flex',
       flexDirection: 'row',      
@@ -551,72 +531,88 @@ const messageInputRowStyles = makeStyles({
    },
 });
 
+const textColumnStyles = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'column',      
+      width: '100%'
+   },
+});
+
+const bottonColumnStyles = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'column',      
+      width: 'fit-content'   
+   },
+});
+
+const bottonRowStyles = makeStyles({
+   root: {    
+      display: 'flex',
+      flexDirection: 'row',      
+      justifyContent: 'flex-end'
+   },
+});
+
 export const InputView = (props: IInputViewProps) => {
 
-   const messageInputGroupClasses = messageInputGroupStyles();
-   const messageInputRowClasses = messageInputRowStyles();
-   const textFieldClasses = textFieldStyles();
+   const inputGroupClasses =inputGroupStyles();
+   const inputRowClasses = inputRowStyles();
+   const textColumnClasses = textColumnStyles();
+   const buttonColumnClasses = bottonColumnStyles();   
+   const buttonRowClasses = bottonRowStyles();      
+   const buttonClasses = buttonStyles();
 
    const [message, setMessage] = useState<string>("");
    const [canSend, setCanSend] = useState<boolean>(false);
 
-   function onKeyChange(ev: ChangeEvent<HTMLInputElement>, data: InputOnChangeData): void {
-
-      setMessage (data.value);
-      setCanSend (data.value.length > 0);
-   }   
-
-   function doSend () : void {
+   function onSend (message_: string) : void {
 
       props.onSend (message);
       setMessage ("");   
       setCanSend (false);        
    }   
 
-   function onKeyDown(ev: KeyboardEvent<HTMLInputElement>): void {
-  
-      if (ev.key === 'Enter' && canSend) {
-         doSend();
-      }
-   };
+   function onChange (message_: string) : void {
+
+      setMessage (message_);   
+      setCanSend (message_.length > 0);        
+   }  
 
    function onMessageSend (ev: React.MouseEvent<HTMLButtonElement>) : void {
 
-      doSend();       
+      onSend(message);       
    }
 
-   let buttonPrompt = "Change this";
-
    return (
-      <div className={messageInputGroupClasses.root}>
+      <div className={inputGroupClasses.root}>
          <Text>{EUIStrings.kSendMessagePreamble}</Text>
          &nbsp;
-         <div className={messageInputRowClasses.root}>
-            <Tooltip content={EUIStrings.kSendButtonPrompt} relationship="label" positioning={'above'}>
-               <Input aria-label={EUIStrings.kSendButtonPrompt}
-                  className={textFieldClasses.root}                  
-                  required={true}                  
-                  value={message}
-                  maxLength={256}
-                  contentBefore={<Mail24Regular />}
-                  placeholder={EUIStrings.kSendMessagePlaceholder}
-                  onChange={onKeyChange}
-                  onKeyDown={onKeyDown}
-                  disabled={false}
-                  autoFocus={true}               
-                  contentAfter={<SendButton 
-                     aria-label={EUIStrings.kSendButtonPrompt} 
-                     disabled={(!canSend) || (props.isBusy)} 
-                     onClick={onMessageSend}
-                  />}            
-            />
-            </Tooltip>   
-            &nbsp;
-            <AnimatedIconButton animate={props.hasSuggestedContent} 
-               icon={EAnimatedIconButtonTypes.kLightBulb} 
-               promptAnimated={EUIStrings.kAiHasSuggestedDocuments} 
-               promptUnamimated={EUIStrings.kAiHasNoSuggestedDocuments}
-               onClick={props.onAddSuggestedContent}/>            
+         <div className={inputRowClasses.root}>
+            <div className={textColumnClasses.root}>
+               <Tooltip content={EUIStrings.kSendMessagePrompt} relationship="label" positioning={'above'}>
+                  <MessagePrompt onSend={onSend} onChange={onChange} message={message} />               
+               </Tooltip>  
+            </div>
+            &nbsp;           
+            <div className={buttonColumnClasses.root}>
+               <div className={buttonRowClasses.root}>
+                  <Tooltip content={EUIStrings.kSendButtonPrompt} relationship="label" positioning={'above'}>            
+                     <Button 
+                        className={buttonClasses.root}
+                        disabled={(!canSend) || (props.isBusy)}
+                        icon={<Send24Regular/>} 
+                        onClick={onMessageSend}/>                  
+                  </Tooltip>                              
+                  &nbsp;
+                  <AnimatedIconButton animate={props.hasSuggestedContent} 
+                     icon={EAnimatedIconButtonTypes.kLightBulb} 
+                     promptAnimated={EUIStrings.kAiHasSuggestedDocuments} 
+                     promptUnamimated={EUIStrings.kAiHasNoSuggestedDocuments}
+                     onClick={props.onAddSuggestedContent}/>      
+                  </div>
+            </div>       
          </div>   
       </div>        
    );
