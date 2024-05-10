@@ -37,17 +37,11 @@ const textFieldStyles = makeStyles({
    }
 });
 
-function css ( element: HTMLBaseElement, property : string) : string {
-   return window.getComputedStyle( element, null ).getPropertyValue( property );
-}
-
-function cssFont (element: HTMLBaseElement) : string {
-   return css (element, 'font-family');
-}
-
 export function wrapText(context: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D | null, 
    text: string,
-   width: number, defaultHeight: number, defaultWidth: number): number {
+   width: number, 
+   defaultHeight: number, defaultWidth: number,
+   lineSeparation: number): number {
 
       let y = 0;
       let hardLines = text.split("\n");
@@ -57,17 +51,18 @@ export function wrapText(context: OffscreenCanvasRenderingContext2D | CanvasRend
    if (hardLines.length === 0)
       return defaultHeight;
 
-   var dy = 0;
+   let dy = 0;
+   let lines = 0;
 
-   for (var ii = 0; ii < hardLines.length; ii++) {
+   for (var iHardLines = 0; iHardLines < hardLines.length; iHardLines++) {
 
       var line = "";
-      var words = hardLines[ii].split(" ");
+      var words = hardLines[iHardLines].split(" ");
       var lineWidth = 0;
       var lineHeightDelta = defaultHeight;
 
-      for (var n = 0; n < words.length; n++) {
-         var testLine = line + words[n] + " ";
+      for (var iWords = 0; iWords < words.length; iWords++) {
+         var testLine = line + words[iWords] + " ";
          var testWidth;
 
          if (context) {
@@ -77,16 +72,20 @@ export function wrapText(context: OffscreenCanvasRenderingContext2D | CanvasRend
          }
          else {
             testWidth = defaultWidth * testLine.length;
-            lineHeightDelta = defaultHeight;
+            lineHeightDelta = defaultHeight;           
          }
 
          // Finish if we have incrementally exceeded maxWidth, 
-         // or if we only have one word so we have to any way. 
-         if ((testWidth > width) || ((testWidth > width) && n === 0)) {
-            line = words[n] + " ";
+         // or if we only have one word so we have to finish any way. 
+         if ((testWidth > width) || ((testWidth > width) && iWords === 0)) {
+            line = words[iWords] + " ";
             y += lineHeightDelta;
             dy += lineHeightDelta;
             lineWidth = (testWidth - lineWidth) - defaultWidth / 2;
+            lines++;
+
+            if ((iWords + 1) < words.length)
+               dy += lineSeparation;
          }
          else {
             line = testLine;
@@ -101,11 +100,14 @@ export function wrapText(context: OffscreenCanvasRenderingContext2D | CanvasRend
       }
       else {
          testWidth = defaultWidth * line.length;
-         lineHeightDelta = defaultHeight;
+         lineHeightDelta = defaultHeight;       
       }
 
       y += lineHeightDelta;
       dy += lineHeightDelta;
+      lines++;
+      if ((iHardLines + 1) < hardLines.length)
+         dy += lineSeparation;      
    }
 
    return dy;
@@ -117,7 +119,6 @@ export function wrapText(context: OffscreenCanvasRenderingContext2D | CanvasRend
 
 export function calculateDyNeeded (width: number, value: string): number {
 
-   var dyNeeded: number;
    const smallestTextForWrap = "A";
 
    let offScreenCanvas = new OffscreenCanvas(width, width * 10);
@@ -129,16 +130,23 @@ export function calculateDyNeeded (width: number, value: string): number {
    let spaceCharWidth = metrics.width;
    let spaceCharHeight = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent; 
 
-   dyNeeded = wrapText(offscreenContext, value.length > 0 ? value: smallestTextForWrap,
+   let dyNeeded = wrapText(offscreenContext, value.length > 0 ? value: smallestTextForWrap,
+         width - EConfigNumbers.kMessagePrompt2HBorder,
+         spaceCharHeight,
+         spaceCharWidth,
+         EConfigNumbers.kMessagePromptLineSpace);
+
+   let dyMin = wrapText(offscreenContext, smallestTextForWrap,
          width,
          spaceCharHeight,
-         spaceCharWidth);
+         spaceCharWidth,
+         EConfigNumbers.kMessagePromptLineSpace);         
 
    // Tidy up
    offScreenCanvas = null as any as OffscreenCanvas;
    offscreenContext = null as any as OffscreenCanvasRenderingContext2D;
 
-   return dyNeeded;
+   return Math.max (dyMin, dyNeeded);
 }
 
 
@@ -183,6 +191,11 @@ export const MessagePrompt = (props: IMessagePromptProps) => {
             }
             break;
 
+         case 'Escape':
+            props.onChange ("");
+            processed = true;
+            break;            
+
          default:
             break;
       }
@@ -193,7 +206,7 @@ export const MessagePrompt = (props: IMessagePromptProps) => {
       }
    };
 
-   let bump = EConfigNumbers.kMessagePromptBorderAllowance;
+   let bump = EConfigNumbers.kMessagePrompt2VBorder;
    var dyNeeded = bump;
 
    if (width !== 0) 

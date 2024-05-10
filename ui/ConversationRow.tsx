@@ -208,7 +208,6 @@ const conversationContentColumnStyles = makeStyles({
 const DefaultSpinner = (props: Partial<SpinnerProps>) => <Spinner {...props} />;
 
 
-
 export const ConversationRow = (props: IConversationRowProps) => {
 
    const embeddedRowClasses = embeddedRowStyles();
@@ -380,7 +379,8 @@ const padAfterMessage = makeStyles({
 
 const linkStyles = makeStyles({
    root: {    
-      marginRight: '10px'    
+      marginRight: '10px'
+    
    },
 });
 
@@ -423,20 +423,27 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
    var relevanceClasses, linkClasses, segmentClasses;
    
    const onClickLink = (event: React.MouseEvent<HTMLAnchorElement>): void => {
-      // NB we dont call 'prevent default' as we want the default acton to occur i.e. open a  new tab. 
+      // NB we call 'prevent default' as we want to control the action i.e. open a  new tab. 
       event.stopPropagation();
+      event.preventDefault();
 
-      props.onClickUrl (segment.url);   
+      props.onClickUrl (segment.url);  
+      (window as any).open(segment.url, '_blank').focus();
    };
 
    relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
    linkClasses = linkStyles();
-   segmentClasses = segmentStyles();             
+   segmentClasses = segmentStyles();     
+   
+   let linkText = segment.url;
+   if (linkText.length > 63) {
+      linkText = linkText.slice (0, 60) + '...';
+   }
 
    return (<div className={sourcesClasses.root} key={segment.url}>
               <div className={segmentClasses.root}>
-                 <Link target='_blank' className={linkClasses.root} 
-                    href={segment.url} onClick={onClickLink}>{segment.url}                    
+                 <Link className={linkClasses.root} 
+                    href={segment.url} onClick={onClickLink} inline>{linkText}                
                   </Link>
                   <Body1 className={relevanceClasses.root}> {relevanceText} </Body1>
                </div>

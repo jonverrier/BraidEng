@@ -6,7 +6,7 @@ export enum EUIStrings {
    kJoinConversationKeyPrompt = "Key",
    kJoinConversationKeyPlaceholder = "Key... ",  
    kJoinConversationDoesNotLookLikeKey = "It does not look like the key is valid.",
-   kJoinConversationLooksLikeKeyOk = "It looks like the key is valid, you can join the conversation via LinkedIn.",
+   kJoinConversationLooksLikeKeyOk = "It looks like the key is valid, you can try to join the conversation via LinkedIn.",
    kJoinConversationWithLinkedInPrompt = "Join with LinkedIn... ",  
    kJoinConversationPicker = "Select a conversation to join.",
 
@@ -26,7 +26,7 @@ export enum EUIStrings {
    kSendButtonPrompt = "Send",
    kSendMessagePrompt = "Message",   
    kSendMessagePlaceholder = "Write a message... ",  
-   kMessageTextPrompt = "Ctrl+Enter to send.",
+   kMessageTextPrompt = "Ctrl+Enter to send or Esc to cancel.",
    kCopyConversationUrlButtonPrompt = "Copy the URL for this conversation to the clipboard",
    kTrimConversationButtonPrompt = "Delete the conversation history",
    kExitConversationButtonPrompt = "Leave this conversation",   
