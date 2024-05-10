@@ -437,7 +437,7 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
    
    let linkText = segment.url;
    if (linkText.length > EConfigNumbers.kMaximumLinkTextlength + 3) {
-      linkText = linkText.slice (0, 60) + '...';
+      linkText = linkText.slice (0, EConfigNumbers.kMaximumLinkTextlength) + '...';
    }
 
    return (<div className={sourcesClasses.root} key={segment.url}>
