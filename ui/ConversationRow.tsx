@@ -34,7 +34,7 @@ import {
 } from '@fluentui/react-icons';
 
 import { EIcon } from '../core/Icons';
-import { EConfigStrings }  from '../core/ConfigStrings';
+import { EConfigNumbers, EConfigStrings }  from '../core/ConfigStrings';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { KnowledgeChunk } from '../core/Knowledge';
@@ -436,7 +436,7 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
    segmentClasses = segmentStyles();     
    
    let linkText = segment.url;
-   if (linkText.length > 63) {
+   if (linkText.length > EConfigNumbers.kMaximumLinkTextlength + 3) {
       linkText = linkText.slice (0, 60) + '...';
    }
 

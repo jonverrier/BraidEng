@@ -49,6 +49,7 @@ export enum EConfigStrings {
 
 export enum EConfigNumbers {
    kHelpfulPromptDelayMsecs = 3000,
+   kMaximumLinkTextlength = 40,
    kHelpfulPromptMinimumGapMins = 10,
    kMessagePrompt2VBorder = 24,   // How much to allow for top + bottom inset
    kMessagePrompt2HBorder = 24,   // How much to allow for left & right inset
