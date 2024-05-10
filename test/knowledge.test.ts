@@ -199,6 +199,22 @@ describe("KnowledgeSource URLs", function () {
       expect(lookLikeSameSource (url1, url2)).toEqual(false);        
    });
 
+   it("Needs to identify URLs from same GitHub repo", function () {
+
+      var url1 = "https://github.com/jonverrier/BraidEng";
+      var url2 = "https://github.com/jonverrier/BraidEng/issues";
+
+      expect(lookLikeSameSource (url1, url2)).toEqual(true);     
+   });
+
+   it("Needs to identify URLs from different GitHub repos", function () {
+
+      var url1 = "https://github.com/jonverrier/BraidEng";
+      var url2 = "https://github.com/jonverrier/BraidWeb";
+
+      expect(lookLikeSameSource (url1, url2)).toEqual(false);        
+   });
+
    describe("KnowledgeRepository", function () {
 
       it("Needs to identify related content given an input URL", function () {
