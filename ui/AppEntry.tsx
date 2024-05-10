@@ -33,8 +33,8 @@ const pageOuterStyles = makeStyles({
       justifyContent: 'center', /* for a row, the cross-axis is horizontal, center means vertically centered */
       height: '100vh', /* fill the screen with flex layout */ 
       width: '100vw',  /* fill the screen with flex layout */       
-      minHeight: "128px", // Ask for enough for at least the error message
-      minWidth: "256px",  // Ask for enough for at least the error message
+      minHeight: "256px", // Ask for enough for at least the error message
+      minWidth: "384px",  // Ask for enough for at least the error message
       marginLeft: '0px',
       marginRight: '0px',
       marginTop: '0px',
