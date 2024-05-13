@@ -37,7 +37,7 @@ webUrls = [
 ["Building LLM applications for production (huyenchip.com)", "https://huyenchip.com/2023/04/11/llm-engineering.html", False],
 ["Prompt Engineering Guide | Prompt Engineering Guide (promptingguide.ai)", "https://www.promptingguide.ai/", False],
 ["Learn | Pinecone", "https://www.pinecone.io/learn/", True],
-["Get started | Langchain", "https://python.langchain.com/docs/get_started", True],
+["Use Cases | Langchain", "https://python.langchain.com/v0.1/docs/use_cases/", True],
 ["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter1/1", True],
 ["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter2/1", True],
 ["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter3/1", True],

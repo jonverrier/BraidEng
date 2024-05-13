@@ -19,7 +19,7 @@ test/*.js
 test/*.js.map
 scripts/*.js
 scripts/*.js.map
-scripts/config/__pycache__/*
+scripts/common/__pycache__/*
 scripts/youtube/__pycache__/*
 scripts/web/__pycache__/*
 scripts/text/__pycache__/*
