@@ -44,6 +44,7 @@ def gen_metadata(playlist_item, transcriptDestinationDir):
     metadata["title"] = playlist_item["snippet"]["title"]
     metadata["sourceId"] = playlist_item["snippet"]["resourceId"]["videoId"]
     metadata["description"] = playlist_item["snippet"]["description"]
+    metadata["hitTrackingId"] = playlist_item["snippet"]["playlistId"]
 
     # save the metadata as a .json file
     json.dump(metadata, open(filename, "w", encoding="utf-8"))

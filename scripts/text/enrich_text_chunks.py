@@ -241,6 +241,6 @@ def enrich_text_chunks(config, markdownDestinationDir):
    logger.debug("Total chunks: %s", len(chunks))
 
    # save chunks to a json file
-   output_file = os.path.join(markdownDestinationDir, "output", "master_markdown.json")
+   output_file = os.path.join(markdownDestinationDir, "output", "master_text.json")
    with open(output_file, "w", encoding="utf-8") as f:
       json.dump(chunks, f, ensure_ascii=False, indent=4)

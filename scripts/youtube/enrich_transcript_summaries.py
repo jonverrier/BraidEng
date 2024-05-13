@@ -146,8 +146,8 @@ def enrich_transcript_summaries (config, transcriptDestinationDir):
 
    # add segment list to a queue
    q = queue.Queue()
-   for segment in chunks:
-      q.put(segment)
+   for chunk in chunks:
+      q.put(chunk)
 
    with Progress() as progress:
       task1 = progress.add_task("[purple]Enriching Summaries...", total=total_chunks)
