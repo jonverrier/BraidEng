@@ -17,6 +17,15 @@ MAX_LINKS_PERPAGE=256 #Max number of links we keep from a single page
 MAX_PAGE_DEPTH=1     #Max depth we search in a website
 AVERAGE_CHARACTERS_PER_TOKEN=6
 
+headers = {
+   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110',
+   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+   'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+   'Accept-Encoding': 'none',
+   'Accept-Language': 'en-US,en;q=0.8',
+   'Connection': 'keep-alive'       
+}  
+
 class Counter:
     """thread safe counter"""
 
@@ -59,10 +68,7 @@ def get_html(url, counter_id, siteUrl, htmlDesitinationDir, logger, minimumPageT
         return False    
     
     # In case the web site expect cookies and/or javascript
-    session = requests.Session()    
-    headers = {
-       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299'
-    }    
+    session = requests.Session()     
     page = session.get(url, headers=headers)
     soup = BeautifulSoup(page.content, "html.parser") 
     fullText = soup.get_text()
@@ -148,8 +154,10 @@ def recurse_page_list (startUrl, processedLinks, depth, logger, recurse):
       logger.debug("Depth exceeded : %s", startUrl)      
       return
    
-   page = requests.get(startUrl)
-   soup = BeautifulSoup(page.content, "html.parser")  
+    # In case the web site expect cookies and/or javascript
+   session = requests.Session()     
+   page = session.get(startUrl, headers=headers)   
+   soup = BeautifulSoup(page.text, "html.parser")  
   
    logger.debug("Processing : %s", startUrl)     
    processedLinks.append (startUrl)
@@ -157,7 +165,7 @@ def recurse_page_list (startUrl, processedLinks, depth, logger, recurse):
    if not recurse:
        return
 
-   subLinks = soup.find_all('a', href=True)
+   subLinks = soup.find_all('a')
    subUrls = []
 
    for link in subLinks:
