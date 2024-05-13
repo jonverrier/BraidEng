@@ -20,7 +20,7 @@
             "args": [
                 "-r",
                 "ts-node/register",
-                "${workspaceRoot}/test/aiconn*.ts",
+                "${workspaceRoot}/test/know*.ts",
                 "--no-timeouts"
             ],
             "cwd": "${workspaceRoot}"

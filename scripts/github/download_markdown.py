@@ -75,6 +75,7 @@ def get_markdown(fileName, counter_id, repoSourceDir, repoName, markdownDestinat
     metadata["sourceId"] = sourceId
     metadata["filename"] = os.path.basename(contentOutputFileName)   
     metadata["description"] = Path(fileName).name
+    metadata["hitTrackingId"] = repoName
 
     # save the metadata as a .json file
     json.dump(metadata, open(metaOutputFilename, "w", encoding="utf-8"))

@@ -6,9 +6,9 @@
 * [Licence](#licence)
 
 ## General Information
-The Braid Engine is an AI-enabled Learning Management System (LMS). The objective is to be able to build a curriculum of content by processing open-source documents from the web (YouTube videos, GitHub repositories, and plan HTML text) and loading AI generated summaries into a document store. A simple front end then enables students to navigate through the content, can answer questions based on the embedded content, and recommend next steps once the student is familiar with a certain level of content. 
+The Braid Engine is an AI-enabled Learning Management System (LMS). The objective is to be able to build a curriculum of content by processing open-source documents from the web (YouTube videos, GitHub repositories, and plan HTML text) and loading AI generated summaries into a document store. A simple front end then enables students to ask questions which the model can answer based on the embedded content. The model can also make suggestions based on content the students have interacted with. 
 
-The specific domain is to teach students how to build AI applications using modern Large Language Model (LLM) technology, and the current approaches to this - Retrieval Assisted Generation (RAG), and multi-sept workflows using the LLM to generate summaries and process questions.
+The specific domain is to teach students how to build AI applications using modern Large Language Model (LLM) technology, and the current approaches to this - Retrieval Assisted Generation (RAG), and multi-step workflows using the LLM to generate summaries and process questions.
 
 The benefits of this approach are:
 - It is simple to maintain content, given that the field is moving so rapidly. Traditional approaches of generating bespoke new content are often obsolete by the time they are ready. 

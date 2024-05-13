@@ -136,7 +136,7 @@ def enrich_text_summaries(config, markdownDestinationDir):
    logger.debug("Starting OpenAI summarization")
 
    # load the chunks from a json file
-   input_file = os.path.join(markdownDestinationDir, "output", "master_markdown.json")
+   input_file = os.path.join(markdownDestinationDir, "output", "master_text.json")
    with open(input_file, "r", encoding="utf-8") as f:
       chunks = json.load(f)
 

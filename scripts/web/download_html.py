@@ -45,7 +45,7 @@ def makePathOnly (url):
 def makeFullyQualified (base, rel):
     return urljoin(base,rel)
     
-def get_html(url, counter_id, siteName, htmlDesitinationDir, logger, minimumPageTokenCount):
+def get_html(url, counter_id, siteUrl, htmlDesitinationDir, logger, minimumPageTokenCount):
     """Read in HTML content and write out as plain text """
 
     sourceId = makePathOnly (url)
@@ -88,6 +88,7 @@ def get_html(url, counter_id, siteName, htmlDesitinationDir, logger, minimumPage
     metadata["sourceId"] = sourceId
     metadata["filename"] = os.path.basename(contentOutputFileName)   
     metadata["description"] = Path(url).name
+    metadata["hitTrackingId"] = siteUrl    
 
     # save the metadata as a .json file
     json.dump(metadata, open(metaOutputFilename, "w", encoding="utf-8"))
@@ -97,14 +98,14 @@ def get_html(url, counter_id, siteName, htmlDesitinationDir, logger, minimumPage
     return True
 
 
-def process_queue(q, sourceUrl, siteName, htmlDestinationDir, logger, minimumPageTokenCount):
+def process_queue(q, sourceUrl, htmlDestinationDir, logger, minimumPageTokenCount):
     """process the queue"""
     while not q.empty():
         file = q.get()
 
         counter.increment()
 
-        get_html(file, counter.value, siteName, htmlDestinationDir, logger, minimumPageTokenCount)
+        get_html(file, counter.value, sourceUrl, htmlDestinationDir, logger, minimumPageTokenCount)
         q.task_done()
 
 
@@ -183,7 +184,7 @@ def build_page_list (sourceUrl, q, minimumPageTokenCount, logger, recurse):
       print(url)
       q.put(url)
     
-def download_html (sourceUrl, siteName, recurse, htmlDesitinationDir, minimumPageTokenCount): 
+def download_html (sourceUrl, recurse, htmlDesitinationDir, minimumPageTokenCount): 
    
    logging.basicConfig(level=logging.WARNING)
    logger = logging.getLogger(__name__)
@@ -215,7 +216,7 @@ def download_html (sourceUrl, siteName, recurse, htmlDesitinationDir, minimumPag
    for i in range(PROCESSING_THREADS):
       t = threading.Thread(
          target=process_queue,
-                args=(q, sourceUrl, siteName, htmlDesitinationDir, logger, minimumPageTokenCount),
+                args=(q, sourceUrl, htmlDesitinationDir, logger, minimumPageTokenCount),
          )
       t.start()
    threads.append(t)
