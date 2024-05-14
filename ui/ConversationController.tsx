@@ -19,7 +19,7 @@ import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } fr
 import { AIConnection, AIConnector } from '../core/AIConnection';
 import { EUIStrings } from './UIStrings';
 import { EConfigNumbers, EConfigStrings } from '../core/ConfigStrings';
-import { KnowledgeEnrichedMessage, KnowledgeChunk, KnowledgeRepository } from '../core/Knowledge';
+import { EnrichedMessage, EmbeddedChunk, EmbeddedChunkRepository } from '../core/EmbeddedChunk';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 import { UrlActivityRecord } from '../core/UrlActivityRecord';
 import { MessageActivityRecord } from '../core/MessageActivityRecord';
@@ -94,7 +94,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
          if (! hasRecentHepfulStart (fluidMessagesConnection_)) {
             if (!suggested) {
-             let suggestion = KnowledgeRepository.lookForSuggestedContent (undefined);
+             let suggestion = EmbeddedChunkRepository.lookForSuggestedContent (undefined);
              setSuggested (suggestion);
             }
          } 
@@ -239,7 +239,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
          email, new Date(), url_);
       repository.save (record);   
       
-      let suggested = KnowledgeRepository.lookForSuggestedContent (url_);
+      let suggested = EmbeddedChunkRepository.lookForSuggestedContent (url_);
       if (suggested)
          setSuggested (suggested);
    }
@@ -301,7 +301,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
             let query = AIConnection.makeOpenAIQuery (messageArray, audienceMap);
 
-            connection.queryAI (messageText_, query).then ((result_: KnowledgeEnrichedMessage) => {
+            connection.queryAI (messageText_, query).then ((result_: EnrichedMessage) => {
                
                // set up a message to append
                let response = new Message ();

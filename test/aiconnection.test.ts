@@ -2,7 +2,7 @@
 // Copyright Braid Technologies ltd, 2024
 import { throwIfUndefined } from '../core/Asserts';
 import { Message} from '../core/Message';
-import { KnowledgeChunk } from '../core/Knowledge';
+import { EmbeddedChunk } from '../core/EmbeddedChunk';
 import { Persona} from '../core/Persona';
 import { EIcon } from '../core/Icons';
 import { SessionKey } from '../core/Keys';
@@ -124,7 +124,7 @@ describe("AIConnection", function () {
 
    function makeLongMessage (startingMessage: Message, segmentCount: number) : Message {
 
-      let segments = new Array<KnowledgeChunk>();      
+      let segments = new Array<EmbeddedChunk>();      
 
       // Make a list of knowledge sources, each with 500 tokens
       for (var i = 0; i < segmentCount; i++) {
@@ -134,7 +134,7 @@ describe("AIConnection", function () {
          for (var j = 0; j < 4000; j++) {
             accumulatedText = accumulatedText.concat (" token");
          }
-         let ks1 = new KnowledgeChunk("makeUpUrl", accumulatedText, new Array<number>(), undefined, undefined);
+         let ks1 = new EmbeddedChunk("makeUpUrl", accumulatedText, new Array<number>(), undefined, undefined);
          segments.push (ks1);
       }
       

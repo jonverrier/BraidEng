@@ -37,7 +37,7 @@ import { EIcon } from '../core/Icons';
 import { EConfigNumbers, EConfigStrings }  from '../core/ConfigStrings';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
-import { KnowledgeChunk } from '../core/Knowledge';
+import { EmbeddedChunk } from '../core/EmbeddedChunk';
 import { EUIStrings } from './UIStrings';
 import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
 import { SessionKey, ConversationKey } from '../core/Keys';
@@ -302,7 +302,7 @@ export interface ISingleMessageViewProps {
 export interface IKnowledgeSegmentProps {
 
    sessionKey: SessionKey;
-   segment: KnowledgeChunk;  
+   segment: EmbeddedChunk;  
    key: string;
    onClickUrl (url_: string) : void;    
 }
@@ -468,7 +468,7 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
       
       if (props.message.chunks.length > 0) { 
 
-         aiSources = props.message.chunks.map ((segment : KnowledgeChunk) => {
+         aiSources = props.message.chunks.map ((segment : EmbeddedChunk) => {
             return <KowledgeSegmentsView sessionKey={props.sessionKey} segment={segment} key={segment.url} 
                     onClickUrl={props.onClickUrl}/>
          })   

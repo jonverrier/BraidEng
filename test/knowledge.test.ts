@@ -1,7 +1,7 @@
 'use strict';
 // Copyright Braid Technologies ltd, 2024
-import { KnowledgeChunk, KnowledgeChunkFinder, KnowledgeEnrichedMessage, 
-   kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount, lookLikeSameSource, KnowledgeRepository} from '../core/Knowledge';
+import { EmbeddedChunk, EmbeddedChunkFinder, EnrichedMessage, 
+   kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount, lookLikeSameSource, EmbeddedChunkRepository} from '../core/EmbeddedChunk';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -21,22 +21,22 @@ var someoneElsesRelevance = 0.0;
 
 describe("KnowledgeSource", function () {
 
-   var ks1: KnowledgeChunk, ks2: KnowledgeChunk, ksErr:KnowledgeChunk;
+   var ks1: EmbeddedChunk, ks2: EmbeddedChunk, ksErr:EmbeddedChunk;
 
-   ks1 = new KnowledgeChunk(myUrl, mySummary, myAda, myTimeStamp, myRelevance);
+   ks1 = new EmbeddedChunk(myUrl, mySummary, myAda, myTimeStamp, myRelevance);
 
-   ks2 = new KnowledgeChunk(someoneElsesUrl, someoneElsesSummary, someoneElseAda, someoneElsesTimeStamp, someoneElsesRelevance);
+   ks2 = new EmbeddedChunk(someoneElsesUrl, someoneElsesSummary, someoneElseAda, someoneElsesTimeStamp, someoneElsesRelevance);
 
    it("Needs to construct an empty object", function () {
 
-      var ksEmpty = new KnowledgeChunk();
+      var ksEmpty = new EmbeddedChunk();
 
       expect(ksEmpty.summary).toEqual("");     
    });
 
    it("Needs to compare for equality and inequality", function () {
 
-      var ksNew: KnowledgeChunk = new KnowledgeChunk(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
+      var ksNew: EmbeddedChunk = new EmbeddedChunk(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
 
       expect(ks1.equals(ks1)).toEqual(true);
       expect(ks1.equals(ksNew)).toEqual(true);
@@ -46,7 +46,7 @@ describe("KnowledgeSource", function () {
    
    it("Needs to detect inequality on date", function () {
 
-      var ksNew: KnowledgeChunk = new KnowledgeChunk(ks1.url, ks1.summary, ks1.ada_v2, new Date(), ks1.relevance);
+      var ksNew: EmbeddedChunk = new EmbeddedChunk(ks1.url, ks1.summary, ks1.ada_v2, new Date(), ks1.relevance);
 
       expect(ks1.equals(ksNew)).toEqual(false);
    });
@@ -60,14 +60,14 @@ describe("KnowledgeSource", function () {
 
    it("Needs to copy construct", function () {
 
-      let ks2: KnowledgeChunk = new KnowledgeChunk(ks1);
+      let ks2: EmbeddedChunk = new EmbeddedChunk(ks1);
 
       expect(ks1.equals(ks2) === true).toEqual(true);
    });
 
    it("Needs to correctly change attributes", function () {
 
-      var ksNew: KnowledgeChunk = new KnowledgeChunk(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
+      var ksNew: EmbeddedChunk = new EmbeddedChunk(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
 
       ksNew.url = someoneElsesUrl;
       ksNew.summary = someoneElsesSummary;
@@ -82,7 +82,7 @@ describe("KnowledgeSource", function () {
 
       var stream: string = ks1.streamOut();
 
-      var ksNew: KnowledgeChunk = new KnowledgeChunk(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
+      var ksNew: EmbeddedChunk = new EmbeddedChunk(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
       ksNew.streamIn(stream);
     
       expect(ks1.equals(ksNew)).toEqual(true);
@@ -94,15 +94,15 @@ describe("KnowledgeSourceBuilder", function () {
 
    it("Needs to construct an empty object", function () {
 
-      let ksEmpty = new KnowledgeChunkFinder(kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);
+      let ksEmpty = new EmbeddedChunkFinder(kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);
 
       expect(ksEmpty.chunks.length).toEqual(0);     
    });
 
    it("Needs to compare for equality and inequality", function () {
 
-      let ksEmpty = new KnowledgeChunkFinder(kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);      
-      let matchesNew = new KnowledgeChunkFinder(-1, 3);        
+      let ksEmpty = new EmbeddedChunkFinder(kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);      
+      let matchesNew = new EmbeddedChunkFinder(-1, 3);        
 
       expect(ksEmpty.equals(ksEmpty)).toEqual(true);     
       expect(ksEmpty.equals(matchesNew)).toEqual(false);
@@ -110,34 +110,34 @@ describe("KnowledgeSourceBuilder", function () {
 
    it("Needs to correctly store attributes", function () {
          
-      let ksEmpty = new KnowledgeChunkFinder(kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);          
+      let ksEmpty = new EmbeddedChunkFinder(kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);          
       expect(ksEmpty.similarityThreshold === kDefaultMinimumCosineSimilarity).toEqual(true);
-      expect(ksEmpty.howMany === kDefaultKnowledgeSegmentCount).toEqual(true);
+      expect(ksEmpty.howMany === kDefaultSearchChunkCount).toEqual(true);
    });
 });
 
 describe("KnowledgeEnrichedMessage", function () {
 
-   let ks1 = new KnowledgeChunk(myUrl, mySummary, myAda, myTimeStamp, myRelevance);
-   let sources1 = new Array<KnowledgeChunk> ();
+   let ks1 = new EmbeddedChunk(myUrl, mySummary, myAda, myTimeStamp, myRelevance);
+   let sources1 = new Array<EmbeddedChunk> ();
    sources1.push (ks1);
-   let enriched1 = new KnowledgeEnrichedMessage (mySummary, sources1);
+   let enriched1 = new EnrichedMessage (mySummary, sources1);
 
-   let ks2 = new KnowledgeChunk(someoneElsesUrl, someoneElsesSummary, someoneElseAda, someoneElsesTimeStamp, someoneElsesRelevance);
-   let sources2 = new Array<KnowledgeChunk> ();
+   let ks2 = new EmbeddedChunk(someoneElsesUrl, someoneElsesSummary, someoneElseAda, someoneElsesTimeStamp, someoneElsesRelevance);
+   let sources2 = new Array<EmbeddedChunk> ();
    sources2.push (ks2);  
-   let enriched2 = new KnowledgeEnrichedMessage (someoneElsesSummary, sources2);    
+   let enriched2 = new EnrichedMessage (someoneElsesSummary, sources2);    
 
    it("Needs to construct an empty object", function () {
 
-      var enrichedMsgEmpty = new KnowledgeEnrichedMessage();
+      var enrichedMsgEmpty = new EnrichedMessage();
 
       expect(enrichedMsgEmpty.segments.length).toEqual(0);     
    });
 
    it("Needs to compare for equality and inequality", function () {
 
-      let enrichedNew = new KnowledgeEnrichedMessage(mySummary, sources1);        
+      let enrichedNew = new EnrichedMessage(mySummary, sources1);        
 
       expect(enriched1.equals(enriched1)).toEqual(true);     
       expect(enriched1.equals(enrichedNew)).toEqual(true);
@@ -154,14 +154,14 @@ describe("KnowledgeEnrichedMessage", function () {
 
    it("Needs to copy construct", function () {
 
-      let enriched2: KnowledgeEnrichedMessage = new KnowledgeEnrichedMessage(enriched1);
+      let enriched2: EnrichedMessage = new EnrichedMessage(enriched1);
 
       expect(enriched1.equals(enriched2) === true).toEqual(true);
    });
 
    it("Needs to correctly change attributes", function () {
 
-      var enrichedNew: KnowledgeEnrichedMessage = new KnowledgeEnrichedMessage(enriched1);
+      var enrichedNew: EnrichedMessage = new EnrichedMessage(enriched1);
 
       expect(enriched1.equals (enrichedNew)).toEqual(true);      
 
@@ -174,7 +174,7 @@ describe("KnowledgeEnrichedMessage", function () {
 
       var stream: string = enriched1.streamOut();
 
-      var enrichedNew: KnowledgeEnrichedMessage = new KnowledgeEnrichedMessage();
+      var enrichedNew: EnrichedMessage = new EnrichedMessage();
       enrichedNew.streamIn(stream);
     
       expect(enriched1.equals(enrichedNew)).toEqual(true);
@@ -219,14 +219,14 @@ describe("KnowledgeSource URLs", function () {
 
       it("Needs to identify related content given an input URL", function () {
    
-         let message = KnowledgeRepository.lookForSuggestedContent ("https://www.youtube.com/watch?v=roEKOzxilq4&t=00h00m00s");
+         let message = EmbeddedChunkRepository.lookForSuggestedContent ("https://www.youtube.com/watch?v=roEKOzxilq4&t=00h00m00s");
    
          expect(typeof message === 'undefined').toEqual(false);     
       });
    
       it("Needs to identify starter content", function () {
 
-         let message = KnowledgeRepository.lookForSuggestedContent (undefined);         
+         let message = EmbeddedChunkRepository.lookForSuggestedContent (undefined);         
    
          expect(typeof message === 'undefined').toEqual(false);       
       });

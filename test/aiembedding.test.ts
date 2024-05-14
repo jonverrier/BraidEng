@@ -9,78 +9,60 @@ import { SessionKey } from '../core/Keys';
 import { AIConnector } from "../core/AIConnection";
 
 import { LiteEmbedding } from "../core/EmbeddingFormats";
-import liteYouTubeEmbeddings from '../core/youtube_embeddings_lite.json';
-import liteGitHubEmbeddings from '../core/markdown_embeddings_lite.json';
-import { KnowledgeRepository, cosineSimilarity, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount } from "../core/Knowledge";
+import { EmbeddedChunkRepository, cosineSimilarity, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount } from "../core/EmbeddedChunk";
 
 
-describe("Embedding", function () {
+describe("AIEmbedding", function () {
 
-   it("Needs to load first line", function () {
-      
-      let embeddings = new Array<LiteEmbedding> ();
-      embeddings = liteYouTubeEmbeddings as Array<any>;
+   it("Needs to find closest match for an existing Markdown document", async function () {
 
-      expect (embeddings[0].summary.length > 0).toBe (true);
-   });
-
-   it("Needs to compare first and second lines", function () {
-      
-      let embeddings = new Array<LiteEmbedding>();
-      embeddings = liteYouTubeEmbeddings as Array<LiteEmbedding>;
-
-      const scoreWithSelf  = cosineSimilarity(embeddings[0].ada_v2, embeddings[0].ada_v2);
-      const scoreWithOther  = cosineSimilarity(embeddings[0].ada_v2, embeddings[1].ada_v2);
-
-      expect (scoreWithSelf > scoreWithOther).toBe (true);
-   });
-
-   it("Needs to find closest match for a row that is present", function () {
-      
-      let embeddings = new Array<LiteEmbedding>();
-      embeddings = liteYouTubeEmbeddings as Array<LiteEmbedding>;
-
-      let maxScore = 0.0;
-      let bestMatch = -1;
-
-      for (let i = 0; i < embeddings.length; i++) {
-
-         let ithEmbed = embeddings[i];
-         let ithScore  = cosineSimilarity(ithEmbed.ada_v2, embeddings[100].ada_v2);  
-         if (ithScore > maxScore)   {    
-            maxScore = ithScore;
-            bestMatch = i;
-         }
-      }
-      expect (bestMatch === 100).toBe (true);
-   }).timeout (2000);
-
-   it("Needs to find closest match for an existing document", async function () {
-      
-      let embeddings = new Array<LiteEmbedding>();
-      embeddings = liteGitHubEmbeddings as Array<LiteEmbedding>;
-
-      let embed = KnowledgeRepository.lookUpSimilarfromUrl ("https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md",
+      let embed = EmbeddedChunkRepository.lookupSimilarfromUrl ("https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md",
          kDefaultMinimumCosineSimilarity, 
-         kDefaultKnowledgeSegmentCount);      
+         kDefaultSearchChunkCount);         
 
-      const client = new AIConnector();
-      let connection = await AIConnector.connect (new SessionKey (KStubEnvironmentVariables.SessionKey));      
-
-      let best = KnowledgeRepository.lookUpMostSimilar (embed.chunks[0].ada_v2, 
+      let best = EmbeddedChunkRepository.lookupMostSimilar (embed.chunks[0].ada_v2, 
          embed.chunks[0].url,
          kDefaultMinimumCosineSimilarity, 
-         kDefaultKnowledgeSegmentCount);
+         kDefaultSearchChunkCount);
 
-      expect (best.chunks.length === kDefaultKnowledgeSegmentCount).toBe (true);
+      expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);
 
    }).timeout (2000);
 
+   it("Needs to find closest match for an existing YouTube document", async function () {
+
+      let embed = EmbeddedChunkRepository.lookupSimilarfromUrl ("https://www.youtube.com/watch?v=l5mG4z343qg&t=00h00m00s",
+         kDefaultMinimumCosineSimilarity, 
+         kDefaultSearchChunkCount);      
+
+      let best = EmbeddedChunkRepository.lookupMostSimilar (embed.chunks[0].ada_v2, 
+         embed.chunks[0].url,
+         kDefaultMinimumCosineSimilarity, 
+         kDefaultSearchChunkCount);
+
+      expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);
+
+   }).timeout (2000);
+
+   it("Needs to find closest match for an existing Html document", async function () {
+
+      let embed = EmbeddedChunkRepository.lookupSimilarfromUrl ("https://karpathy.medium.com/software-2-0-a64152b37c35",
+         kDefaultMinimumCosineSimilarity, 
+         kDefaultSearchChunkCount);          
+
+      let best = EmbeddedChunkRepository.lookupMostSimilar (embed.chunks[0].ada_v2, 
+         embed.chunks[0].url,
+         kDefaultMinimumCosineSimilarity, 
+         kDefaultSearchChunkCount);
+
+      expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);
+
+   }).timeout (2000);
 
    it("Needs to find closest match for a simple query", async function () {
       
       let embeddings = new Array<LiteEmbedding>();
-      embeddings = liteYouTubeEmbeddings as Array<LiteEmbedding>;
+      embeddings = embeddings as Array<LiteEmbedding>;
 
       let query = "Trolly chicken dilemma chicks"
 
@@ -88,19 +70,19 @@ describe("Embedding", function () {
       let connection = await AIConnector.connect (new SessionKey (KStubEnvironmentVariables.SessionKey));      
 
       const embedding = await connection.createEmbedding (query);
-      let best = KnowledgeRepository.lookUpMostSimilar (embedding, 
+      let best = EmbeddedChunkRepository.lookupMostSimilar (embedding, 
          undefined,
          0, // Deliberately set this low so we always match
-         kDefaultKnowledgeSegmentCount);
+         kDefaultSearchChunkCount);
 
-      expect (best.chunks.length === kDefaultKnowledgeSegmentCount).toBe (true);    
+      expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);    
 
    }).timeout (2000);   
 
    it("Needs to find closest match for an irrelevant query", async function () {
       
       let embeddings = new Array<LiteEmbedding>();
-      embeddings = liteYouTubeEmbeddings as Array<LiteEmbedding>;
+      embeddings = embeddings as Array<LiteEmbedding>;
 
       let query = "Human baby animals cute cats dogs"
 
@@ -108,19 +90,19 @@ describe("Embedding", function () {
       let connection = await AIConnector.connect (new SessionKey (KStubEnvironmentVariables.SessionKey));      
 
       const embedding = await connection.createEmbedding (query);
-      let best = KnowledgeRepository.lookUpMostSimilar (embedding, 
+      let best = EmbeddedChunkRepository.lookupMostSimilar (embedding, 
          undefined,
          0, // Deliberately set this low so we always match
-         kDefaultKnowledgeSegmentCount);
+         kDefaultSearchChunkCount);
 
-      expect (best.chunks.length === kDefaultKnowledgeSegmentCount).toBe (true);   
+      expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);   
 
    }).timeout (2000);     
 
    it("Needs to find closest match for a Markdown query", async function () {
       
       let embeddings = new Array<LiteEmbedding>();
-      embeddings = liteYouTubeEmbeddings as Array<LiteEmbedding>;
+      embeddings = embeddings as Array<LiteEmbedding>;
 
       let query = "User experience is a very important aspect of building apps. Users need to be able to use your app in an efficient way to perform tasks. Being efficient is one thing but you also need to design apps so that they can be used by everyone, to make them accessible. This chapter will focus on this area so you hopefully end up designing an app that people can and want to use. Introduction User experience is how a user interacts with and uses a specific product or service be it a system, tool"
 
@@ -128,13 +110,14 @@ describe("Embedding", function () {
       let connection = await AIConnector.connect (new SessionKey (KStubEnvironmentVariables.SessionKey));      
 
       const embedding = await connection.createEmbedding (query);
-      let best = KnowledgeRepository.lookUpMostSimilar (embedding, 
+      let best = EmbeddedChunkRepository.lookupMostSimilar (embedding, 
          undefined,
          0, // Deliberately set this low so we always match
-         kDefaultKnowledgeSegmentCount);
+         kDefaultSearchChunkCount);
          
-      expect (best.chunks.length === kDefaultKnowledgeSegmentCount).toBe (true);    
+      expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);    
 
    }).timeout (2000);      
 });
+
 
