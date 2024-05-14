@@ -1,5 +1,6 @@
 // Copyright (c) 2024 Braid Technologies Ltd
  
+import { SessionKey } from "./Keys";
 import { MStreamable } from "./StreamingFramework";
 import { areSameDate, areSameShallowArray, areSameDeepArray} from './Utilities';
 import { LiteEmbedding} from "./EmbeddingFormats";
@@ -7,7 +8,10 @@ import { InvalidParameterError } from "./Errors";
 import { Message } from "./Message";
 import { EUIStrings } from "../ui/UIStrings";
 import { EConfigStrings } from "./ConfigStrings";
+
 import embeddings from './embeddings_lite.json'
+
+let embeddings2 = new Array<LiteEmbedding> ();
 
 function copyTimeStamp (stamp: Date | undefined) : Date | undefined {
    return (typeof stamp === 'undefined') ? undefined : new Date(stamp);
@@ -606,4 +610,26 @@ export class EnrichedMessage extends MStreamable {
 
       return this;
    }
+}
+
+export async function fetchEmbeddedChunks (key: SessionKey) : Promise<void> {
+   
+   // Default options are marked with *
+   const response : Response = await fetch('http://localhost:1337/embeddings_lite.json', {
+      method: "GET", 
+      mode: "same-origin",  
+      cache: "default",    // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: "same-origin", // include, *same-origin, omit
+      headers: {
+         "Content-Type": "application/json",
+      },
+      redirect: "follow", // manual, *follow, error
+      referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+   });
+
+   response.json().then ((data: any) => {
+       embeddings2 = data;
+   }).catch ((err) => {
+      console.log (err);
+   })
 }

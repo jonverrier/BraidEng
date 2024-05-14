@@ -9,10 +9,25 @@ import { SessionKey } from '../core/Keys';
 import { AIConnector } from "../core/AIConnection";
 
 import { LiteEmbedding } from "../core/EmbeddingFormats";
-import { EmbeddedChunkRepository, cosineSimilarity, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount } from "../core/EmbeddedChunk";
+import { fetchEmbeddedChunks, EmbeddedChunkRepository, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount } from "../core/EmbeddedChunk";
 
 
-describe("AIEmbedding", function () {
+describe("AIEmbedding", async function () {
+
+   it("Needs to download embeddings file from server", async function () {
+
+      let caught = false;
+
+      try {
+      await fetchEmbeddedChunks(new SessionKey(KStubEnvironmentVariables.SessionKey));
+      }
+      catch (e) {
+         caught = true;
+         console.error (e);
+      }
+      expect (caught).toBe (false);
+
+   }).timeout (2000);
 
    it("Needs to find closest match for an existing Markdown document", async function () {
 
