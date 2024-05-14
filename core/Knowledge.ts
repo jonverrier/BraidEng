@@ -2,14 +2,12 @@
  
 import { MStreamable } from "./StreamingFramework";
 import { areSameDate, areSameShallowArray, areSameDeepArray} from './Utilities';
-import { LiteEmbedding, makeYouTubeUrl, makeGithubUrl, makeWebUrl } from "../core/EmbeddingFormats";
-import liteYouTubeEmbeddings from '../core/youtube_embeddings_lite.json';
-import liteMarkdownEmbeddings from '../core/markdown_embeddings_lite.json';
-import liteHtmlEmbeddings from '../core/html_embeddings_lite.json';
+import { LiteEmbedding} from "./EmbeddingFormats";
 import { InvalidParameterError } from "./Errors";
 import { Message } from "./Message";
 import { EUIStrings } from "../ui/UIStrings";
 import { EConfigStrings } from "./ConfigStrings";
+import embeddings from './embeddings_lite.json'
 
 function copyTimeStamp (stamp: Date | undefined) : Date | undefined {
    return (typeof stamp === 'undefined') ? undefined : new Date(stamp);
@@ -21,30 +19,6 @@ function copyRelevance (relevance: number | undefined) : number | undefined {
 
 const youTubeHostname = "www.youtube.com";
 const gitHubHostname = "github.com";
-
-export function isYouTube (url: string) : boolean {
-
-   const URLIn = new URL (url);
-
-   if (URLIn.hostname === (youTubeHostname)) {
-      return true;
-   }
-   else {
-      return false;
-   }
-}
-
-export function isGitHub (url: string) : boolean {
-
-   const URLIn = new URL (url);
-
-   if (URLIn.hostname === (gitHubHostname)) {
-      return true;
-   }
-   else {
-      return false;
-   }
-}
 
 export function lookLikeSameSource (url1: string, url2: string ) : boolean {
 
@@ -80,8 +54,14 @@ export function lookLikeSameSource (url1: string, url2: string ) : boolean {
          return false;
    }
 
-   if ((URLLeft.hostname === URLRight.hostname) && (URLLeft.pathname === URLRight.pathname)) {
-      return true;
+   // To compare two Web URLs we look at the first path paramters  
+   if ((URLLeft.hostname === URLRight.hostname) && 
+       (pathLeft.length >= 1) && (pathRight.length >= 1)) {
+
+         if (pathLeft[0] === pathRight[0])
+            return true;
+         else
+            return false;
    }
 
    return false;
@@ -428,14 +408,12 @@ export function cosineSimilarity(vector1: number[], vector2: number[]): number {
 
 export class KnowledgeRepository  {
 
-   static lookUpMostSimilar (embedding: Array<number>, url: string | undefined, 
+   static lookupMostSimilar (embedding: Array<number>, url: string | undefined, 
       similarityThresholdLo: number, howMany: number) : KnowledgeChunkFinder {
 
-      let chunks = new KnowledgeChunkFinder(similarityThresholdLo, howMany);
+      let chunks = new KnowledgeChunkFinder (similarityThresholdLo, howMany);
 
-      YouTubeRespository.lookUpMostSimilar (embedding, url, chunks);
-      MarkdownRespository.lookUpMostSimilar (embedding, url, chunks);  
-      HtmlRespository.lookUpMostSimilar (embedding, url, chunks); 
+      lookupMostSimilar (embeddings as Array<LiteEmbedding>, embedding, url, chunks);
 
       return chunks;
    }   
@@ -444,20 +422,12 @@ export class KnowledgeRepository  {
     * lookUpSimilarfromUrl 
     * look to see of we have similar content from other sources
     */   
-   static lookUpSimilarfromUrl (url: string, similarityThresholdLo: number, howMany: number) : KnowledgeChunkFinder {
+   static lookupSimilarfromUrl (url: string, similarityThresholdLo: number, howMany: number) : KnowledgeChunkFinder {
       
-      var chunkIn: KnowledgeChunk | undefined = undefined;
-
-      if (isYouTube (url))
-         chunkIn = YouTubeRespository.lookUpUrl (url);
-      else
-      if (isGitHub (url))
-         chunkIn = MarkdownRespository.lookUpUrl (url);         
-      else
-         chunkIn =  HtmlRespository.lookUpUrl (url); 
+      let chunkIn = lookupUrl (embeddings as Array<LiteEmbedding>, url);
 
       if (chunkIn) {
-         return KnowledgeRepository.lookUpMostSimilar (chunkIn.ada_v2, url, 
+         return KnowledgeRepository.lookupMostSimilar (chunkIn.ada_v2, url, 
                                                        similarityThresholdLo, howMany);
       }
 
@@ -473,10 +443,10 @@ export class KnowledgeRepository  {
       if (!url_) {
          haveUrl = false;
          url_ = "https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md";         
-         candidateChunk = MarkdownRespository.lookUpUrl (url_);
+         candidateChunk = lookupUrl (embeddings as Array<LiteEmbedding>, url_);
       }
       else {
-         let finder = KnowledgeRepository.lookUpSimilarfromUrl (url_, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);         
+         let finder = KnowledgeRepository.lookupSimilarfromUrl (url_, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);         
          if (finder.chunks.length > 0)
             candidateChunk = finder.chunks[0];
       }
@@ -500,16 +470,13 @@ export class KnowledgeRepository  {
    }
 }
 
-type MakeUrlFn = (a: LiteEmbedding) => string;
-
-function lookUpMostSimilar (repository: Array<LiteEmbedding>, 
+function lookupMostSimilar (repository: Array<LiteEmbedding>, 
    embedding: Array<number>, urlIn: string | undefined, 
-   builder: KnowledgeChunkFinder,
-   fn : MakeUrlFn ): void {
+   builder: KnowledgeChunkFinder): void {
 
       for (let i = 0; i < repository.length; i++) {
 
-         let url = fn (repository[i]); 
+         let url = repository[i].url; 
          let relevance = Number (cosineSimilarity (embedding, repository[i].ada_v2).toPrecision(2));
 
          let candidate = new KnowledgeChunk (url, repository[i].summary, repository[i].ada_v2, undefined, relevance);
@@ -518,12 +485,11 @@ function lookUpMostSimilar (repository: Array<LiteEmbedding>,
 }
 
 function lookupUrl (repository: Array<LiteEmbedding>, 
-   urlIn: string | undefined, 
-   fn : MakeUrlFn ): KnowledgeChunk | undefined {
+   urlIn: string | undefined): KnowledgeChunk | undefined {
 
       for (let i = 0; i < repository.length; i++) {
 
-         let url = fn (repository[i]);
+         let url = repository[i].url; 
          if (url === urlIn) {
             let candidate = new KnowledgeChunk (url, repository[i].summary, repository[i].ada_v2, undefined, undefined);
             return candidate;
@@ -531,86 +497,6 @@ function lookupUrl (repository: Array<LiteEmbedding>,
       }   
 
       return undefined;     
-}
-
-/**
- * YouTubeRespository 
- * Facade over imported JSON - at some point move to vector DB blah blah
- */
-class YouTubeRespository  {
-   
-   static makeUrl (embedding: LiteEmbedding) : string {
-      return makeYouTubeUrl (embedding.sourceId, embedding.start, embedding.seconds);        
-   }
-
-   static lookUpMostSimilar (embedding: Array<number>, url: string | undefined, builder: KnowledgeChunkFinder): void {
-
-      let embeddings = new Array<LiteEmbedding>();
-      embeddings = liteYouTubeEmbeddings as Array<LiteEmbedding>;
-
-      lookUpMostSimilar (embeddings, embedding, url, builder, YouTubeRespository.makeUrl); 
-   }
-
-   static lookUpUrl (url_: string) : KnowledgeChunk | undefined {
-
-      let embeddings = new Array<LiteEmbedding>();
-      embeddings = liteYouTubeEmbeddings as Array<LiteEmbedding>;
-
-      return lookupUrl (embeddings, url_, YouTubeRespository.makeUrl);
-   }
-   
-}
-
-/**
- * MarkdownRespository 
- * Facade over imported JSON - at some point move to vector DB blah blah
- */
-class MarkdownRespository  {
-   
-   static makeUrl (embedding: LiteEmbedding) : string {
-      return makeGithubUrl (embedding.sourceId);        
-   }
-
-   static lookUpMostSimilar (embedding: Array<number>, url: string | undefined, builder: KnowledgeChunkFinder): void {
-
-      let embeddings = new Array<LiteEmbedding>();
-      embeddings = liteMarkdownEmbeddings as Array<LiteEmbedding>;
-   
-      lookUpMostSimilar (embeddings, embedding, url, builder, MarkdownRespository.makeUrl);      
-   }
-
-   static lookUpUrl (url_: string) : KnowledgeChunk | undefined {
-
-      let embeddings = new Array<LiteEmbedding>();
-      embeddings = liteMarkdownEmbeddings as Array<LiteEmbedding>;
-
-      return lookupUrl (embeddings, url_, MarkdownRespository.makeUrl);
-   }   
-   
-}
-
-class HtmlRespository  {
-   
-   static makeUrl (embedding: LiteEmbedding) : string {
-      return makeWebUrl (embedding.sourceId);        
-   }
-
-   static lookUpMostSimilar (embedding: Array<number>,  url: string | undefined, builder: KnowledgeChunkFinder): void {
-
-      let embeddings = new Array<LiteEmbedding>();
-      embeddings = liteHtmlEmbeddings as Array<LiteEmbedding>;
-
-      lookUpMostSimilar (embeddings, embedding, url, builder, HtmlRespository.makeUrl);    
-   }
-
-   static lookUpUrl (url_: string) : KnowledgeChunk | undefined {
-
-      let embeddings = new Array<LiteEmbedding>();
-      embeddings = liteHtmlEmbeddings as Array<LiteEmbedding>;
-
-      return lookupUrl (embeddings, url_, HtmlRespository.makeUrl);
-   }   
-   
 }
 
 export class KnowledgeEnrichedMessage extends MStreamable {

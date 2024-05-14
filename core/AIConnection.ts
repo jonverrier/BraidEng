@@ -70,7 +70,7 @@ export class AIConnection {
 
       let embedding = await this.createEmbedding (mostRecent);
 
-      let enriched = KnowledgeRepository.lookUpMostSimilar (embedding, undefined, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);
+      let enriched = KnowledgeRepository.lookupMostSimilar (embedding, undefined, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);
 
       return new KnowledgeEnrichedMessage (response.data.choices[0].message.content as string, enriched.chunks);
    }    

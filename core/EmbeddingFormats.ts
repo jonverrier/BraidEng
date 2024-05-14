@@ -4,6 +4,7 @@ export interface FullEmbedding {
    speaker: string;
    title: string;
    sourceId: string;
+   hitTrackingId: string;
    description: string;
    start: string;
    seconds: number;
@@ -13,15 +14,15 @@ export interface FullEmbedding {
 };
 
 export interface LiteEmbedding {
-   sourceId: string;
-   start: string;
-   seconds: number;   
+   url: string;
    summary: string;
    ada_v2: Array<number>;
 };
 
+export type MakeEmbeddingUrlFnLite = (a: LiteEmbedding) => string;
+export type MakeEmbeddingUrlFnFull = (a: FullEmbedding) => string;
 
-export function makeYouTubeUrl (sourceId: string, startHms: string, seconds: number) : string {
+function makeYouTubeUrl (sourceId: string, startHms: string, seconds: number) : string {
 
    let a = startHms.split(':'); // split it at the colons
 
@@ -30,12 +31,24 @@ export function makeYouTubeUrl (sourceId: string, startHms: string, seconds: num
    return 'https://www.youtube.com/watch?v=' + sourceId + '&t=' + h + 'h' + m + 'm' + s +'s';
 } 
 
-export function makeGithubUrl (sourceId: string) : string {
+function makeGithubUrl (sourceId: string) : string {
 
    return 'https://github.com/' + sourceId;
 } 
 
-export function makeWebUrl (sourceId: string) : string {
+function makeWebUrl (sourceId: string) : string {
 
    return 'https://' + sourceId;
 } 
+
+export function makeYouTubeUrlFromFullEmbedding (embedding: FullEmbedding) : string {
+   return makeYouTubeUrl (embedding.sourceId, embedding.start, embedding.seconds);        
+}
+
+export function  makeGithubUrlFromFullEmbedding (embedding: FullEmbedding) : string {
+   return makeGithubUrl (embedding.sourceId);        
+}
+
+export function makeHtmlUrlfromFullEmbedding (embedding: FullEmbedding) : string {
+   return makeWebUrl (embedding.sourceId);        
+}
