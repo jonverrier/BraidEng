@@ -11,7 +11,7 @@ import { throwIfUndefined } from './Asserts';
 import { ConnectionError, AssertionFailedError } from "./Errors";
 import { KeyRetriever } from "./KeyRetriever";
 import { Environment, EEnvironment } from "./Environment";
-import { KnowledgeEnrichedMessage, KnowledgeRepository, kDefaultKnowledgeSegmentCount, kDefaultMinimumCosineSimilarity} from "./Knowledge";
+import { EnrichedMessage, EmbeddedChunkRepository, kDefaultSearchChunkCount, kDefaultMinimumCosineSimilarity} from "./EmbeddedChunk";
 import { SessionKey } from "./Keys";
 
 // We allow for the equivalent of 10 minutes of chat. 10 mins * 60 words = 600 words = 2400 tokens. 
@@ -32,7 +32,7 @@ export class AIConnection {
    }  
 
    // Makes an Axios call to call web endpoint
-   async queryAI  (mostRecent: string, allMessages: Array<Object>) : Promise<KnowledgeEnrichedMessage> {
+   async queryAI  (mostRecent: string, allMessages: Array<Object>) : Promise<EnrichedMessage> {
       
       this._activeCallCount++;
 
@@ -70,9 +70,9 @@ export class AIConnection {
 
       let embedding = await this.createEmbedding (mostRecent);
 
-      let enriched = KnowledgeRepository.lookupMostSimilar (embedding, undefined, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);
+      let enriched = EmbeddedChunkRepository.lookupMostSimilar (embedding, undefined, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);
 
-      return new KnowledgeEnrichedMessage (response.data.choices[0].message.content as string, enriched.chunks);
+      return new EnrichedMessage (response.data.choices[0].message.content as string, enriched.chunks);
    }    
 
       // Makes an Axios call to call web endpoint

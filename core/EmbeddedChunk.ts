@@ -68,14 +68,14 @@ export function lookLikeSameSource (url1: string, url2: string ) : boolean {
 }
 
 /**
- * KnowledgeChunk object
+ * EmbeddedChunk object
  * @param url - link to source on the web.
  * @param summary - text summary (50 words)
  * @param ada_v2: embedding value array. Note this is copied by value to avoid duplicating large arrays.
  * @param timeStamp - when the item is dated from - can be undefined if not known
  * @param relevance - cosine relevance score to a query - can be undefined if the source reference has not been compared yet
  */
-export class KnowledgeChunk extends MStreamable {
+export class EmbeddedChunk extends MStreamable {
    private _url: string;
    private _summary: string;
    private _ada_v2: Array<number>;
@@ -83,12 +83,12 @@ export class KnowledgeChunk extends MStreamable {
    private _relevance: number | undefined;
 
    /**
-    * Create an empty KnowledgeSegment object - required for particiation in serialisation framework
+    * Create an empty EmbeddedChunk object - required for particiation in serialisation framework
     */
    public constructor();
 
    /**
-    * Create a KnowledgeChunk object
+    * Create a EmbeddedChunk object
     * @param url_ - link to source on the web.
     * @param summary_ - text summary (50 words)
     * @param ada_v2_: embedding value array. Note this is copied by value to avoid duplicating large arrays.
@@ -99,10 +99,10 @@ export class KnowledgeChunk extends MStreamable {
                       timeStamp_: Date | undefined, relevance_: number | undefined);
 
    /**
-    * Create a KnowledgeChunk object
+    * Create a EmbeddedChunk object
     * @param source - object to copy from - should work for JSON format and for real constructed objects
     */
-   public constructor(source: KnowledgeChunk);
+   public constructor(source: EmbeddedChunk);
 
    public constructor(...arr: any[])
    {
@@ -155,7 +155,7 @@ export class KnowledgeChunk extends MStreamable {
 
       const obj = JSON.parse(stream);
 
-      this.assign(new KnowledgeChunk (obj.url, obj.summary, obj.ada_v2, obj.timeStamp, obj.relevance));   
+      this.assign(new EmbeddedChunk (obj.url, obj.summary, obj.ada_v2, obj.timeStamp, obj.relevance));   
    }
 
    /**
@@ -210,7 +210,7 @@ export class KnowledgeChunk extends MStreamable {
     * Uses field values, not identity bcs if objects are streamed to/from JSON, field identities will be different. 
     * @param rhs - the object to compare this one to.  
     */
-   equals(rhs: KnowledgeChunk): boolean {
+   equals(rhs: EmbeddedChunk): boolean {
 
       return ((this._url === rhs._url) &&
          (this._summary === rhs._summary) &&
@@ -223,7 +223,7 @@ export class KnowledgeChunk extends MStreamable {
     * assignment operator 
     * @param rhs - the object to assign this one from.  
     */
-   assign(rhs: KnowledgeChunk): KnowledgeChunk {
+   assign(rhs: EmbeddedChunk): EmbeddedChunk {
 
       this._url = rhs._url;
       this._summary = rhs._summary;
@@ -235,24 +235,24 @@ export class KnowledgeChunk extends MStreamable {
    }
 }
 
-export const kDefaultKnowledgeSegmentCount: number = 3;
+export const kDefaultSearchChunkCount: number = 3;
 export const kDefaultMinimumCosineSimilarity = 0.8;
 
 /**
- * KnowledgeChunkFinder object
+ * EmbeddedChunkFinder object
  * @param similarityThresholdLo_: Lowest cosine similarity to allow
  * @param howMany_: how many segments to collect
  * Conceptually this class acts a 'bag' - keeps the top N sources in an unordererd array, only sorts them when requested at the end,
  * which avoids lots of re-sorting while searching for the top N. Should be OK performance wise as the loest value will climb up quite quickly. 
  */
-export class KnowledgeChunkFinder {
+export class EmbeddedChunkFinder {
 
-   private _chunks: Array<KnowledgeChunk>;
+   private _chunks: Array<EmbeddedChunk>;
    private _similarityThresholdLo: number;
    private _howMany : number;
 
    /**
-    * Create a KnowledgeSourceBuilder object
+    * Create a EmbeddedChunkFinder object
     * @param similarityThresholdLo_ - lowest bar for similarity
     * @param howMany_ - how many items to retrieve 
     */
@@ -261,7 +261,7 @@ export class KnowledgeChunkFinder {
       if (similarityThresholdLo_ < -1 || similarityThresholdLo_ > 1)
          throw new InvalidParameterError ("Cosine similarity must be between -1 and 1.");
 
-      this._chunks = new Array<KnowledgeChunk> ();  
+      this._chunks = new Array<EmbeddedChunk> ();  
       this._similarityThresholdLo = similarityThresholdLo_;
       this._howMany = howMany_;            
    }
@@ -275,7 +275,7 @@ export class KnowledgeChunkFinder {
    get howMany (): number {
       return this._howMany;
    }        
-   get chunks (): Array<KnowledgeChunk> {
+   get chunks (): Array<EmbeddedChunk> {
       return this._chunks;
    }   
 
@@ -284,7 +284,7 @@ export class KnowledgeChunkFinder {
     * Uses field values, not identity bcs if objects are streamed to/from JSON, field identities will be different. 
     * @param rhs - the object to compare this one to.  
     */
-   equals(rhs: KnowledgeChunkFinder): boolean {
+   equals(rhs: EmbeddedChunkFinder): boolean {
 
       return (this._howMany == rhs._howMany 
          && this._similarityThresholdLo == rhs._similarityThresholdLo 
@@ -352,7 +352,7 @@ export class KnowledgeChunkFinder {
     * @param candidate - the object to test  
     * @param url - optionally, the URL of the source we started with. Use this to avoid picking duplicates. 
     */
-   replaceIfBeatsCurrent (candidate: KnowledgeChunk, urlIn: string | undefined): boolean {
+   replaceIfBeatsCurrent (candidate: EmbeddedChunk, urlIn: string | undefined): boolean {
 
       // If we have a reference source, check if its just the same source as our reference e.g. different chunk of a Youtube video
       if (urlIn && lookLikeSameSource (candidate.url, urlIn)) {
@@ -406,12 +406,12 @@ export function cosineSimilarity(vector1: number[], vector2: number[]): number {
    return dotProduct / (magnitude1 * magnitude2);
 }
 
-export class KnowledgeRepository  {
+export class EmbeddedChunkRepository  {
 
    static lookupMostSimilar (embedding: Array<number>, url: string | undefined, 
-      similarityThresholdLo: number, howMany: number) : KnowledgeChunkFinder {
+      similarityThresholdLo: number, howMany: number) : EmbeddedChunkFinder {
 
-      let chunks = new KnowledgeChunkFinder (similarityThresholdLo, howMany);
+      let chunks = new EmbeddedChunkFinder (similarityThresholdLo, howMany);
 
       lookupMostSimilar (embeddings as Array<LiteEmbedding>, embedding, url, chunks);
 
@@ -422,21 +422,21 @@ export class KnowledgeRepository  {
     * lookUpSimilarfromUrl 
     * look to see of we have similar content from other sources
     */   
-   static lookupSimilarfromUrl (url: string, similarityThresholdLo: number, howMany: number) : KnowledgeChunkFinder {
+   static lookupSimilarfromUrl (url: string, similarityThresholdLo: number, howMany: number) : EmbeddedChunkFinder {
       
       let chunkIn = lookupUrl (embeddings as Array<LiteEmbedding>, url);
 
       if (chunkIn) {
-         return KnowledgeRepository.lookupMostSimilar (chunkIn.ada_v2, url, 
+         return EmbeddedChunkRepository.lookupMostSimilar (chunkIn.ada_v2, url, 
                                                        similarityThresholdLo, howMany);
       }
 
-      return new KnowledgeChunkFinder(kDefaultMinimumCosineSimilarity, howMany);
+      return new EmbeddedChunkFinder(kDefaultMinimumCosineSimilarity, howMany);
    }
 
    static lookForSuggestedContent (url_: string | undefined) : Message | undefined {
 
-      let candidateChunk : KnowledgeChunk | undefined = undefined;
+      let candidateChunk : EmbeddedChunk | undefined = undefined;
       let haveUrl = true;
 
       // If we do not have a history, provide a helpful start point 
@@ -446,7 +446,7 @@ export class KnowledgeRepository  {
          candidateChunk = lookupUrl (embeddings as Array<LiteEmbedding>, url_);
       }
       else {
-         let finder = KnowledgeRepository.lookupSimilarfromUrl (url_, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount);         
+         let finder = EmbeddedChunkRepository.lookupSimilarfromUrl (url_, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);         
          if (finder.chunks.length > 0)
             candidateChunk = finder.chunks[0];
       }
@@ -458,7 +458,7 @@ export class KnowledgeRepository  {
          suggested.text = haveUrl ? EUIStrings.kNeedInspirationHereIsAnother : EUIStrings.kNewUserNeedInspiration;
          suggested.sentAt = new Date();
 
-         let chunks = new Array<KnowledgeChunk> ();         
+         let chunks = new Array<EmbeddedChunk> ();         
          chunks.push (candidateChunk);
 
          suggested.chunks = chunks;
@@ -472,26 +472,26 @@ export class KnowledgeRepository  {
 
 function lookupMostSimilar (repository: Array<LiteEmbedding>, 
    embedding: Array<number>, urlIn: string | undefined, 
-   builder: KnowledgeChunkFinder): void {
+   builder: EmbeddedChunkFinder): void {
 
       for (let i = 0; i < repository.length; i++) {
 
          let url = repository[i].url; 
          let relevance = Number (cosineSimilarity (embedding, repository[i].ada_v2).toPrecision(2));
 
-         let candidate = new KnowledgeChunk (url, repository[i].summary, repository[i].ada_v2, undefined, relevance);
+         let candidate = new EmbeddedChunk (url, repository[i].summary, repository[i].ada_v2, undefined, relevance);
          let changed = builder.replaceIfBeatsCurrent (candidate, urlIn);
       }         
 }
 
 function lookupUrl (repository: Array<LiteEmbedding>, 
-   urlIn: string | undefined): KnowledgeChunk | undefined {
+   urlIn: string | undefined): EmbeddedChunk | undefined {
 
       for (let i = 0; i < repository.length; i++) {
 
          let url = repository[i].url; 
          if (url === urlIn) {
-            let candidate = new KnowledgeChunk (url, repository[i].summary, repository[i].ada_v2, undefined, undefined);
+            let candidate = new EmbeddedChunk (url, repository[i].summary, repository[i].ada_v2, undefined, undefined);
             return candidate;
          }
       }   
@@ -499,28 +499,28 @@ function lookupUrl (repository: Array<LiteEmbedding>,
       return undefined;     
 }
 
-export class KnowledgeEnrichedMessage extends MStreamable {
+export class EnrichedMessage extends MStreamable {
 
    private _message: string;
-   private _segments: Array<KnowledgeChunk>;
+   private _segments: Array<EmbeddedChunk>;
 
    /**
-    * Create an empty KnowledgeEnrichedMessage object - required for particiation in serialisation framework
+    * Create an empty EnrichedMessage object - required for particiation in serialisation framework
     */
    public constructor();
 
    /**
-    * Create a KnowledgeEnrichedMessage object
+    * Create a EnrichedMessage object
     * @param message_: the message back from the AI 
     * @param segments_: array of the best source objects
     */
-   public constructor(message_: string, segments_: Array<KnowledgeChunk>);
+   public constructor(message_: string, segments_: Array<EmbeddedChunk>);
 
    /**
-    * Create a KnowledgeEnrichedMessage object
+    * Create a EnrichedMessage object
     * @param source - object to copy from - should work for JSON format and for real constructed objects
     */
-   public constructor(source: KnowledgeEnrichedMessage);
+   public constructor(source: EnrichedMessage);
 
    public constructor(...arr: any[])
    {
@@ -530,7 +530,7 @@ export class KnowledgeEnrichedMessage extends MStreamable {
       if (arr.length === 0) {   
 
          this._message = "";         
-         this._segments = new Array<KnowledgeChunk> ();                          
+         this._segments = new Array<EmbeddedChunk> ();                          
          return;
       }
 
@@ -555,10 +555,10 @@ export class KnowledgeEnrichedMessage extends MStreamable {
 
       this._message = obj.message;
 
-      this._segments = new Array<KnowledgeChunk> (); 
+      this._segments = new Array<EmbeddedChunk> (); 
 
       for (let i = 0; i < obj.segments.length; i++) {
-         let newSource = new KnowledgeChunk (obj.segments[i]);
+         let newSource = new EmbeddedChunk (obj.segments[i]);
          this._segments.push (newSource);
       }
    }
@@ -569,7 +569,7 @@ export class KnowledgeEnrichedMessage extends MStreamable {
    get message (): string {
       return this._message;
    }     
-   get segments (): Array<KnowledgeChunk> {
+   get segments (): Array<EmbeddedChunk> {
       return this._segments;
    }   
 
@@ -580,7 +580,7 @@ export class KnowledgeEnrichedMessage extends MStreamable {
 
       this._message = message_;
    }   
-   set segments(segments_: Array<KnowledgeChunk>) {
+   set segments(segments_: Array<EmbeddedChunk>) {
 
       this._segments = segments_;
    }   
@@ -590,7 +590,7 @@ export class KnowledgeEnrichedMessage extends MStreamable {
     * Uses field values, not identity bcs if objects are streamed to/from JSON, field identities will be different. 
     * @param rhs - the object to compare this one to.  
     */
-   equals(rhs: KnowledgeEnrichedMessage): boolean {
+   equals(rhs: EnrichedMessage): boolean {
 
       return (this._message === rhs._message && areSameDeepArray (this._segments, rhs._segments));
    }
@@ -599,7 +599,7 @@ export class KnowledgeEnrichedMessage extends MStreamable {
     * assignment operator 
     * @param rhs - the object to assign this one from.  
     */
-   assign(rhs: KnowledgeEnrichedMessage): KnowledgeEnrichedMessage {
+   assign(rhs: EnrichedMessage): EnrichedMessage {
 
       this._message = rhs._message;
       this._segments = rhs._segments;

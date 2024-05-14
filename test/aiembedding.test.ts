@@ -9,53 +9,53 @@ import { SessionKey } from '../core/Keys';
 import { AIConnector } from "../core/AIConnection";
 
 import { LiteEmbedding } from "../core/EmbeddingFormats";
-import { KnowledgeRepository, cosineSimilarity, kDefaultMinimumCosineSimilarity, kDefaultKnowledgeSegmentCount } from "../core/Knowledge";
+import { EmbeddedChunkRepository, cosineSimilarity, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount } from "../core/EmbeddedChunk";
 
 
 describe("AIEmbedding", function () {
 
    it("Needs to find closest match for an existing Markdown document", async function () {
 
-      let embed = KnowledgeRepository.lookupSimilarfromUrl ("https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md",
+      let embed = EmbeddedChunkRepository.lookupSimilarfromUrl ("https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md",
          kDefaultMinimumCosineSimilarity, 
-         kDefaultKnowledgeSegmentCount);         
+         kDefaultSearchChunkCount);         
 
-      let best = KnowledgeRepository.lookupMostSimilar (embed.chunks[0].ada_v2, 
+      let best = EmbeddedChunkRepository.lookupMostSimilar (embed.chunks[0].ada_v2, 
          embed.chunks[0].url,
          kDefaultMinimumCosineSimilarity, 
-         kDefaultKnowledgeSegmentCount);
+         kDefaultSearchChunkCount);
 
-      expect (best.chunks.length === kDefaultKnowledgeSegmentCount).toBe (true);
+      expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);
 
    }).timeout (2000);
 
    it("Needs to find closest match for an existing YouTube document", async function () {
 
-      let embed = KnowledgeRepository.lookupSimilarfromUrl ("https://www.youtube.com/watch?v=l5mG4z343qg&t=00h00m00s",
+      let embed = EmbeddedChunkRepository.lookupSimilarfromUrl ("https://www.youtube.com/watch?v=l5mG4z343qg&t=00h00m00s",
          kDefaultMinimumCosineSimilarity, 
-         kDefaultKnowledgeSegmentCount);      
+         kDefaultSearchChunkCount);      
 
-      let best = KnowledgeRepository.lookupMostSimilar (embed.chunks[0].ada_v2, 
+      let best = EmbeddedChunkRepository.lookupMostSimilar (embed.chunks[0].ada_v2, 
          embed.chunks[0].url,
          kDefaultMinimumCosineSimilarity, 
-         kDefaultKnowledgeSegmentCount);
+         kDefaultSearchChunkCount);
 
-      expect (best.chunks.length === kDefaultKnowledgeSegmentCount).toBe (true);
+      expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);
 
    }).timeout (2000);
 
    it("Needs to find closest match for an existing Html document", async function () {
 
-      let embed = KnowledgeRepository.lookupSimilarfromUrl ("https://karpathy.medium.com/software-2-0-a64152b37c35",
+      let embed = EmbeddedChunkRepository.lookupSimilarfromUrl ("https://karpathy.medium.com/software-2-0-a64152b37c35",
          kDefaultMinimumCosineSimilarity, 
-         kDefaultKnowledgeSegmentCount);          
+         kDefaultSearchChunkCount);          
 
-      let best = KnowledgeRepository.lookupMostSimilar (embed.chunks[0].ada_v2, 
+      let best = EmbeddedChunkRepository.lookupMostSimilar (embed.chunks[0].ada_v2, 
          embed.chunks[0].url,
          kDefaultMinimumCosineSimilarity, 
-         kDefaultKnowledgeSegmentCount);
+         kDefaultSearchChunkCount);
 
-      expect (best.chunks.length === kDefaultKnowledgeSegmentCount).toBe (true);
+      expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);
 
    }).timeout (2000);
 
@@ -70,12 +70,12 @@ describe("AIEmbedding", function () {
       let connection = await AIConnector.connect (new SessionKey (KStubEnvironmentVariables.SessionKey));      
 
       const embedding = await connection.createEmbedding (query);
-      let best = KnowledgeRepository.lookupMostSimilar (embedding, 
+      let best = EmbeddedChunkRepository.lookupMostSimilar (embedding, 
          undefined,
          0, // Deliberately set this low so we always match
-         kDefaultKnowledgeSegmentCount);
+         kDefaultSearchChunkCount);
 
-      expect (best.chunks.length === kDefaultKnowledgeSegmentCount).toBe (true);    
+      expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);    
 
    }).timeout (2000);   
 
@@ -90,12 +90,12 @@ describe("AIEmbedding", function () {
       let connection = await AIConnector.connect (new SessionKey (KStubEnvironmentVariables.SessionKey));      
 
       const embedding = await connection.createEmbedding (query);
-      let best = KnowledgeRepository.lookupMostSimilar (embedding, 
+      let best = EmbeddedChunkRepository.lookupMostSimilar (embedding, 
          undefined,
          0, // Deliberately set this low so we always match
-         kDefaultKnowledgeSegmentCount);
+         kDefaultSearchChunkCount);
 
-      expect (best.chunks.length === kDefaultKnowledgeSegmentCount).toBe (true);   
+      expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);   
 
    }).timeout (2000);     
 
@@ -110,12 +110,12 @@ describe("AIEmbedding", function () {
       let connection = await AIConnector.connect (new SessionKey (KStubEnvironmentVariables.SessionKey));      
 
       const embedding = await connection.createEmbedding (query);
-      let best = KnowledgeRepository.lookupMostSimilar (embedding, 
+      let best = EmbeddedChunkRepository.lookupMostSimilar (embedding, 
          undefined,
          0, // Deliberately set this low so we always match
-         kDefaultKnowledgeSegmentCount);
+         kDefaultSearchChunkCount);
          
-      expect (best.chunks.length === kDefaultKnowledgeSegmentCount).toBe (true);    
+      expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);    
 
    }).timeout (2000);      
 });
