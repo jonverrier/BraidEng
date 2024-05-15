@@ -44,7 +44,11 @@ export enum EConfigStrings {
    kCohort1Team1ConversationKey = "1591d257-f836-4faf-bdb7-703b02539b95",   
    kCohort1Team2ConversationKey = "f0837123-6ed3-4c49-84f9-be6c3dc54855",
    kCohort1Team3ConversationKey = "e586f7f7-4d4b-485c-b50f-382c544fd8e6",   
-   kCohort1Team4ConversationKey = "694cef73-939f-4c6c-ab02-76158a41ac43",      
+   kCohort1Team4ConversationKey = "694cef73-939f-4c6c-ab02-76158a41ac43",     
+   kDemoConversationKey = "",
+
+   kEmbeddingFileUrlLocal = 'http://localhost:1337/embeddings_lite.json',
+   kEmbeddingFileUrlProduction = 'https://braidapps.io/embeddings_lite.json',   
 };
 
 export enum EConfigNumbers {
@@ -54,7 +58,8 @@ export enum EConfigNumbers {
    kMessagePrompt2VBorder = 24,   // How much to allow for top + bottom inset
    kMessagePrompt2HBorder = 24,   // How much to allow for left & right inset
    kMessagePromptLineSpace = 8,   // How much to allow between lines
-   kMessagePromptMaxCharacters = 2048
+   kMessagePromptMaxCharacters = 2048,
+   kMaxDownloadWaitSeconds = 20    
 }
 
 // This is used for local running only, as in browser we cannot access environment variables

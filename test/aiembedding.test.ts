@@ -9,7 +9,7 @@ import { SessionKey } from '../core/Keys';
 import { AIConnector } from "../core/AIConnection";
 
 import { LiteEmbedding } from "../core/EmbeddingFormats";
-import { fetchEmbeddedChunks, EmbeddedChunkRepository, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount } from "../core/EmbeddedChunk";
+import { fetchEmbeddedings, EmbeddedingRepository, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount } from "../core/Embeddings";
 
 
 describe("AIEmbedding", async function () {
@@ -19,7 +19,7 @@ describe("AIEmbedding", async function () {
       let caught = false;
 
       try {
-      await fetchEmbeddedChunks(new SessionKey(KStubEnvironmentVariables.SessionKey));
+         await fetchEmbeddedings();
       }
       catch (e) {
          caught = true;
@@ -31,11 +31,11 @@ describe("AIEmbedding", async function () {
 
    it("Needs to find closest match for an existing Markdown document", async function () {
 
-      let embed = EmbeddedChunkRepository.lookupSimilarfromUrl ("https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md",
+      let embed = EmbeddedingRepository.lookupSimilarfromUrl ("https://github.com/microsoft/generative-ai-for-beginners/blob/main/01-introduction-to-genai/README.md",
          kDefaultMinimumCosineSimilarity, 
          kDefaultSearchChunkCount);         
 
-      let best = EmbeddedChunkRepository.lookupMostSimilar (embed.chunks[0].ada_v2, 
+      let best = EmbeddedingRepository.lookupMostSimilar (embed.chunks[0].ada_v2, 
          embed.chunks[0].url,
          kDefaultMinimumCosineSimilarity, 
          kDefaultSearchChunkCount);
@@ -46,11 +46,11 @@ describe("AIEmbedding", async function () {
 
    it("Needs to find closest match for an existing YouTube document", async function () {
 
-      let embed = EmbeddedChunkRepository.lookupSimilarfromUrl ("https://www.youtube.com/watch?v=l5mG4z343qg&t=00h00m00s",
+      let embed = EmbeddedingRepository.lookupSimilarfromUrl ("https://www.youtube.com/watch?v=l5mG4z343qg&t=00h00m00s",
          kDefaultMinimumCosineSimilarity, 
          kDefaultSearchChunkCount);      
 
-      let best = EmbeddedChunkRepository.lookupMostSimilar (embed.chunks[0].ada_v2, 
+      let best = EmbeddedingRepository.lookupMostSimilar (embed.chunks[0].ada_v2, 
          embed.chunks[0].url,
          kDefaultMinimumCosineSimilarity, 
          kDefaultSearchChunkCount);
@@ -61,11 +61,11 @@ describe("AIEmbedding", async function () {
 
    it("Needs to find closest match for an existing Html document", async function () {
 
-      let embed = EmbeddedChunkRepository.lookupSimilarfromUrl ("https://karpathy.medium.com/software-2-0-a64152b37c35",
+      let embed = EmbeddedingRepository.lookupSimilarfromUrl ("https://karpathy.medium.com/software-2-0-a64152b37c35",
          kDefaultMinimumCosineSimilarity, 
          kDefaultSearchChunkCount);          
 
-      let best = EmbeddedChunkRepository.lookupMostSimilar (embed.chunks[0].ada_v2, 
+      let best = EmbeddedingRepository.lookupMostSimilar (embed.chunks[0].ada_v2, 
          embed.chunks[0].url,
          kDefaultMinimumCosineSimilarity, 
          kDefaultSearchChunkCount);
@@ -85,7 +85,7 @@ describe("AIEmbedding", async function () {
       let connection = await AIConnector.connect (new SessionKey (KStubEnvironmentVariables.SessionKey));      
 
       const embedding = await connection.createEmbedding (query);
-      let best = EmbeddedChunkRepository.lookupMostSimilar (embedding, 
+      let best = EmbeddedingRepository.lookupMostSimilar (embedding, 
          undefined,
          0, // Deliberately set this low so we always match
          kDefaultSearchChunkCount);
@@ -105,7 +105,7 @@ describe("AIEmbedding", async function () {
       let connection = await AIConnector.connect (new SessionKey (KStubEnvironmentVariables.SessionKey));      
 
       const embedding = await connection.createEmbedding (query);
-      let best = EmbeddedChunkRepository.lookupMostSimilar (embedding, 
+      let best = EmbeddedingRepository.lookupMostSimilar (embedding, 
          undefined,
          0, // Deliberately set this low so we always match
          kDefaultSearchChunkCount);
@@ -125,7 +125,7 @@ describe("AIEmbedding", async function () {
       let connection = await AIConnector.connect (new SessionKey (KStubEnvironmentVariables.SessionKey));      
 
       const embedding = await connection.createEmbedding (query);
-      let best = EmbeddedChunkRepository.lookupMostSimilar (embedding, 
+      let best = EmbeddedingRepository.lookupMostSimilar (embedding, 
          undefined,
          0, // Deliberately set this low so we always match
          kDefaultSearchChunkCount);

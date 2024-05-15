@@ -7,11 +7,12 @@ import { LiteEmbedding} from "./EmbeddingFormats";
 import { InvalidParameterError } from "./Errors";
 import { Message } from "./Message";
 import { EUIStrings } from "../ui/UIStrings";
-import { EConfigStrings } from "./ConfigStrings";
+import { EConfigNumbers, EConfigStrings } from "./ConfigStrings";
+import { ConnectionError } from "./Errors";
+import { EEnvironment, Environment } from "./Environment";
+import { logApiInfo } from "./Logging";
 
-import embeddings from './embeddings_lite.json'
-
-let embeddings2 = new Array<LiteEmbedding> ();
+let embeddings = new Array<LiteEmbedding> ();
 
 function copyTimeStamp (stamp: Date | undefined) : Date | undefined {
    return (typeof stamp === 'undefined') ? undefined : new Date(stamp);
@@ -72,14 +73,14 @@ export function lookLikeSameSource (url1: string, url2: string ) : boolean {
 }
 
 /**
- * EmbeddedChunk object
+ * Embeddeding object
  * @param url - link to source on the web.
  * @param summary - text summary (50 words)
  * @param ada_v2: embedding value array. Note this is copied by value to avoid duplicating large arrays.
  * @param timeStamp - when the item is dated from - can be undefined if not known
  * @param relevance - cosine relevance score to a query - can be undefined if the source reference has not been compared yet
  */
-export class EmbeddedChunk extends MStreamable {
+export class Embeddeding extends MStreamable {
    private _url: string;
    private _summary: string;
    private _ada_v2: Array<number>;
@@ -87,12 +88,12 @@ export class EmbeddedChunk extends MStreamable {
    private _relevance: number | undefined;
 
    /**
-    * Create an empty EmbeddedChunk object - required for particiation in serialisation framework
+    * Create an empty Embeddeding object - required for particiation in serialisation framework
     */
    public constructor();
 
    /**
-    * Create a EmbeddedChunk object
+    * Create a Embeddeding object
     * @param url_ - link to source on the web.
     * @param summary_ - text summary (50 words)
     * @param ada_v2_: embedding value array. Note this is copied by value to avoid duplicating large arrays.
@@ -103,10 +104,10 @@ export class EmbeddedChunk extends MStreamable {
                       timeStamp_: Date | undefined, relevance_: number | undefined);
 
    /**
-    * Create a EmbeddedChunk object
+    * Create a Embeddeding object
     * @param source - object to copy from - should work for JSON format and for real constructed objects
     */
-   public constructor(source: EmbeddedChunk);
+   public constructor(source: Embeddeding);
 
    public constructor(...arr: any[])
    {
@@ -159,7 +160,7 @@ export class EmbeddedChunk extends MStreamable {
 
       const obj = JSON.parse(stream);
 
-      this.assign(new EmbeddedChunk (obj.url, obj.summary, obj.ada_v2, obj.timeStamp, obj.relevance));   
+      this.assign(new Embeddeding (obj.url, obj.summary, obj.ada_v2, obj.timeStamp, obj.relevance));   
    }
 
    /**
@@ -214,7 +215,7 @@ export class EmbeddedChunk extends MStreamable {
     * Uses field values, not identity bcs if objects are streamed to/from JSON, field identities will be different. 
     * @param rhs - the object to compare this one to.  
     */
-   equals(rhs: EmbeddedChunk): boolean {
+   equals(rhs: Embeddeding): boolean {
 
       return ((this._url === rhs._url) &&
          (this._summary === rhs._summary) &&
@@ -227,7 +228,7 @@ export class EmbeddedChunk extends MStreamable {
     * assignment operator 
     * @param rhs - the object to assign this one from.  
     */
-   assign(rhs: EmbeddedChunk): EmbeddedChunk {
+   assign(rhs: Embeddeding): Embeddeding {
 
       this._url = rhs._url;
       this._summary = rhs._summary;
@@ -243,20 +244,20 @@ export const kDefaultSearchChunkCount: number = 3;
 export const kDefaultMinimumCosineSimilarity = 0.8;
 
 /**
- * EmbeddedChunkFinder object
+ * EmbeddedingFinder object
  * @param similarityThresholdLo_: Lowest cosine similarity to allow
  * @param howMany_: how many segments to collect
  * Conceptually this class acts a 'bag' - keeps the top N sources in an unordererd array, only sorts them when requested at the end,
  * which avoids lots of re-sorting while searching for the top N. Should be OK performance wise as the loest value will climb up quite quickly. 
  */
-export class EmbeddedChunkFinder {
+export class EmbeddedingFinder {
 
-   private _chunks: Array<EmbeddedChunk>;
+   private _chunks: Array<Embeddeding>;
    private _similarityThresholdLo: number;
    private _howMany : number;
 
    /**
-    * Create a EmbeddedChunkFinder object
+    * Create a EmbeddedingFinder object
     * @param similarityThresholdLo_ - lowest bar for similarity
     * @param howMany_ - how many items to retrieve 
     */
@@ -265,7 +266,7 @@ export class EmbeddedChunkFinder {
       if (similarityThresholdLo_ < -1 || similarityThresholdLo_ > 1)
          throw new InvalidParameterError ("Cosine similarity must be between -1 and 1.");
 
-      this._chunks = new Array<EmbeddedChunk> ();  
+      this._chunks = new Array<Embeddeding> ();  
       this._similarityThresholdLo = similarityThresholdLo_;
       this._howMany = howMany_;            
    }
@@ -279,7 +280,7 @@ export class EmbeddedChunkFinder {
    get howMany (): number {
       return this._howMany;
    }        
-   get chunks (): Array<EmbeddedChunk> {
+   get chunks (): Array<Embeddeding> {
       return this._chunks;
    }   
 
@@ -288,7 +289,7 @@ export class EmbeddedChunkFinder {
     * Uses field values, not identity bcs if objects are streamed to/from JSON, field identities will be different. 
     * @param rhs - the object to compare this one to.  
     */
-   equals(rhs: EmbeddedChunkFinder): boolean {
+   equals(rhs: EmbeddedingFinder): boolean {
 
       return (this._howMany == rhs._howMany 
          && this._similarityThresholdLo == rhs._similarityThresholdLo 
@@ -356,7 +357,7 @@ export class EmbeddedChunkFinder {
     * @param candidate - the object to test  
     * @param url - optionally, the URL of the source we started with. Use this to avoid picking duplicates. 
     */
-   replaceIfBeatsCurrent (candidate: EmbeddedChunk, urlIn: string | undefined): boolean {
+   replaceIfBeatsCurrent (candidate: Embeddeding, urlIn: string | undefined): boolean {
 
       // If we have a reference source, check if its just the same source as our reference e.g. different chunk of a Youtube video
       if (urlIn && lookLikeSameSource (candidate.url, urlIn)) {
@@ -410,12 +411,14 @@ export function cosineSimilarity(vector1: number[], vector2: number[]): number {
    return dotProduct / (magnitude1 * magnitude2);
 }
 
-export class EmbeddedChunkRepository  {
+export class EmbeddedingRepository  {
 
    static lookupMostSimilar (embedding: Array<number>, url: string | undefined, 
-      similarityThresholdLo: number, howMany: number) : EmbeddedChunkFinder {
+      similarityThresholdLo: number, howMany: number) : EmbeddedingFinder {
 
-      let chunks = new EmbeddedChunkFinder (similarityThresholdLo, howMany);
+      waitforEmbeddedingLoad();
+
+      let chunks = new EmbeddedingFinder (similarityThresholdLo, howMany);
 
       lookupMostSimilar (embeddings as Array<LiteEmbedding>, embedding, url, chunks);
 
@@ -426,22 +429,26 @@ export class EmbeddedChunkRepository  {
     * lookUpSimilarfromUrl 
     * look to see of we have similar content from other sources
     */   
-   static lookupSimilarfromUrl (url: string, similarityThresholdLo: number, howMany: number) : EmbeddedChunkFinder {
+   static lookupSimilarfromUrl (url: string, similarityThresholdLo: number, howMany: number) : EmbeddedingFinder {
       
+      waitforEmbeddedingLoad();
+
       let chunkIn = lookupUrl (embeddings as Array<LiteEmbedding>, url);
 
       if (chunkIn) {
-         return EmbeddedChunkRepository.lookupMostSimilar (chunkIn.ada_v2, url, 
+         return EmbeddedingRepository.lookupMostSimilar (chunkIn.ada_v2, url, 
                                                        similarityThresholdLo, howMany);
       }
 
-      return new EmbeddedChunkFinder(kDefaultMinimumCosineSimilarity, howMany);
+      return new EmbeddedingFinder(kDefaultMinimumCosineSimilarity, howMany);
    }
 
    static lookForSuggestedContent (url_: string | undefined) : Message | undefined {
 
-      let candidateChunk : EmbeddedChunk | undefined = undefined;
+      let candidateChunk : Embeddeding | undefined = undefined;
       let haveUrl = true;
+
+      waitforEmbeddedingLoad();
 
       // If we do not have a history, provide a helpful start point 
       if (!url_) {
@@ -450,7 +457,7 @@ export class EmbeddedChunkRepository  {
          candidateChunk = lookupUrl (embeddings as Array<LiteEmbedding>, url_);
       }
       else {
-         let finder = EmbeddedChunkRepository.lookupSimilarfromUrl (url_, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);         
+         let finder = EmbeddedingRepository.lookupSimilarfromUrl (url_, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);         
          if (finder.chunks.length > 0)
             candidateChunk = finder.chunks[0];
       }
@@ -462,7 +469,7 @@ export class EmbeddedChunkRepository  {
          suggested.text = haveUrl ? EUIStrings.kNeedInspirationHereIsAnother : EUIStrings.kNewUserNeedInspiration;
          suggested.sentAt = new Date();
 
-         let chunks = new Array<EmbeddedChunk> ();         
+         let chunks = new Array<Embeddeding> ();         
          chunks.push (candidateChunk);
 
          suggested.chunks = chunks;
@@ -476,26 +483,26 @@ export class EmbeddedChunkRepository  {
 
 function lookupMostSimilar (repository: Array<LiteEmbedding>, 
    embedding: Array<number>, urlIn: string | undefined, 
-   builder: EmbeddedChunkFinder): void {
+   builder: EmbeddedingFinder): void {
 
       for (let i = 0; i < repository.length; i++) {
 
          let url = repository[i].url; 
          let relevance = Number (cosineSimilarity (embedding, repository[i].ada_v2).toPrecision(2));
 
-         let candidate = new EmbeddedChunk (url, repository[i].summary, repository[i].ada_v2, undefined, relevance);
+         let candidate = new Embeddeding (url, repository[i].summary, repository[i].ada_v2, undefined, relevance);
          let changed = builder.replaceIfBeatsCurrent (candidate, urlIn);
       }         
 }
 
 function lookupUrl (repository: Array<LiteEmbedding>, 
-   urlIn: string | undefined): EmbeddedChunk | undefined {
+   urlIn: string | undefined): Embeddeding | undefined {
 
       for (let i = 0; i < repository.length; i++) {
 
          let url = repository[i].url; 
          if (url === urlIn) {
-            let candidate = new EmbeddedChunk (url, repository[i].summary, repository[i].ada_v2, undefined, undefined);
+            let candidate = new Embeddeding (url, repository[i].summary, repository[i].ada_v2, undefined, undefined);
             return candidate;
          }
       }   
@@ -506,7 +513,7 @@ function lookupUrl (repository: Array<LiteEmbedding>,
 export class EnrichedMessage extends MStreamable {
 
    private _message: string;
-   private _segments: Array<EmbeddedChunk>;
+   private _segments: Array<Embeddeding>;
 
    /**
     * Create an empty EnrichedMessage object - required for particiation in serialisation framework
@@ -518,7 +525,7 @@ export class EnrichedMessage extends MStreamable {
     * @param message_: the message back from the AI 
     * @param segments_: array of the best source objects
     */
-   public constructor(message_: string, segments_: Array<EmbeddedChunk>);
+   public constructor(message_: string, segments_: Array<Embeddeding>);
 
    /**
     * Create a EnrichedMessage object
@@ -534,7 +541,7 @@ export class EnrichedMessage extends MStreamable {
       if (arr.length === 0) {   
 
          this._message = "";         
-         this._segments = new Array<EmbeddedChunk> ();                          
+         this._segments = new Array<Embeddeding> ();                          
          return;
       }
 
@@ -559,10 +566,10 @@ export class EnrichedMessage extends MStreamable {
 
       this._message = obj.message;
 
-      this._segments = new Array<EmbeddedChunk> (); 
+      this._segments = new Array<Embeddeding> (); 
 
       for (let i = 0; i < obj.segments.length; i++) {
-         let newSource = new EmbeddedChunk (obj.segments[i]);
+         let newSource = new Embeddeding (obj.segments[i]);
          this._segments.push (newSource);
       }
    }
@@ -573,7 +580,7 @@ export class EnrichedMessage extends MStreamable {
    get message (): string {
       return this._message;
    }     
-   get segments (): Array<EmbeddedChunk> {
+   get segments (): Array<Embeddeding> {
       return this._segments;
    }   
 
@@ -584,7 +591,7 @@ export class EnrichedMessage extends MStreamable {
 
       this._message = message_;
    }   
-   set segments(segments_: Array<EmbeddedChunk>) {
+   set segments(segments_: Array<Embeddeding>) {
 
       this._segments = segments_;
    }   
@@ -612,24 +619,63 @@ export class EnrichedMessage extends MStreamable {
    }
 }
 
-export async function fetchEmbeddedChunks (key: SessionKey) : Promise<void> {
+let haveLoaded: boolean = false;
+
+export async function fetchEmbeddedings () : Promise<void> {
    
-   // Default options are marked with *
-   const response : Response = await fetch('http://localhost:1337/embeddings_lite.json', {
+   if (haveLoaded)
+      return;
+
+   let environment = Environment.environment();
+   let url = "";
+
+   if (environment === EEnvironment.kLocal) {
+      url = EConfigStrings.kEmbeddingFileUrlLocal;
+   }
+   else {
+      url = EConfigStrings.kEmbeddingFileUrlProduction;
+   }
+
+   let startTime = new Date();
+
+   const response : Response = await fetch(EConfigStrings.kEmbeddingFileUrlLocal, {
       method: "GET", 
       mode: "same-origin",  
-      cache: "default",    // *default, no-cache, reload, force-cache, only-if-cached
-      credentials: "same-origin", // include, *same-origin, omit
+      cache: "default",    
+      credentials: "same-origin", 
       headers: {
          "Content-Type": "application/json",
       },
-      redirect: "follow", // manual, *follow, error
-      referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+      redirect: "follow", 
+      referrerPolicy: "no-referrer", 
    });
 
    response.json().then ((data: any) => {
-       embeddings2 = data;
+       embeddings = data;
+       haveLoaded = true;
+       let endTime = new Date();   
+       
+       logApiInfo ("Embedding file loadtime: ", endTime.getTime() - startTime.getTime())
+       return;
+
    }).catch ((err) => {
-      console.log (err);
+       throw new ConnectionError (err.toString())
    })
+}
+
+export function waitforEmbeddedingLoad () : void {
+
+   let maxTries = 4 * EConfigNumbers.kMaxDownloadWaitSeconds; // The '4' must move on cencert with the 250 msecs below
+
+   function sleep (msecs: number) : void { 
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, msecs);
+   }
+
+   while (!haveLoaded && maxTries > 0) {      
+      sleep (250);
+      maxTries--;
+   }
+
+   if (maxTries === 0)
+      throw new ConnectionError ("Timeout loading Embedding file.")      
 }

@@ -11,7 +11,7 @@ import { throwIfUndefined } from './Asserts';
 import { ConnectionError, AssertionFailedError } from "./Errors";
 import { KeyRetriever } from "./KeyRetriever";
 import { Environment, EEnvironment } from "./Environment";
-import { EnrichedMessage, EmbeddedChunkRepository, kDefaultSearchChunkCount, kDefaultMinimumCosineSimilarity} from "./EmbeddedChunk";
+import { EnrichedMessage, EmbeddedingRepository, kDefaultSearchChunkCount, kDefaultMinimumCosineSimilarity} from "./Embeddings";
 import { SessionKey } from "./Keys";
 
 // We allow for the equivalent of 10 minutes of chat. 10 mins * 60 words = 600 words = 2400 tokens. 
@@ -70,7 +70,7 @@ export class AIConnection {
 
       let embedding = await this.createEmbedding (mostRecent);
 
-      let enriched = EmbeddedChunkRepository.lookupMostSimilar (embedding, undefined, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);
+      let enriched = EmbeddedingRepository.lookupMostSimilar (embedding, undefined, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);
 
       return new EnrichedMessage (response.data.choices[0].message.content as string, enriched.chunks);
    }    

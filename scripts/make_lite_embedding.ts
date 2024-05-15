@@ -41,7 +41,7 @@ describe("Embedding", function () {
       let caught = false;
 
       try {
-         let result = await fs.writeFile('core/embeddings_lite.json', jsonContent, 'utf8');
+         let result = await fs.writeFile('data/embeddings_lite.json', jsonContent, 'utf8');
       }
       catch (e: any) {
          caught = true;
