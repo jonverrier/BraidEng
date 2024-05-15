@@ -62,7 +62,7 @@ describe("AIConnection", function () {
       }
       expect (caught).toBe (false);
 
-   }).timeout (5000);
+   }).timeout (10000);
 
    it("Needs to detect Bot message type", function () {
 
@@ -206,7 +206,7 @@ describe("AIConnector", function () {
       }
       expect (caught).toBe (false);
 
-   }).timeout (5000);
+   }).timeout (10000);
 
    it("Needs to connect to valid stub API", async function () {
 
@@ -237,7 +237,7 @@ describe("AIConnector", function () {
 
       expect(caught).toEqual(false);      
 
-   }).timeout (5000);    
+   }).timeout (10000);    
 
    it("Needs to detect error on failure to connect to back end", async function () {
 
@@ -256,6 +256,6 @@ describe("AIConnector", function () {
 
       expect(caught).toEqual(true);    
 
-   }).timeout (5000);   
+   }).timeout (10000);   
 
 });

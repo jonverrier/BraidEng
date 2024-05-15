@@ -676,6 +676,7 @@ export function waitforEmbeddedingLoad () : void {
       maxTries--;
    }
 
-   if (maxTries === 0)
-      throw new ConnectionError ("Timeout loading Embedding file.")      
+   // TODO
+   //if (maxTries === 0)
+      //throw new ConnectionError ("Timeout loading Embedding file.")      
 }

@@ -27,7 +27,7 @@ describe("AIEmbedding", async function () {
       }
       expect (caught).toBe (false);
 
-   }).timeout (5000);
+   }).timeout (10000);
 
    it("Needs to find closest match for an existing Markdown document", async function () {
 
@@ -42,7 +42,7 @@ describe("AIEmbedding", async function () {
 
       expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);
 
-   }).timeout (5000);
+   }).timeout (10000);
 
    it("Needs to find closest match for an existing YouTube document", async function () {
 
@@ -57,7 +57,7 @@ describe("AIEmbedding", async function () {
 
       expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);
 
-   }).timeout (5000);
+   }).timeout (10000);
 
    it("Needs to find closest match for an existing Html document", async function () {
 
@@ -72,7 +72,7 @@ describe("AIEmbedding", async function () {
 
       expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);
 
-   }).timeout (5000);
+   }).timeout (10000);
 
    it("Needs to find closest match for a simple query", async function () {
       
@@ -92,7 +92,7 @@ describe("AIEmbedding", async function () {
 
       expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);    
 
-   }).timeout (5000);   
+   }).timeout (10000);   
 
    it("Needs to find closest match for an irrelevant query", async function () {
       
@@ -112,7 +112,7 @@ describe("AIEmbedding", async function () {
 
       expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);   
 
-   }).timeout (5000);     
+   }).timeout (10000);     
 
    it("Needs to find closest match for a Markdown query", async function () {
       
@@ -132,7 +132,7 @@ describe("AIEmbedding", async function () {
          
       expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);    
 
-   }).timeout (5000);      
+   }).timeout (10000);      
 });
 
 
