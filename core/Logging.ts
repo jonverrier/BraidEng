@@ -33,3 +33,8 @@ export function logApiError (description: string, details: any) : void {
 
    logger.ERROR (EConfigStrings.kApiLogCategory, description, [details]);
 }
+
+export function logApiInfo (description: string, details: any) : void {
+
+   logger.INFO (EConfigStrings.kApiLogCategory, description, [details]);
+}

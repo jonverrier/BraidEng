@@ -19,7 +19,7 @@ import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } fr
 import { AIConnection, AIConnector } from '../core/AIConnection';
 import { EUIStrings } from './UIStrings';
 import { EConfigNumbers, EConfigStrings } from '../core/ConfigStrings';
-import { EnrichedMessage, EmbeddedChunk, EmbeddedChunkRepository } from '../core/EmbeddedChunk';
+import { EnrichedMessage, Embeddeding, EmbeddedingRepository } from '../core/Embeddings';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 import { UrlActivityRecord } from '../core/UrlActivityRecord';
 import { MessageActivityRecord } from '../core/MessageActivityRecord';
@@ -94,7 +94,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
          if (! hasRecentHepfulStart (fluidMessagesConnection_)) {
             if (!suggested) {
-             let suggestion = EmbeddedChunkRepository.lookForSuggestedContent (undefined);
+             let suggestion = EmbeddedingRepository.lookForSuggestedContent (undefined);
              setSuggested (suggestion);
             }
          } 
@@ -239,7 +239,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
          email, new Date(), url_);
       repository.save (record);   
       
-      let suggested = EmbeddedChunkRepository.lookForSuggestedContent (url_);
+      let suggested = EmbeddedingRepository.lookForSuggestedContent (url_);
       if (suggested)
          setSuggested (suggested);
    }

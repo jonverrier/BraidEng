@@ -24,11 +24,10 @@ export class KeyRetriever {
    // If running locally, looks for an environment variable
    async requestKey  (apiUrl_: string, paramName_: string, sessionKey_: SessionKey) : Promise<string> {
      
-      let environment = Environment.environment();
-
       /*  Now we use a localhost server bcs it can access environment variables
       // If we are running locally directly in the browser (not via a web server on localhost:)
       // use the stub values - no Production secrets are really stored locally 
+      let environment = Environment.environment();
       if (environment === EEnvironment.kLocal) {
          type KStubEnvironmentVariableKey = keyof typeof KStubEnvironmentVariables;
          let memberKeyAsStr: KStubEnvironmentVariableKey = paramName_ as any;

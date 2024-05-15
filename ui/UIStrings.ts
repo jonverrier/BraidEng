@@ -14,7 +14,8 @@ export enum EUIStrings {
    kCohort1Team1ConversationName = "4x100m swim",
    kCohort1Team2ConversationName = "Triathlon",
    kCohort1Team3ConversationName = "Judo",   
-   kCohort1Team4ConversationName = "4x400m run",   
+   kCohort1Team4ConversationName = "4x400m run",
+   kDemoConversationName = "Demo",
    kTestConversationName = "Test",   
 
    kPageErrorCaption = "Error",

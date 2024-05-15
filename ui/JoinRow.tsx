@@ -81,7 +81,9 @@ const dropdownStyles = makeStyles({
  function conversationKeyFromName (name: string) : ConversationKey {
    switch (name) {
       case EUIStrings.kTestConversationName:
-         return new ConversationKey ("");             
+         return new ConversationKey ("");  
+      case EUIStrings.kDemoConversationName:  
+         return new ConversationKey (EConfigStrings.kDemoConversationKey);                     
       case EUIStrings.kCohort1Team1ConversationName:
          return new ConversationKey (EConfigStrings.kCohort1Team1ConversationKey);            
       case EUIStrings.kCohort1Team2ConversationName:
@@ -92,7 +94,7 @@ const dropdownStyles = makeStyles({
          return new ConversationKey (EConfigStrings.kCohort1Team4ConversationKey);      
       case EUIStrings.kCohort1ConversationName:
       default:
-         return new ConversationKey (EConfigStrings.kCohort1ConversationKey);                
+         return new ConversationKey (EConfigStrings.kCohort1ConversationKey);                   
       }   
  }
 
@@ -130,7 +132,8 @@ export const JoinRow = (props: IJoinPageProps) => {
          EUIStrings.kCohort1Team1ConversationName,
          EUIStrings.kCohort1Team2ConversationName,
          EUIStrings.kCohort1Team3ConversationName,
-         EUIStrings.kCohort1Team4ConversationName
+         EUIStrings.kCohort1Team4ConversationName,
+         EUIStrings.kDemoConversationName
       ];
       defaultConversationName = EUIStrings.kCohort1ConversationName;    
    }

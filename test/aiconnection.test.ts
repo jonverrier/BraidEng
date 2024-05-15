@@ -2,13 +2,14 @@
 // Copyright Braid Technologies ltd, 2024
 import { throwIfUndefined } from '../core/Asserts';
 import { Message} from '../core/Message';
-import { EmbeddedChunk } from '../core/EmbeddedChunk';
+import { Embeddeding } from '../core/Embeddings';
 import { Persona} from '../core/Persona';
 import { EIcon } from '../core/Icons';
 import { SessionKey } from '../core/Keys';
 import { KStubEnvironmentVariables} from '../core/ConfigStrings'; 
 import { EEnvironment, Environment } from '../core/Environment';
 import { AIConnection, AIConnector } from '../core/AIConnection';
+import { fetchEmbeddedings } from '../core/Embeddings';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -44,8 +45,24 @@ describe("AIConnection", function () {
 
    beforeEach(async () => {
 
-      this.timeout(10000);
+      this.timeout(10000);      
    });
+
+   // TODO - change APIs to asyc, then this function does not have to be first in block
+   it("Needs to download embeddings file from server", async function () {
+
+      let caught = false;
+
+      try {
+      await fetchEmbeddedings();
+      }
+      catch (e) {
+         caught = true;
+         console.error (e);
+      }
+      expect (caught).toBe (false);
+
+   }).timeout (2000);
 
    it("Needs to detect Bot message type", function () {
 
@@ -124,7 +141,7 @@ describe("AIConnection", function () {
 
    function makeLongMessage (startingMessage: Message, segmentCount: number) : Message {
 
-      let segments = new Array<EmbeddedChunk>();      
+      let segments = new Array<Embeddeding>();      
 
       // Make a list of knowledge sources, each with 500 tokens
       for (var i = 0; i < segmentCount; i++) {
@@ -134,7 +151,7 @@ describe("AIConnection", function () {
          for (var j = 0; j < 4000; j++) {
             accumulatedText = accumulatedText.concat (" token");
          }
-         let ks1 = new EmbeddedChunk("makeUpUrl", accumulatedText, new Array<number>(), undefined, undefined);
+         let ks1 = new Embeddeding("makeUpUrl", accumulatedText, new Array<number>(), undefined, undefined);
          segments.push (ks1);
       }
       
@@ -173,6 +190,23 @@ describe("AIConnection", function () {
 
 
 describe("AIConnector", function () {
+
+
+   // TODO - change APIs to asyc, then this function does not have to be first in block
+   it("Needs to download embeddings file from server", async function () {
+
+      let caught = false;
+
+      try {
+      await fetchEmbeddedings();
+      }
+      catch (e) {
+         caught = true;
+         console.error (e);
+      }
+      expect (caught).toBe (false);
+
+   }).timeout (2000);
 
    it("Needs to connect to valid stub API", async function () {
 
