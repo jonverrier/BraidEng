@@ -668,7 +668,7 @@ export function waitforEmbeddedingLoad () : void {
    let maxTries = 4 * EConfigNumbers.kMaxDownloadWaitSeconds; // The '4' must move on cencert with the 250 msecs below
 
    function sleep (msecs: number) : void { 
-      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, msecs);
+      // Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, msecs);
    }
 
    while (!haveLoaded && maxTries > 0) {      
