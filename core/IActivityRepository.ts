@@ -2,8 +2,6 @@
 
 // Internal import
 import { ActivityRecord } from './ActivityRecord';
-import { UrlActivityRecord } from './UrlActivityRecord';
-import { MessageActivityRecord } from './MessageActivityRecord';
 
 export interface IActivityRepository {
 

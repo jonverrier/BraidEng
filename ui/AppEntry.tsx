@@ -20,7 +20,7 @@ import { JoinRow } from './JoinRow';
 import { ConversationControllerRow } from './ConversationController';
 import { SessionKey, ConversationKey } from '../core/Keys';
 import { EConfigStrings } from '../core/ConfigStrings';
-import { fetchEmbeddedings } from '../core/Embeddings';
+import { fetchEmbeddedings } from '../core/Embedding';
 
 export interface IAppProps {
 

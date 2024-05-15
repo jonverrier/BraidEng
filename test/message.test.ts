@@ -4,7 +4,7 @@ import { MDynamicStreamable } from '../core/StreamingFramework';
 import { Message} from '../core/Message';
 import { IKeyGenerator } from '../core/KeyGenerator';
 import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
-import { Embeddeding } from '../core/Embeddings';
+import { Embedding } from '../core/Embedding';
 import { logApiError } from '../core/Logging';
 
 import { expect } from 'expect';
@@ -149,10 +149,10 @@ describe("Message", function () {
 
    it("Needs to convert to and from JSON() with KnowledgeSources attached", function () {
 
-      let ks1 = new Embeddeding(message1.id, message1.text, new Array<number>(), undefined, undefined);
+      let ks1 = new Embedding(message1.id, message1.text, new Array<number>(), undefined, undefined);
       let messageWithSources = new Message (message1);
 
-      let sources = new Array<Embeddeding> ();
+      let sources = new Array<Embedding> ();
       sources.push (ks1);
       messageWithSources.chunks = sources;      
       var stream: string = messageWithSources.streamOut();
@@ -179,10 +179,10 @@ describe("Message", function () {
 
    it("Needs to dynamically create Message to and from JSON() with KnowledgeSources attached", function () {
 
-      let ks1 = new Embeddeding(message1.id, message1.text, new Array<number>(), undefined, undefined);
+      let ks1 = new Embedding(message1.id, message1.text, new Array<number>(), undefined, undefined);
       let messageWithSources = new Message (message1);
 
-      let sources = new Array<Embeddeding> ();
+      let sources = new Array<Embedding> ();
       sources.push (ks1);
       messageWithSources.chunks = sources;      
      
@@ -199,7 +199,7 @@ describe("Message", function () {
 
    it("Needs to count with tokens KnowledgeSources attached", function () {
 
-      let ks1 = new Embeddeding(message1.id, message1.text, new Array<number>(), undefined, undefined);
+      let ks1 = new Embedding(message1.id, message1.text, new Array<number>(), undefined, undefined);
 
       var messageNew: Message = new Message();  
       expect(messageNew.isDirty).toEqual(true);          
@@ -215,7 +215,7 @@ describe("Message", function () {
       let messageWithSources = new Message (messageNew);
       expect(messageWithSources.isDirty).toEqual(true); 
 
-      let sources = new Array<Embeddeding> ();
+      let sources = new Array<Embedding> ();
       sources.push (ks1);
       messageWithSources.chunks = sources;      
       expect(messageWithSources.isDirty).toEqual(true);         
