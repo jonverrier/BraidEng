@@ -9,7 +9,6 @@ import { SessionKey } from '../core/Keys';
 import { KStubEnvironmentVariables} from '../core/ConfigStrings'; 
 import { EEnvironment, Environment } from '../core/Environment';
 import { AIConnection, AIConnector } from '../core/AIConnection';
-import { fetchEmbeddedings } from '../core/Embedding';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -45,8 +44,7 @@ describe("AIConnection", function () {
 
    beforeEach(async () => {
 
-      this.timeout(20000);  
-      await fetchEmbeddedings();    
+      this.timeout(20000);      
    });
 
    it("Needs to detect Bot message type", function () {
@@ -178,8 +176,7 @@ describe("AIConnector", function () {
 
    beforeEach(async () => {
 
-      this.timeout(20000);  
-      await fetchEmbeddedings();    
+      this.timeout(20000);   
    });
 
    it("Needs to connect to valid stub API", async function () {

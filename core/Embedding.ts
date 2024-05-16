@@ -4,14 +4,6 @@ import { MStreamable } from "./StreamingFramework";
 import { areSameDate, areSameShallowArray, areSameDeepArray} from './Utilities';
 import { LiteEmbedding} from "./EmbeddingFormats";
 import { InvalidParameterError } from "./Errors";
-import { Message } from "./Message";
-import { EUIStrings } from "../ui/UIStrings";
-import { EConfigNumbers, EConfigStrings } from "./ConfigStrings";
-import { ConnectionError } from "./Errors";
-import { EEnvironment, Environment } from "./Environment";
-import { logApiInfo } from "./Logging";
-
-let embeddings = new Array<LiteEmbedding> ();
 
 function copyTimeStamp (stamp: Date | undefined) : Date | undefined {
    return (typeof stamp === 'undefined') ? undefined : new Date(stamp);
@@ -385,13 +377,13 @@ export class EmbeddingMatchAccumulator {
    }    
 }
 
-export class EnrichedMessage extends MStreamable {
+export class EnrichedMessage  {
 
    private _message: string;
    private _segments: Array<Embedding>;
 
    /**
-    * Create an empty EnrichedMessage object - required for particiation in serialisation framework
+    * Create an empty EnrichedMessage object 
     */
    public constructor();
 
@@ -410,9 +402,6 @@ export class EnrichedMessage extends MStreamable {
 
    public constructor(...arr: any[])
    {
-
-      super();
-
       if (arr.length === 0) {   
 
          this._message = "";         
@@ -427,25 +416,6 @@ export class EnrichedMessage extends MStreamable {
       else {
          this._message = arr[0];
          this._segments = arr[1];      
-      }
-   }
-
-   streamOut(): string {
-
-      return JSON.stringify({ message: this._message, segments: this._segments});
-   }
-
-   streamIn(stream: string): void {
-
-      const obj = JSON.parse(stream);
-
-      this._message = obj.message;
-
-      this._segments = new Array<Embedding> (); 
-
-      for (let i = 0; i < obj.segments.length; i++) {
-         let newSource = new Embedding (obj.segments[i]);
-         this._segments.push (newSource);
       }
    }
 
@@ -492,65 +462,4 @@ export class EnrichedMessage extends MStreamable {
 
       return this;
    }
-}
-
-let haveLoaded: boolean = false;
-
-export async function fetchEmbeddedings () : Promise<void> {
-   
-   if (haveLoaded)
-      return;
-
-   let environment = Environment.environment();
-   let url = "";
-
-   if (environment === EEnvironment.kLocal) {
-      url = EConfigStrings.kEmbeddingFileUrlLocal;
-   }
-   else {
-      url = EConfigStrings.kEmbeddingFileUrlProduction;
-   }
-
-   let startTime = new Date();
-
-   const response : Response = await fetch(EConfigStrings.kEmbeddingFileUrlLocal, {
-      method: "GET", 
-      mode: "same-origin",  
-      cache: "default",    
-      credentials: "same-origin", 
-      headers: {
-         "Content-Type": "application/json",
-      },
-      redirect: "follow", 
-      referrerPolicy: "no-referrer", 
-   });
-
-   response.json().then ((data: any) => {
-       embeddings = data;
-       haveLoaded = true;
-       let endTime = new Date();   
-       
-       logApiInfo ("Embedding file loadtime: ", endTime.getTime() - startTime.getTime())
-       return;
-
-   }).catch ((err) => {
-       throw new ConnectionError (err.toString())
-   })
-}
-
-export function waitforEmbeddedingLoad () : void {
-
-   let maxTries = 4 * EConfigNumbers.kMaxDownloadWaitSeconds; // The '4' must move on cencert with the 250 msecs below
-
-   function sleep (msecs: number) : void { 
-      // Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, msecs);
-   }
-
-   while (!haveLoaded && maxTries > 0) {      
-      sleep (250);
-      maxTries--;
-   }
-
-   if (maxTries === 0)
-      throw new ConnectionError ("Timeout loading Embedding file.")      
 }

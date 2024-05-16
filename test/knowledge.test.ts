@@ -170,16 +170,6 @@ describe("KnowledgeEnrichedMessage", function () {
      
       expect(enriched1.equals (enrichedNew)).toEqual(false);
    });
-
-   it("Needs to convert to and from JSON()", function () {
-
-      var stream: string = enriched1.streamOut();
-
-      var enrichedNew: EnrichedMessage = new EnrichedMessage();
-      enrichedNew.streamIn(stream);
-    
-      expect(enriched1.equals(enrichedNew)).toEqual(true);
-   });
 });
 
 describe("KnowledgeSource URLs", function () {

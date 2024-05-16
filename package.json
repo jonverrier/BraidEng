@@ -19,6 +19,7 @@
    },
    "devDependencies": {
       "@fluentui/react-components": "^9.44.0",
+      "@fluentui/react-icons-font-subsetting-webpack-plugin": "^2.0.239",
       "@fluidframework/azure-client": "^1.1.1",
       "@fluidframework/azure-local-service": "^1.1.1",
       "@fluidframework/build-common": "^2.0.3",

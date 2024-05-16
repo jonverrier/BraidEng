@@ -20,7 +20,6 @@ import { JoinRow } from './JoinRow';
 import { ConversationControllerRow } from './ConversationController';
 import { SessionKey, ConversationKey } from '../core/Keys';
 import { EConfigStrings } from '../core/ConfigStrings';
-import { fetchEmbeddedings } from '../core/Embedding';
 
 export interface IAppProps {
 
@@ -115,9 +114,7 @@ export const App = (props: IAppProps) => {
       setLastMessage ("");
       setLastMessageType (EMainPageMessageTypes.kNothing);
    }
-
-   fetchEmbeddedings();
-
+   
    return (
          <FluentProvider theme={teamsDarkTheme} >            
             <div className={pageOuterClasses.root}>    
