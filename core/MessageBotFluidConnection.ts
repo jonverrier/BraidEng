@@ -86,7 +86,7 @@ export class MessageBotFluidConnection extends FluidConnection {
 
    private setInitialValues (participantCaucus: CaucusOf<Persona>,  messageCaucus: CaucusOf<Message>): void {
     
-      this.checkAddAddSelfToAudience (participantCaucus, messageCaucus);
+      checkAddAddSelfToAudience (participantCaucus, messageCaucus, this._localUser);
 
       // Add the Bot persona if its not already there
       let isStored = participantCaucus.has(EConfigStrings.kLLMGuid);
@@ -96,65 +96,66 @@ export class MessageBotFluidConnection extends FluidConnection {
          let botPersona = new Persona (EConfigStrings.kLLMGuid, EConfigStrings.kLLMName, EConfigStrings.kLLMName, EIcon.kLLMPersona, undefined, new Date());
          participantCaucus.add (botPersona.id, botPersona);            
       }
-   }
-
-   // Glare is when two drivers point their headlights at each other. 
-   // The Glare check is a way to resolve priority - in this case we let the id that is lexically lowe 'win'
-   private localWinsGlareCheck (idMe: string, idOther: string) {
-      if (idMe < idOther) 
-         return true;
-      return false;
-   }
-
-
-   private checkAddAddSelfToAudience (participantCaucus: CaucusOf<Persona>, messageCaucus: CaucusOf<Message>): void {
-
-      let isStored = participantCaucus.has(this._localUser.id);
-
-      if (! isStored ) {      
-         
-         // We look at all participants looking for someine with the same email as us. 
-         // If we find one, we do a 'glare' comparison to consistently pick a winner, and the loser of the
-         // 'glare' comparison sets their details to those of the winner. 
-         let currentParticipants = participantCaucus.currentAsArray();
-         let found = false;
-
-         for (let i = 0; i < currentParticipants.length && !found; i++) {        
-            if ((this._localUser.email === currentParticipants[i].email ) && 
-               (!this.localWinsGlareCheck (this._localUser.id, currentParticipants[i].id))) { 
-               
-               // last case is a backwards compatibility hack - we added participants with no name but low UUIDs that keep winning the glare test                     
-               if ((currentParticipants[i].name === undefined) || (currentParticipants[i].name.length === 0)) {
-                  currentParticipants[i].name = this._localUser.name;
-                  participantCaucus.amend (currentParticipants[i].id, currentParticipants[i]);
-               }
-               found = true;
-
-               // Any messages which had us as the auther - need to reset Author ID
-               let currentMessages = messageCaucus.currentAsArray();
-      
-               for (let j = 0; j < currentMessages.length; j++) {    
-                  if (currentMessages[j].authorId === this._localUser.id) {
-                     currentMessages[i].authorId = currentParticipants[i].id;
-                     messageCaucus.amend (currentMessages[i].id, currentMessages[j]);                     
-                  }
-               }
-               this._localUser.id = currentParticipants[i].id; // Need to push the new ID back into our local copy
-            }
-         }
-
-         if (!found) {
-            // Connect our own user ID to the participant caucus if we are not already in it (or our email is)
-            participantCaucus.add (this._localUser.id, this._localUser);             
-         }
-      } 
-      else {
-         // Check the right name is stored - name changes when the user logs in 
-         let stored = participantCaucus.get(this._localUser.id);         
-         if ((stored.name !== this._localUser.name) || (stored.email !== this._localUser.email)) {
-            participantCaucus.add (this._localUser.id, this._localUser);                 
-         }        
-      }
-   }   
+   } 
 }
+
+// Glare is when two drivers point their headlights at each other. 
+// The Glare check is a way to resolve priority - in this case we let the id that is lexically lowe 'win'
+function localWinsGlareCheck (idMe: string, idOther: string) {
+   if (idMe < idOther) 
+      return true;
+   return false;
+}  
+
+function checkAddAddSelfToAudience (participantCaucus: CaucusOf<Persona>, 
+   messageCaucus: CaucusOf<Message>,
+   localUser: Persona): void {
+
+   let isStored = participantCaucus.has(localUser.id);
+
+   if (! isStored ) {      
+      
+      // We look at all participants looking for someine with the same email as us. 
+      // If we find one, we do a 'glare' comparison to consistently pick a winner, and the loser of the
+      // 'glare' comparison sets their details to those of the winner. 
+      let currentParticipants = participantCaucus.currentAsArray();
+      let found = false;
+
+      for (let i = 0; i < currentParticipants.length && !found; i++) {        
+         if ((localUser.email === currentParticipants[i].email ) && 
+            (!localWinsGlareCheck (localUser.id, currentParticipants[i].id))) { 
+            
+            // last case is a backwards compatibility hack - we added participants with no name but low UUIDs that keep winning the glare test                     
+            if ((currentParticipants[i].name === undefined) || (currentParticipants[i].name.length === 0)) {
+               currentParticipants[i].name = localUser.name;
+               participantCaucus.amend (currentParticipants[i].id, currentParticipants[i]);
+            }
+            found = true;
+
+            // Any messages which had us as the auther - need to reset Author ID
+            let currentMessages = messageCaucus.currentAsArray();
+   
+            for (let j = 0; j < currentMessages.length; j++) {    
+               if (currentMessages[j].authorId === localUser.id) {
+                  currentMessages[i].authorId = currentParticipants[i].id;
+                  messageCaucus.amend (currentMessages[i].id, currentMessages[j]);                     
+               }
+            }
+            localUser.id = currentParticipants[i].id; // Need to push the new ID back into our local copy
+         }
+      }
+
+      if (!found) {
+         // Connect our own user ID to the participant caucus if we are not already in it (or our email is)
+         participantCaucus.add (localUser.id, localUser);             
+      }
+   } 
+   else {
+      // Check the right name is stored - name changes when the user logs in 
+      let stored = participantCaucus.get(localUser.id);         
+      if ((stored.name !== localUser.name) || (stored.email !== localUser.email)) {
+         participantCaucus.add (localUser.id, localUser);                 
+      }        
+   }
+}   
 
