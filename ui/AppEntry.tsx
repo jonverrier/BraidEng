@@ -114,7 +114,7 @@ export const App = (props: IAppProps) => {
       setLastMessage ("");
       setLastMessageType (EMainPageMessageTypes.kNothing);
    }
-   
+
    return (
          <FluentProvider theme={teamsDarkTheme} >            
             <div className={pageOuterClasses.root}>    
