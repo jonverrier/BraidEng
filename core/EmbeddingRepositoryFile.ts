@@ -154,7 +154,7 @@ async function startEmbeddingFileDownload () : Promise<boolean> {
 
    let startTime = new Date();
 
-   const response : Response = await fetch(EConfigStrings.kEmbeddingFileUrlLocal, {
+   const response : Response = await fetch(url, {
       method: "GET", 
       mode: "same-origin",  
       cache: "default",    

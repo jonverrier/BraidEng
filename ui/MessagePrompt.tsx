@@ -1,13 +1,13 @@
 /*! Copyright Braid Technologies 2024 */
  
 // React
-import React, { ChangeEvent, useState, useRef, useLayoutEffect } from 'react';
+import React, { ChangeEvent, useState, useLayoutEffect } from 'react';
 
 // Fluent
-import { Input, InputOnChangeData, makeStyles, tokens, Textarea, TextareaProps, TextareaOnChangeData } from '@fluentui/react-components';
+import { InputOnChangeData, makeStyles, Textarea } from '@fluentui/react-components';
 
 import { EUIStrings } from './UIStrings';
-import { throwIfNull, throwIfUndefined } from '../core/Asserts';
+import { throwIfUndefined } from '../core/Asserts';
 import { EConfigNumbers, EConfigStrings } from '../core/ConfigStrings';
 
 export interface IMessagePromptProps {
@@ -115,8 +115,6 @@ export function wrapText(context: OffscreenCanvasRenderingContext2D | CanvasRend
 
 // Ref
 // https://blog.steveasleep.com/how-to-draw-multi-line-text-on-an-html-canvas-in-2021
-
-
 export function calculateDyNeeded (width: number, value: string): number {
 
    const smallestTextForWrap = "A";
@@ -149,18 +147,20 @@ export function calculateDyNeeded (width: number, value: string): number {
    return Math.max (dyMin, dyNeeded);
 }
 
-
 export const MessagePrompt = (props: IMessagePromptProps) => {   
 
    const textFieldClasses = textFieldStyles();
-   const ref = useRef(null);
-   const [width, setWidth] = useState(0);   
+   const [width, setWidth] = useState(0); 
+   const textAreaId = "textAreaId;"  
    
    useLayoutEffect(() => {
       
-      throwIfNull(ref.current);
-      if (ref.current) {
-         let dx = (ref.current as any).offsetWidth; 
+      const textArea = document.getElementById(
+         textAreaId
+       ) as HTMLTextAreaElement | null;
+
+      if (textArea) {
+         let dx = textArea.offsetWidth; 
 
          if (width !== dx) {
             setWidth(dx);         
@@ -210,12 +210,11 @@ export const MessagePrompt = (props: IMessagePromptProps) => {
    var dyNeeded = bump;
 
    if (width !== 0) 
-      dyNeeded = calculateDyNeeded (width, props.message) + bump;
-   
+      dyNeeded = calculateDyNeeded (width, props.message) + bump;   
 
    return (<div className={textFieldClasses.root}> 
       <Textarea
-         ref={ref}
+         id={textAreaId}
          appearance="outline"
          placeholder={EUIStrings.kSendMessagePlaceholder}
          maxLength={EConfigNumbers.kMessagePromptMaxCharacters}
