@@ -59,7 +59,7 @@ export class MessageBotFluidConnection extends FluidConnection {
       setInterval(() => {
          throwIfUndefined(self._participantCaucus);
          throwIfUndefined(self._messageCaucus);         
-         self.checkAddAddSelfToAudience(self._participantCaucus, self._messageCaucus);
+         checkAddAddSelfToAudience(self._participantCaucus, self._messageCaucus, self._localUser);
        }, 10000);
    }
 
