@@ -19,7 +19,9 @@ import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } fr
 import { AIConnection, AIConnector } from '../core/AIConnection';
 import { EUIStrings } from './UIStrings';
 import { EConfigNumbers, EConfigStrings } from '../core/ConfigStrings';
-import { EnrichedMessage, Embeddeding, EmbeddedingRepository } from '../core/Embeddings';
+import { EnrichedMessage } from '../core/Embedding';
+import { IEmbeddingRepository } from '../core/IEmbeddingRepository';
+import { getEmbeddingRepository } from '../core/IEmbeddingRepositoryFactory';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 import { UrlActivityRecord } from '../core/UrlActivityRecord';
 import { MessageActivityRecord } from '../core/MessageActivityRecord';
@@ -94,8 +96,13 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
          if (! hasRecentHepfulStart (fluidMessagesConnection_)) {
             if (!suggested) {
-             let suggestion = EmbeddedingRepository.lookForSuggestedContent (undefined);
-             setSuggested (suggestion);
+               let embeddingRespository = getEmbeddingRepository (props.sessionKey);
+               let suggestion = embeddingRespository.lookForSuggestedContent (undefined, 
+                                                                              EUIStrings.kNewUserNeedInspiration);
+               suggestion.then ((message) => {
+                  if (message)
+                     setSuggested (message);
+               });
             }
          } 
          setIsBusy (false);
@@ -239,9 +246,12 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
          email, new Date(), url_);
       repository.save (record);   
       
-      let suggested = EmbeddedingRepository.lookForSuggestedContent (url_);
-      if (suggested)
-         setSuggested (suggested);
+      let embeddingRespository = getEmbeddingRepository (props.sessionKey);
+      let suggestion = embeddingRespository.lookForSuggestedContent (url_, EUIStrings.kNeedInspirationHereIsAnother);      
+      suggestion.then ((message) => {
+         if (message)
+            setSuggested (message);
+      });
    }
 
    function onAddSuggestedContent () {

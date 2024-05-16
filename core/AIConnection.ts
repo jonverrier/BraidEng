@@ -2,6 +2,7 @@
 import axios from "axios";
 
 // Local
+import { SessionKey } from "./Keys";
 import { logApiError } from "./Logging";
 import { Message } from './Message';
 import { Persona } from './Persona';
@@ -11,8 +12,9 @@ import { throwIfUndefined } from './Asserts';
 import { ConnectionError, AssertionFailedError } from "./Errors";
 import { KeyRetriever } from "./KeyRetriever";
 import { Environment, EEnvironment } from "./Environment";
-import { EnrichedMessage, EmbeddedingRepository, kDefaultSearchChunkCount, kDefaultMinimumCosineSimilarity} from "./Embeddings";
-import { SessionKey } from "./Keys";
+import { EnrichedMessage } from "./Embedding";
+import { IEmbeddingRepository, kDefaultSearchChunkCount, kDefaultMinimumCosineSimilarity} from "./IEmbeddingRepository";
+import { getEmbeddingRepository } from "./IEmbeddingRepositoryFactory";
 
 // We allow for the equivalent of 10 minutes of chat. 10 mins * 60 words = 600 words = 2400 tokens. 
 const kMaxTokens : number= 4096;
@@ -20,7 +22,8 @@ const kMaxTokens : number= 4096;
 export class AIConnection {
 
    private _activeCallCount: number;
-   private _key: string;   
+   private _key: string;  
+   private _embeddings: IEmbeddingRepository;
 
    /**
     * Create an AIConnection object 
@@ -28,7 +31,8 @@ export class AIConnection {
    constructor(key_: string) {
 
       this._activeCallCount = 0;
-      this._key = key_
+      this._key = key_;
+      this._embeddings = getEmbeddingRepository (new SessionKey (key_));
    }  
 
    // Makes an Axios call to call web endpoint
@@ -70,7 +74,7 @@ export class AIConnection {
 
       let embedding = await this.createEmbedding (mostRecent);
 
-      let enriched = EmbeddedingRepository.lookupMostSimilar (embedding, undefined, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);
+      let enriched = await this._embeddings.lookupMostSimilar (embedding, undefined, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);
 
       return new EnrichedMessage (response.data.choices[0].message.content as string, enriched.chunks);
    }    

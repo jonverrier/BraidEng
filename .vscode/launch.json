@@ -20,7 +20,7 @@
             "args": [
                 "-r",
                 "ts-node/register",
-                "${workspaceRoot}/test/aiembed*.ts",
+                "${workspaceRoot}/test/ai*.ts",
                 "--no-timeouts"
             ],
             "cwd": "${workspaceRoot}"

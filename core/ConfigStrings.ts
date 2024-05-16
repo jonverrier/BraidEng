@@ -59,7 +59,7 @@ export enum EConfigNumbers {
    kMessagePrompt2HBorder = 24,   // How much to allow for left & right inset
    kMessagePromptLineSpace = 8,   // How much to allow between lines
    kMessagePromptMaxCharacters = 2048,
-   kMaxDownloadWaitSeconds = 20    
+   kMaxDownloadWaitSeconds = 30    
 }
 
 // This is used for local running only, as in browser we cannot access environment variables

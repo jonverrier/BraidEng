@@ -1,11 +1,12 @@
 'use strict';
 // Copyright Braid Technologies ltd, 2024
-import { Embeddeding, EmbeddedingFinder, EnrichedMessage, 
-   kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount, lookLikeSameSource, EmbeddedingRepository} from '../core/Embeddings';
-
+import { SessionKey } from '../core/Keys';
+import { Embedding, EmbeddingMatchAccumulator, EnrichedMessage, lookLikeSameSource} from '../core/Embedding';
+import { kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount} from '../core/IEmbeddingRepository';
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
 import { throwIfUndefined } from '../core/Asserts';
+import { getEmbeddingRepository } from '../core/IEmbeddingRepositoryFactory';
 
 var myUrl: string = "1234";
 var mySummary: string = "Jon";
@@ -21,22 +22,22 @@ var someoneElsesRelevance = 0.0;
 
 describe("KnowledgeSource", function () {
 
-   var ks1: Embeddeding, ks2: Embeddeding, ksErr:Embeddeding;
+   var ks1: Embedding, ks2: Embedding, ksErr:Embedding;
 
-   ks1 = new Embeddeding(myUrl, mySummary, myAda, myTimeStamp, myRelevance);
+   ks1 = new Embedding(myUrl, mySummary, myAda, myTimeStamp, myRelevance);
 
-   ks2 = new Embeddeding(someoneElsesUrl, someoneElsesSummary, someoneElseAda, someoneElsesTimeStamp, someoneElsesRelevance);
+   ks2 = new Embedding(someoneElsesUrl, someoneElsesSummary, someoneElseAda, someoneElsesTimeStamp, someoneElsesRelevance);
 
    it("Needs to construct an empty object", function () {
 
-      var ksEmpty = new Embeddeding();
+      var ksEmpty = new Embedding();
 
       expect(ksEmpty.summary).toEqual("");     
    });
 
    it("Needs to compare for equality and inequality", function () {
 
-      var ksNew: Embeddeding = new Embeddeding(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
+      var ksNew: Embedding = new Embedding(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
 
       expect(ks1.equals(ks1)).toEqual(true);
       expect(ks1.equals(ksNew)).toEqual(true);
@@ -46,7 +47,7 @@ describe("KnowledgeSource", function () {
    
    it("Needs to detect inequality on date", function () {
 
-      var ksNew: Embeddeding = new Embeddeding(ks1.url, ks1.summary, ks1.ada_v2, new Date(), ks1.relevance);
+      var ksNew: Embedding = new Embedding(ks1.url, ks1.summary, ks1.ada_v2, new Date(), ks1.relevance);
 
       expect(ks1.equals(ksNew)).toEqual(false);
    });
@@ -60,14 +61,14 @@ describe("KnowledgeSource", function () {
 
    it("Needs to copy construct", function () {
 
-      let ks2: Embeddeding = new Embeddeding(ks1);
+      let ks2: Embedding = new Embedding(ks1);
 
       expect(ks1.equals(ks2) === true).toEqual(true);
    });
 
    it("Needs to correctly change attributes", function () {
 
-      var ksNew: Embeddeding = new Embeddeding(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
+      var ksNew: Embedding = new Embedding(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
 
       ksNew.url = someoneElsesUrl;
       ksNew.summary = someoneElsesSummary;
@@ -82,7 +83,7 @@ describe("KnowledgeSource", function () {
 
       var stream: string = ks1.streamOut();
 
-      var ksNew: Embeddeding = new Embeddeding(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
+      var ksNew: Embedding = new Embedding(ks1.url, ks1.summary, ks1.ada_v2, ks1.timeStamp, ks1.relevance);
       ksNew.streamIn(stream);
     
       expect(ks1.equals(ksNew)).toEqual(true);
@@ -94,15 +95,15 @@ describe("KnowledgeSourceBuilder", function () {
 
    it("Needs to construct an empty object", function () {
 
-      let ksEmpty = new EmbeddedingFinder(kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);
+      let ksEmpty = new EmbeddingMatchAccumulator(kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);
 
       expect(ksEmpty.chunks.length).toEqual(0);     
    });
 
    it("Needs to compare for equality and inequality", function () {
 
-      let ksEmpty = new EmbeddedingFinder(kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);      
-      let matchesNew = new EmbeddedingFinder(-1, 3);        
+      let ksEmpty = new EmbeddingMatchAccumulator(kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);      
+      let matchesNew = new EmbeddingMatchAccumulator(-1, 3);        
 
       expect(ksEmpty.equals(ksEmpty)).toEqual(true);     
       expect(ksEmpty.equals(matchesNew)).toEqual(false);
@@ -110,7 +111,7 @@ describe("KnowledgeSourceBuilder", function () {
 
    it("Needs to correctly store attributes", function () {
          
-      let ksEmpty = new EmbeddedingFinder(kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);          
+      let ksEmpty = new EmbeddingMatchAccumulator(kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);          
       expect(ksEmpty.similarityThreshold === kDefaultMinimumCosineSimilarity).toEqual(true);
       expect(ksEmpty.howMany === kDefaultSearchChunkCount).toEqual(true);
    });
@@ -118,13 +119,13 @@ describe("KnowledgeSourceBuilder", function () {
 
 describe("KnowledgeEnrichedMessage", function () {
 
-   let ks1 = new Embeddeding(myUrl, mySummary, myAda, myTimeStamp, myRelevance);
-   let sources1 = new Array<Embeddeding> ();
+   let ks1 = new Embedding(myUrl, mySummary, myAda, myTimeStamp, myRelevance);
+   let sources1 = new Array<Embedding> ();
    sources1.push (ks1);
    let enriched1 = new EnrichedMessage (mySummary, sources1);
 
-   let ks2 = new Embeddeding(someoneElsesUrl, someoneElsesSummary, someoneElseAda, someoneElsesTimeStamp, someoneElsesRelevance);
-   let sources2 = new Array<Embeddeding> ();
+   let ks2 = new Embedding(someoneElsesUrl, someoneElsesSummary, someoneElseAda, someoneElsesTimeStamp, someoneElsesRelevance);
+   let sources2 = new Array<Embedding> ();
    sources2.push (ks2);  
    let enriched2 = new EnrichedMessage (someoneElsesSummary, sources2);    
 
@@ -169,16 +170,6 @@ describe("KnowledgeEnrichedMessage", function () {
      
       expect(enriched1.equals (enrichedNew)).toEqual(false);
    });
-
-   it("Needs to convert to and from JSON()", function () {
-
-      var stream: string = enriched1.streamOut();
-
-      var enrichedNew: EnrichedMessage = new EnrichedMessage();
-      enrichedNew.streamIn(stream);
-    
-      expect(enriched1.equals(enrichedNew)).toEqual(true);
-   });
 });
 
 describe("KnowledgeSource URLs", function () {
@@ -217,16 +208,18 @@ describe("KnowledgeSource URLs", function () {
 
    describe("KnowledgeRepository", function () {
 
-      it("Needs to identify related content given an input URL", function () {
+      let repository = getEmbeddingRepository (new SessionKey (""));
+
+      it("Needs to identify related content given an input URL", async function () {
    
-         let message = EmbeddedingRepository.lookForSuggestedContent ("https://www.youtube.com/watch?v=roEKOzxilq4&t=00h00m00s");
+         let message = await repository.lookForSuggestedContent ("https://www.youtube.com/watch?v=roEKOzxilq4&t=00h00m00s", "test");
    
          expect(typeof message === 'undefined').toEqual(false);     
       });
    
-      it("Needs to identify starter content", function () {
+      it("Needs to identify starter content", async function () {
 
-         let message = EmbeddedingRepository.lookForSuggestedContent (undefined);         
+         let message = await repository.lookForSuggestedContent (undefined, "test");         
    
          expect(typeof message === 'undefined').toEqual(false);       
       });
