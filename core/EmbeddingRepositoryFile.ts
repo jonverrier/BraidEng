@@ -133,11 +133,14 @@ export class EmbeddingRepositoryFile implements IEmbeddingRepository {
 }
 
 let haveLoaded: boolean = false;
+let started = false;
 
-export async function fetchEmbeddedings () : Promise<void> {
+async function startEmbeddingFileDownload () : Promise<boolean> {
    
-   if (haveLoaded)
-      return;
+   if (started)
+      return false;
+
+   started = true;
 
    let environment = Environment.environment();
    let url = "";
@@ -169,20 +172,25 @@ export async function fetchEmbeddedings () : Promise<void> {
        let endTime = new Date();   
        
        logApiInfo ("Embedding file loadtime: ", endTime.getTime() - startTime.getTime())
-       return;
+       return true;
 
    }).catch ((err) => {
-       throw new ConnectionError (err.toString())
+       throw new ConnectionError (err.toString());      
    })
+
+   // Cant actualy get here but compiler complains
+   return started;
 }
 
  async function waitforEmbeddedingLoad () : Promise<boolean> {
 
+   startEmbeddingFileDownload();
+
    let maxTries = 4 * EConfigNumbers.kMaxDownloadWaitSeconds; // The '4' must move on cencert with the '250' msecs below
-                                                              // 4 * 250 msecs = target max delay in seconds
+                                                              // i.e 4 * 250 msecs = target max delay in seconds
    let done = new Promise<boolean> (function(resolve, reject) {
      
-      let timeoutID = setInterval(function() {
+      function inner () {
 
          maxTries--;
 
@@ -196,8 +204,13 @@ export async function fetchEmbeddedings () : Promise<void> {
             clearInterval(timeoutID);               
          }
 
-      }, 250);     
+      }
+
+      let timeoutID = setInterval(inner, 250);     
    });
 
    return done; 
 }
+
+// Get download started on module load
+startEmbeddingFileDownload();

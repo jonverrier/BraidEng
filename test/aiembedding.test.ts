@@ -11,26 +11,10 @@ import { AIConnector } from "../core/AIConnection";
 import { LiteEmbedding } from "../core/EmbeddingFormats";
 import { kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount } from "../core/IEmbeddingRepository";
 import { getEmbeddingRepository } from '../core/IEmbeddingRepositoryFactory';
-import { fetchEmbeddedings } from "../core/EmbeddingRepositoryFile";
 
 describe("AIEmbedding", async function () {
 
    let repository = getEmbeddingRepository (new SessionKey (""));
-
-   it("Needs to download embeddings file from server", async function () {
-
-      let caught = false;
-
-      try {
-         await fetchEmbeddedings();
-      }
-      catch (e) {
-         caught = true;
-         console.error (e);
-      }
-      expect (caught).toBe (false);
-
-   }).timeout (5000);
 
    it("Needs to find closest match for an existing Markdown document", async function () {
 

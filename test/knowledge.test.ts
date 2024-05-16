@@ -7,7 +7,6 @@ import { expect } from 'expect';
 import { describe, it } from 'mocha';
 import { throwIfUndefined } from '../core/Asserts';
 import { getEmbeddingRepository } from '../core/IEmbeddingRepositoryFactory';
-import { fetchEmbeddedings } from "../core/EmbeddingRepositoryFile";
 
 var myUrl: string = "1234";
 var mySummary: string = "Jon";
