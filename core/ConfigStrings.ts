@@ -45,7 +45,7 @@ export enum EConfigStrings {
    kCohort1Team2ConversationKey = "f0837123-6ed3-4c49-84f9-be6c3dc54855",
    kCohort1Team3ConversationKey = "e586f7f7-4d4b-485c-b50f-382c544fd8e6",   
    kCohort1Team4ConversationKey = "694cef73-939f-4c6c-ab02-76158a41ac43",     
-   kDemoConversationKey = "",
+   kDemoConversationKey = "acb4f61a-a825-4c73-887d-336078160df1",
 
    kEmbeddingFileUrlLocal = 'http://localhost:1337/embeddings_lite.json',
    kEmbeddingFileUrlProduction = 'https://braidapps.io/embeddings_lite.json',   
