@@ -18,7 +18,7 @@ module.exports = {
    resolve: {
       extensions: ['.tsx', '.ts', '.js'], // '.ttf', '.woff', '.woff2'],
       // Include 'fluentIconFont' to use the font implementation of the Fluent icons
-      //conditionNames: ['fluentIconFont', 'import']      
+      // conditionNames: ['fluentIconFont', 'import']      
    },
    plugins: [
       // new FluentUIReactIconsFontSubsettingPlugin(), new NodePolyfillPlugin()      

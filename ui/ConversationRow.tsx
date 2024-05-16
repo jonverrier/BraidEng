@@ -1,20 +1,18 @@
 /*! Copyright Braid Technologies 2022 */
 
 // React
-import React, { ChangeEvent, KeyboardEvent, useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // Fluent
 import {
    makeStyles, shorthands, 
-   Button, ButtonProps, 
+   Button, 
    Toolbar, ToolbarButton, ToolbarDivider,
    Tooltip, 
    Body1,
    Caption1,
    Link,
    Text, 
-   Input, 
-   InputOnChangeData,
    Spinner, 
    SpinnerProps,
    partitionAvatarGroupItems,
@@ -26,7 +24,6 @@ import {
 import {
    Person24Regular,
    Laptop24Regular,
-   Mail24Regular,
    Send24Regular,
    Copy24Regular,
    Delete24Regular, 
@@ -215,6 +212,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
    const conversationContentRowClasses = conversationContentRowStyles();
    const conversationContentColumnClasses =  conversationContentColumnStyles();
    const footerSectionClasses = innerColumnFooterStyles();   
+   const alwaysScrollToBottomId = "AlwaysScrollToBottom";
     
    // Shorthand only
    let conversation = props.conversation;
@@ -223,14 +221,24 @@ export const ConversationRow = (props: IConversationRowProps) => {
    function onSend (messageText_: string) : void {
 
       props.onSend (messageText_);
+      scroll();
    }
 
-   // https://stackoverflow.com/questions/45719909/scroll-to-bottom-of-an-overflowing-div-in-react
-   const AlwaysScrollToBottom = () => {
-      const elementRef = useRef();
-      useEffect(() => (elementRef.current as any).scrollIntoView());
-      return <div ref={elementRef as any} />;
-    };   
+   // https://stackoverflow.com/questions/45719909/scroll-to-bottom-of-an-overflowing-div-in-react 
+   function scroll (): void {
+
+      const divScroll = document.getElementById(
+         alwaysScrollToBottomId
+       ) as HTMLDivElement | null;
+
+      if (divScroll) {
+         divScroll.scrollIntoView();
+      }       
+   }
+ 
+   useEffect(() => {
+      scroll();
+    });     
 
    if (! props.isConnected) {
       return (<div></div>);
@@ -264,7 +272,7 @@ export const ConversationRow = (props: IConversationRowProps) => {
                            />
                         )                     
                      })}                          
-                     <AlwaysScrollToBottom />  
+                     <div id={alwaysScrollToBottomId}/>  
                   </div>               
                </div>
 
@@ -509,17 +517,6 @@ export interface IInputViewProps {
    onAddSuggestedContent(): void;
 }
 
-const SendButton: React.FC<ButtonProps> = (props) => {
-   return (
-     <Button
-       {...props}
-       appearance="transparent"
-       icon={<Send24Regular />}
-       size="medium"
-     />
-   );
- };
-
  const inputGroupStyles = makeStyles({
    root: {    
       display: 'flex',
@@ -598,9 +595,7 @@ export const InputView = (props: IInputViewProps) => {
          &nbsp;
          <div className={inputRowClasses.root}>
             <div className={textColumnClasses.root}>
-               <Tooltip content={EUIStrings.kSendMessagePrompt} relationship="label" positioning={'above'}>
-                  <MessagePrompt onSend={onSend} onChange={onChange} message={message} />               
-               </Tooltip>  
+               <MessagePrompt onSend={onSend} onChange={onChange} message={message} />               
             </div>
             &nbsp;           
             <div className={buttonColumnClasses.root}>
