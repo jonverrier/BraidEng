@@ -32,7 +32,9 @@ export enum EConfigStrings {
    kLLMNearRequestSignatureLowerCase = 'braid',   
    kOpenAiPersonaPrompt = "You are an AI assistant helping a team of developers understand AI. You explaining complex concepts in simple language, using Python examples if it helps. You limit replies to 100 words or less. If you don't know the answer to a question, just say 'I don't know'.",
    kEnrichmentPrompt = "You will be provided with a question about building applications that use generative AI technology. Write a 50 word summary of an article that would be a great answer to the question. Consider enriching the question with additional topics that the question asker might want to understand. Write the summary in the present tense, as though the article exists. If the question is not related to building AI applications, deflect it with a humorous 10 word answer.",
+   kFollowUpPrompt = "You will be provided with a summary of an article about building applications that use generative AI technology. Write a question of no more than 10 words that a reader might ask as a follow up to reading the article.",
    kEnrichmentQuestionPrefix = "Question: ",
+   kFollowUpPrefix = "Article summary: ",
 
    kErrorConnectingToKeyAPI = "Error connecting to Braid server.",
    kErrorConnectingToAiAPI = "Error connecting to AI server.",

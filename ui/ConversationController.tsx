@@ -47,7 +47,6 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    const [audience, setAudience] = useState<Map<string, Persona>>(new Map<string, Persona>());
    const [fluidConnection, setFluidConnection] = useState<MessageBotFluidConnection | undefined>(undefined);
    const [joining, setJoining] = useState<boolean> (false);
-   const [sessionKey, setSessionKey] = useState<SessionKey> (props.sessionKey);
    const [conversationKey, setConversationKey] = useState<ConversationKey> (props.conversationKey);   
    const [isBusy, setIsBusy] = useState<boolean>(false);
    const [suggested, setSuggested] = useState<Message|undefined>(undefined);
@@ -95,8 +94,8 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
          if (! hasRecentHepfulStart (fluidMessagesConnection_)) {
             if (!suggested) {
                let embeddingRespository = getEmbeddingRepository (props.sessionKey);
-               let suggestion = embeddingRespository.lookForSuggestedContent (undefined, 
-                                                                              EUIStrings.kNewUserNeedInspiration);
+               let suggestion = embeddingRespository.lookForRelatedContent (undefined, 
+                                                                            EUIStrings.kNewUserNeedInspiration);
                suggestion.then ((message) => {
                   if (message)
                      setSuggested (message);
@@ -173,20 +172,20 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       
       if (! (props.conversationKey.looksValidConversationKey())) {
 
-         fluidMessagesConnection.createNew (sessionKey).then (conversationKey_ => {
+         fluidMessagesConnection.createNew (props.sessionKey).then (conversationKey_ => {
         
             initialiseConnectionState (fluidMessagesConnection, conversationKey_);
             setJoining (false);
 
          }).catch ((e : any) => {
          
-            props.onFluidError (e? e.toString() : "Error creating new conversation, " + sessionKey.toString() + ".");
+            props.onFluidError ("Error creating new conversation, session: " + props.sessionKey.toString() + ".");
             setJoining (false);
          })
       }
       else {
 
-         fluidMessagesConnection.attachToExisting (sessionKey, conversationKey).then (conversationKey_ => {
+         fluidMessagesConnection.attachToExisting (props.sessionKey, conversationKey).then (conversationKey_ => {
 
             initialiseConnectionState (fluidMessagesConnection, conversationKey_);
          
@@ -245,11 +244,25 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       repository.save (record);   
       
       let embeddingRespository = getEmbeddingRepository (props.sessionKey);
-      let suggestion = embeddingRespository.lookForSuggestedContent (url_, EUIStrings.kNeedInspirationHereIsAnother);      
-      suggestion.then ((message) => {
-         if (message)
-            setSuggested (message);
-      });
+
+      // Get the summary of the URL the user clocked on
+      let summary = embeddingRespository.lookupUrlSummary (url_);
+      summary.then ((summaryText: string) => {
+
+         let connectionPromise = AIConnector.connect (props.sessionKey);
+      
+         // Connext to the LLM
+         connectionPromise.then ( (connection : AIConnection) => { 
+
+            // Ask the LLM for a question based on the summary            
+            connection.makeFollowUpCall (summaryText).then ((result_: Message) => {                                                                               
+               if (result_) {
+                  result_.authorId = props.localPersona.id;
+                  setSuggested (result_);
+               }
+            });
+         });  
+      });                                                                
    }
 
    function onAddSuggestedContent () {
@@ -259,7 +272,16 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       throwIfUndefined (suggested);      
       suggested.sentAt = new Date(); // Need to reset date so it goes at the end. 
-      addMessage (fluidMessagesConnection, suggested); 
+
+      if (suggested.chunks && suggested.chunks.length > 0) {
+         // If we have attached chucks, its a full message that we just replay
+         addMessage (fluidMessagesConnection, suggested); 
+      }
+      else {
+         // Else its is text, so we play it as a message that makes a request to the LLM
+         let fullMessage = EConfigStrings.kLLMRequestSignature + " " + suggested.text;
+         onSend (fullMessage);
+      }
 
       setSuggested (undefined);
    }
@@ -355,13 +377,14 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    else
       return (
          <ConversationRow 
-             isConnected={sessionKey.looksValidSessionKey() && conversationKey.looksValidConversationKey()}
+             isConnected={props.sessionKey.looksValidSessionKey() && conversationKey.looksValidConversationKey()}
              isBusy = {isBusy}
-             sessionKey={sessionKey}
+             sessionKey={props.sessionKey}
              conversationKey={conversationKey}
              conversation={conversation}
              audience={audience} 
              hasSuggestedContent={suggested ? true: false}
+             suggestedContent={suggested ? suggested.text: ""}
              onSend={onSend} 
              onAddSuggestedContent={onAddSuggestedContent}
              onTrimConversation={onTrimConversation}

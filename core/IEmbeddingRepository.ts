@@ -26,7 +26,13 @@ export interface IEmbeddingRepository  {
     * lookForSuggestedContent 
     * look to see of we have similar content from other sources
     */   
-   lookForSuggestedContent (url_: string | undefined, messageText: string) : Promise<Message | undefined>;
+   lookForRelatedContent (url_: string | undefined, messageText: string) : Promise<Message | undefined>;
+
+   /**
+    * lookupUrlSummary 
+    * looks for summary given a URL
+    */   
+   lookupUrlSummary (url_: string) : Promise<string | undefined>;      
 }
 
 
