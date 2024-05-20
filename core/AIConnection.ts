@@ -15,6 +15,7 @@ import { Environment, EEnvironment } from "./Environment";
 import { IEmbeddingRepository, kDefaultSearchChunkCount, kDefaultMinimumCosineSimilarity} from "./IEmbeddingRepository";
 import { getEmbeddingRepository } from "./IEmbeddingRepositoryFactory";
 import { getDefaultKeyGenerator } from "./IKeyGeneratorFactory";
+import { EUIStrings } from "../ui/UIStrings";
 
 // We allow for the equivalent of 10 minutes of chat. 10 mins * 60 words = 600 words = 2400 tokens. 
 const kMaxTokens : number= 4096;
@@ -41,22 +42,21 @@ export class AIConnection {
    }  
 
    // Makes an Axios call to call web endpoint
-   async makeEnrichedCall  (allMessages: Array<AIMessageElement>) : Promise<Message> {
+   // Make two queries - one to get the anser to the direct question, another to ask for a reference summary. 
+   // The reference summary is then used to look up good articles to add to the response.  
+   async makeEnrichedCall  (messageId: string, allMessages: Array<AIMessageElement>) : Promise<Message> {
       
-      this._activeCallCount++;
+      let enrichedQuery = this.buildEnrichmentQuery (allMessages);      
 
-      var response : string = await this.makeSingleCall (allMessages); 
-
-      if (!response)
-         throw new ConnectionError(EConfigStrings.kErrorConnectingToAiAPI);      
-
-      let embedding = await this.createEmbedding (allMessages[allMessages.length - 1].content);
+      const [directResponse, enrichedResponse] = await Promise.all ([this.makeSingleCall (allMessages), 
+                                                                     this.makeSingleCall (enrichedQuery)]);
+      let embedding = await this.createEmbedding (enrichedResponse);
 
       let enriched = await this._embeddings.lookupMostSimilar (embedding, undefined, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);
-
+                              
       let keyGenerator = getDefaultKeyGenerator();
-      return new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, undefined, 
-                          response, new Date(), enriched.chunks);
+      return new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, messageId, 
+                          directResponse, new Date(), enriched.chunks);                                                                        
    }    
 
       // Makes an Axios call to call web endpoint
@@ -101,7 +101,7 @@ export class AIConnection {
       return this._activeCallCount !== 0;
    }
 
-   buildQuery (messages: Array<Message>, authors: Map<string, Persona>): Array<AIMessageElement> {
+   buildDirectQuery (messages: Array<Message>, authors: Map<string, Persona>): Array<AIMessageElement> {
 
       let builtQuery = new Array<AIMessageElement> ();
 
@@ -135,6 +135,22 @@ export class AIConnection {
       }
       return builtQuery; 
    }   
+
+   buildEnrichmentQuery (messages: Array<AIMessageElement>): Array<AIMessageElement> {
+
+      let builtQuery = new Array<AIMessageElement> ();
+      
+      let engineeredPrompt = EConfigStrings.kEnrichmentPrompt;
+      let prompt = { role: 'system', content: engineeredPrompt };
+      builtQuery.push (prompt);        
+
+      let lastMessage = messages[messages.length -1].content;
+      let engineeredQuestion = EConfigStrings.kEnrichmentQuestionPrefix + lastMessage;      
+      let entry = { role: 'user', content: engineeredQuestion };
+      builtQuery.push (entry);
+
+      return builtQuery; 
+   } 
 
    // Makes an Axios call to call web endpoint
    private async makeSingleCall  (input: Array<AIMessageElement>) : Promise<string> {

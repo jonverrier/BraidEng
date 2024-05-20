@@ -56,7 +56,7 @@ def process_queue(config, progress, task, q, output_chunks):
         if "ada_v2" in chunk:
            output_chunks.append(chunk.copy())
         else:
-           embedding = get_text_embedding(config, chunk["summary"])
+           embedding = get_text_embedding(config, chunk["text"])
            chunk["ada_v2"] = embedding.copy()
            output_chunks.append(chunk.copy())
            

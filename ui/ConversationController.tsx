@@ -307,9 +307,9 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
          connectionPromise.then ( (connection : AIConnection) => {
 
-            let query = connection.buildQuery (messageArray, audienceMap);
+            let query = connection.buildDirectQuery (messageArray, audienceMap);
 
-            connection.makeEnrichedCall (query).then ((result_: Message) => {
+            connection.makeEnrichedCall (message.id, query).then ((result_: Message) => {
                
                // Push it to shared data
                addMessage (fluidMessagesConnection, result_);

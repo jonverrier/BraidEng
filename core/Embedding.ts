@@ -285,7 +285,7 @@ export class EmbeddingMatchAccumulator {
 
    /**
     * searches current most relevant results to see if the new one should be included.  
-    * @param rhs - the object to assign this one from.  
+    * @param urlIn - the URL of a reference source, may be undefined. If it is defined, we are looking for similar atcitcles. 
     */
    private lowestOfCurrent (urlIn: string | undefined): number {
 
@@ -347,6 +347,7 @@ export class EmbeddingMatchAccumulator {
    replaceIfBeatsCurrent (candidate: Embedding, urlIn: string | undefined): boolean {
 
       // If we have a reference source, check if its just the same source as our reference e.g. different chunk of a Youtube video
+      // If it is, we bail 
       if (urlIn && lookLikeSameSource (candidate.url, urlIn)) {
          return false;
       }
@@ -358,10 +359,15 @@ export class EmbeddingMatchAccumulator {
          }
          return true;
       }
+      // Now check we are not piling up multiple references to the same source
+      // If it is, we bail 
+      for (let i = 0; i < this._chunks.length; i++) {
+         if (lookLikeSameSource (candidate.url, this._chunks[i].url))
+            return false;         
+      }
 
       // Else we do a search and insert the new one if it is better than a current candidate
-      // TODO  - avoid lots of duplicates from same source
-      let lowestIndex = this.lowestOfCurrent(urlIn);
+      let lowestIndex = this.lowestOfCurrent(candidate.url);
       let currentLowest = this._chunks[lowestIndex];
 
       if (typeof currentLowest.relevance !== 'undefined' 

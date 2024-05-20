@@ -98,7 +98,7 @@ describe("AIConnection", async function () {
       throwIfUndefined(process.env.SessionKey);        
       let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey)); 
 
-      let query = caller.buildQuery (messages, authors);
+      let query = caller.buildDirectQuery (messages, authors);
 
       expect(query.length).toEqual(3);         
    });    
@@ -115,8 +115,8 @@ describe("AIConnection", async function () {
       throwIfUndefined(process.env.SessionKey);        
 
       let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey));             
-      let fullQuery = caller.buildQuery (messages, authors);
-      let result = await caller.makeEnrichedCall (fullQuery);
+      let fullQuery = caller.buildDirectQuery (messages, authors);
+      let result = await caller.makeEnrichedCall ("1", fullQuery);
 
       expect (result.text.length > 0).toBe(true);
    });   
@@ -156,7 +156,7 @@ describe("AIConnection", async function () {
       throwIfUndefined(process.env.SessionKey);        
       let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey)); 
 
-      let query = caller.buildQuery (messages, authors);
+      let query = caller.buildDirectQuery (messages, authors);
 
       expect(query.length).toEqual(5);         
    });    
@@ -176,7 +176,7 @@ describe("AIConnection", async function () {
       throwIfUndefined(process.env.SessionKey);        
       let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey)); 
 
-      let query = caller.buildQuery (messages, authors);
+      let query = caller.buildDirectQuery (messages, authors);
 
       expect(query.length).toEqual(2);         
    });      
