@@ -26,6 +26,8 @@ export enum EUIStrings {
    kSendMessagePreamble = "Type a message below. If you want @Braid to reply, put '@Braid' in the message. Treat your messages as public and do not enter confidential information. ",
    kSendButtonPrompt = "Send",
    kSendMessagePrompt = "Message",   
+   kLikedThis = "Liked this!",
+   kDidNotLikeThis = "Not so good.",
    kSendMessagePlaceholder = "Write a message... ",  
    kMessageTextPrompt = "Ctrl+Enter to send or Esc to cancel.",
    kCopyConversationUrlButtonPrompt = "Copy the URL for this conversation to the clipboard",
@@ -37,7 +39,6 @@ export enum EUIStrings {
    kAiNoGoodSources = "@Braid does not have good backup for this answer. AI can make mistakes. Consider checking important information.",
    kAiContentWarning = "AI can make mistakes. Consider checking important information.",
 
-   kNeedInspirationHereIsAnother = "Need more inspiration? Here is a document from another source on a similar topic to the one you just looked at...",
-   kNewUserNeedInspiration = "It looks we have a new joiner. You might like to start here, or type your own AI related query at the bottom of the page.",   
+   kNewUserNeedInspiration = "It looks we have a new joiner. You might like to start by clicking here, or type your own AI related query at the bottom of the page.",   
    kLLMNameReminder = "Just checking...  if you want your request to be sent to @Braid, include the phrase '@Braid' in your message. With an '@' sign."
 };
