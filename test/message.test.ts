@@ -2,8 +2,8 @@
 // Copyright Braid Technologies ltd, 2024
 import { MDynamicStreamable } from '../core/StreamingFramework';
 import { Message} from '../core/Message';
-import { IKeyGenerator } from '../core/KeyGenerator';
-import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
+import { IKeyGenerator } from '../core/IKeyGenerator';
+import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 import { Embedding } from '../core/Embedding';
 import { logApiError } from '../core/Logging';
 
@@ -11,7 +11,7 @@ import { expect } from 'expect';
 import { describe, it } from 'mocha';
 import axios from "axios";
 
-var keyGenerator: IKeyGenerator = new UuidKeyGenerator();
+var keyGenerator: IKeyGenerator = getDefaultKeyGenerator();
 
 var myId: string = "1234";
 var myAuthorId: string = "Jon";
@@ -265,7 +265,7 @@ describe("MessageAPI", function () {
       }
       catch(error: any) {  
 
-         logApiError ("Error calling production message API:", error);    
+         logApiError ("Error calling production message API:", error.response.data);    
          
          // TODO - get typescript working on server.
          // Set aside for the moment.

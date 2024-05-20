@@ -2,7 +2,6 @@
  
 import { MStreamable } from "./StreamingFramework";
 import { areSameDate, areSameShallowArray, areSameDeepArray} from './Utilities';
-import { LiteEmbedding} from "./EmbeddingFormats";
 import { InvalidParameterError } from "./Errors";
 
 function copyTimeStamp (stamp: Date | undefined) : Date | undefined {
@@ -286,7 +285,7 @@ export class EmbeddingMatchAccumulator {
 
    /**
     * searches current most relevant results to see if the new one should be included.  
-    * @param rhs - the object to assign this one from.  
+    * @param urlIn - the URL of a reference source, may be undefined. If it is defined, we are looking for similar atcitcles. 
     */
    private lowestOfCurrent (urlIn: string | undefined): number {
 
@@ -348,6 +347,7 @@ export class EmbeddingMatchAccumulator {
    replaceIfBeatsCurrent (candidate: Embedding, urlIn: string | undefined): boolean {
 
       // If we have a reference source, check if its just the same source as our reference e.g. different chunk of a Youtube video
+      // If it is, we bail 
       if (urlIn && lookLikeSameSource (candidate.url, urlIn)) {
          return false;
       }
@@ -359,10 +359,15 @@ export class EmbeddingMatchAccumulator {
          }
          return true;
       }
+      // Now check we are not piling up multiple references to the same source
+      // If it is, we bail 
+      for (let i = 0; i < this._chunks.length; i++) {
+         if (lookLikeSameSource (candidate.url, this._chunks[i].url))
+            return false;         
+      }
 
       // Else we do a search and insert the new one if it is better than a current candidate
-      // TODO  - avoid lots of duplicates from same source
-      let lowestIndex = this.lowestOfCurrent(urlIn);
+      let lowestIndex = this.lowestOfCurrent(candidate.url);
       let currentLowest = this._chunks[lowestIndex];
 
       if (typeof currentLowest.relevance !== 'undefined' 
@@ -375,91 +380,4 @@ export class EmbeddingMatchAccumulator {
 
       return false;
    }    
-}
-
-export class EnrichedMessage  {
-
-   private _message: string;
-   private _segments: Array<Embedding>;
-
-   /**
-    * Create an empty EnrichedMessage object 
-    */
-   public constructor();
-
-   /**
-    * Create a EnrichedMessage object
-    * @param message_: the message back from the AI 
-    * @param segments_: array of the best source objects
-    */
-   public constructor(message_: string, segments_: Array<Embedding>);
-
-   /**
-    * Create a EnrichedMessage object
-    * @param source - object to copy from - should work for JSON format and for real constructed objects
-    */
-   public constructor(source: EnrichedMessage);
-
-   public constructor(...arr: any[])
-   {
-      if (arr.length === 0) {   
-
-         this._message = "";         
-         this._segments = new Array<Embedding> ();                          
-         return;
-      }
-
-      if (arr.length === 1) {
-         this._message = arr[0]._message;
-         this._segments = arr[0]._segments; 
-      }
-      else {
-         this._message = arr[0];
-         this._segments = arr[1];      
-      }
-   }
-
-   /**
-   * set of 'getters' for private variables
-   */
-   get message (): string {
-      return this._message;
-   }     
-   get segments (): Array<Embedding> {
-      return this._segments;
-   }   
-
-   /**
-   * set of 'setters' for private variables
-   */
-   set message(message_: string) {
-
-      this._message = message_;
-   }   
-   set segments(segments_: Array<Embedding>) {
-
-      this._segments = segments_;
-   }   
-
-   /**
-    * test for equality - checks all fields are the same. 
-    * Uses field values, not identity bcs if objects are streamed to/from JSON, field identities will be different. 
-    * @param rhs - the object to compare this one to.  
-    */
-   equals(rhs: EnrichedMessage): boolean {
-
-      return (this._message === rhs._message && areSameDeepArray (this._segments, rhs._segments));
-   }
-
-   /**
-    * assignment operator 
-    * @param rhs - the object to assign this one from.  
-    */
-   assign(rhs: EnrichedMessage): EnrichedMessage {
-
-      this._message = rhs._message;
-      this._segments = rhs._segments;
-
-      return this;
-   }
 }

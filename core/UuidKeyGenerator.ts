@@ -1,6 +1,6 @@
 // Copyright (c) 2024 Braid Technologies Ltd
 import { EnvironmentError } from './Errors';
-import { IKeyGenerator } from './KeyGenerator';
+import { IKeyGenerator } from './IKeyGenerator';
 
 export class UuidKeyGenerator implements IKeyGenerator {
 

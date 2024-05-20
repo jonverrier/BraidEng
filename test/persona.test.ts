@@ -3,13 +3,13 @@
 import { MDynamicStreamable } from '../core/StreamingFramework';
 import { Persona} from '../core/Persona';
 import { EIcon } from '../core/Icons';
-import { IKeyGenerator } from '../core/KeyGenerator';
-import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
+import { IKeyGenerator } from '../core/IKeyGenerator';
+import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
 
-var keyGenerator: IKeyGenerator = new UuidKeyGenerator();
+var keyGenerator: IKeyGenerator = getDefaultKeyGenerator();
 
 var myId: string = "1234";
 var myName: string = "Jon";

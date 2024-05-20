@@ -1,6 +1,6 @@
 // Copyright (c) 2024 Braid Technologies Ltd
-import { IKeyGenerator } from './KeyGenerator';
-import { UuidKeyGenerator } from './UuidKeyGenerator';
+import { IKeyGenerator } from './IKeyGenerator';
+import { getDefaultKeyGenerator } from './IKeyGeneratorFactory';
 
 export class SessionKey {
 
@@ -18,7 +18,7 @@ export class SessionKey {
    * Does this look like a valid UUID
    */
    looksValidSessionKey(): boolean {
-      let keyGenerator : IKeyGenerator = new UuidKeyGenerator();
+      let keyGenerator : IKeyGenerator = getDefaultKeyGenerator();
 
       return keyGenerator.couldBeAKey (this._sessionId);
    }
@@ -48,7 +48,7 @@ export class ConversationKey {
    */
    looksValidConversationKey(): boolean {
 
-      let keyGenerator : IKeyGenerator = new UuidKeyGenerator();
+      let keyGenerator : IKeyGenerator = getDefaultKeyGenerator();
 
       return keyGenerator.couldBeAKey (this._conversationId);
    }

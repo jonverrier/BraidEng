@@ -3,10 +3,10 @@
 import { InvalidParameterError } from './Errors';
 import { EIcon } from './Icons';
 import { throwIfUndefined } from './Asserts'; 
-import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
+import { getDefaultKeyGenerator } from './IKeyGeneratorFactory';
 import { MDynamicStreamable, DynamicStreamableFactory } from "./StreamingFramework";
 
-const keyGenerator = new UuidKeyGenerator();
+const keyGenerator = getDefaultKeyGenerator();
 
 const unknownUuid: string = "88a77968-2525-4b83-b396-352ca83d1680";
 

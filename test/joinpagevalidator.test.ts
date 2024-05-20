@@ -2,15 +2,15 @@
 // Copyright Braid Technologies ltd, 2024
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
-import { IKeyGenerator } from '../core/KeyGenerator';
-import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
+import { IKeyGenerator } from '../core/IKeyGenerator';
+import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 import { SessionKey, ConversationKey } from '../core/Keys';
 import { JoinDetails } from '../core/JoinDetails';
 import { JoinPageValidator } from '../core/JoinPageValidator';
 
 const badUuid = "9a0583f5xca56-421b-8545-aa23032d6c93"
 
-var keyGenerator: IKeyGenerator = new UuidKeyGenerator();
+var keyGenerator: IKeyGenerator = getDefaultKeyGenerator();
 
 describe("JoinPageValidator", function () {
 

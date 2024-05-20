@@ -26,7 +26,7 @@ var botSentAt = new Date(0);
 let myBotRequestId: string = "12345";
 let myBotRequestText = "Hello @Braid What is back propagation?";
 
-describe("AIConnection", function () {
+describe("AIConnection", async function () {
 
    let authors = new Map<string, Persona> ();
    let person = new Persona (myAuthorId, myAuthorId, "", EIcon.kPersonPersona, undefined, new Date());   
@@ -35,16 +35,13 @@ describe("AIConnection", function () {
    authors.set (bot.id, bot);
 
    let personMessage = new Message(myMessageId, myAuthorId, undefined, myText, mySentAt);
-
    let botMessage = new Message(botMessageId, botAuthorId, undefined, botText, botSentAt);
-
    let botRequest = new Message(myBotRequestId, myAuthorId, undefined, myBotRequestText, mySentAt); 
-
    this.timeout(20000);
 
    beforeEach(async () => {
 
-      this.timeout(20000);      
+      this.timeout(20000);           
    });
 
    it("Needs to detect Bot message type", function () {
@@ -88,7 +85,7 @@ describe("AIConnection", function () {
       expect(answer).toEqual(false);          
    });   
 
-   it("Needs to build request object", function () {
+   it("Needs to build request object", async function () {
 
       let messages = new Array<Message>();
       messages.length = 3;
@@ -96,7 +93,12 @@ describe("AIConnection", function () {
       messages[1] = botRequest;
       messages[2] = botMessage;
 
-      let query = AIConnection.makeOpenAIQuery (messages, authors);
+      throwIfUndefined(process);
+      throwIfUndefined(process.env);
+      throwIfUndefined(process.env.SessionKey);        
+      let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey)); 
+
+      let query = caller.buildDirectQuery (messages, authors);
 
       expect(query.length).toEqual(3);         
    });    
@@ -107,19 +109,16 @@ describe("AIConnection", function () {
       messages.length = 2;
       messages[0] = personMessage;
       messages[1] = botRequest;
-      //messages[2] = botMessage;
-      //messages[2] = botMessage;
-
-      let fullQuery = AIConnection.makeOpenAIQuery (messages, authors);
 
       throwIfUndefined(process);
       throwIfUndefined(process.env);
-      throwIfUndefined(process.env.AZURE_OPENAI_API_KEY);        
-      let caller = new AIConnection(process.env.AZURE_OPENAI_API_KEY);
+      throwIfUndefined(process.env.SessionKey);        
 
-      let result = await caller.queryAI (botRequest.text, fullQuery);
+      let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey));             
+      let fullQuery = caller.buildDirectQuery (messages, authors);
+      let result = await caller.makeEnrichedCall ("1", fullQuery);
 
-      expect (result.message.length > 0).toBe(true);
+      expect (result.text.length > 0).toBe(true);
    });   
 
    function makeLongMessage (startingMessage: Message, segmentCount: number) : Message {
@@ -143,7 +142,7 @@ describe("AIConnection", function () {
 
       return newBotRequest;
    }
-   it("Needs to detect when token limit is OK", function () {
+   it("Needs to detect when token limit is OK", async function () {
 
       let messages = new Array<Message>();
 
@@ -152,11 +151,17 @@ describe("AIConnection", function () {
       messages[1] = botRequest;
       messages[2] = makeLongMessage (botMessage, 2);
 
-      let query = AIConnection.makeOpenAIQuery (messages, authors);
+      throwIfUndefined(process);
+      throwIfUndefined(process.env);
+      throwIfUndefined(process.env.SessionKey);        
+      let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey)); 
+
+      let query = caller.buildDirectQuery (messages, authors);
+
       expect(query.length).toEqual(5);         
    });    
 
-   it("Needs to detect when token limit overflows", function () {
+   it("Needs to detect when token limit overflows", async function () {
 
       let messages = new Array<Message>();
 
@@ -166,7 +171,13 @@ describe("AIConnection", function () {
       messages[2] = makeLongMessage (botMessage, 4);
       messages[3] = botRequest;      
 
-      let query = AIConnection.makeOpenAIQuery (messages, authors);
+      throwIfUndefined(process);
+      throwIfUndefined(process.env);
+      throwIfUndefined(process.env.SessionKey);        
+      let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey)); 
+
+      let query = caller.buildDirectQuery (messages, authors);
+
       expect(query.length).toEqual(2);         
    });      
 });

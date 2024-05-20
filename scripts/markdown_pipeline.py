@@ -10,12 +10,12 @@ MARKDOWN_DESTINATION_DIR = "data/markdown"
 
 config = ApiConfiguration()
 
-#for item in gitHubUrls:
-#   download_markdown (item[2], item[1], MARKDOWN_DESTINATION_DIR)
+for item in gitHubUrls:
+   download_markdown (item[2], item[1], MARKDOWN_DESTINATION_DIR)
 
-#enrich_text_chunks(config,MARKDOWN_DESTINATION_DIR) 
-#enrich_text_summaries(config, MARKDOWN_DESTINATION_DIR)
-#enrich_text_embeddings(config, MARKDOWN_DESTINATION_DIR)
-#enrich_lite(MARKDOWN_DESTINATION_DIR)
+enrich_text_chunks(config,MARKDOWN_DESTINATION_DIR) 
+enrich_text_summaries(config, MARKDOWN_DESTINATION_DIR)
+enrich_text_embeddings(config, MARKDOWN_DESTINATION_DIR)
+enrich_lite(MARKDOWN_DESTINATION_DIR)
 
 countUrlHits (MARKDOWN_DESTINATION_DIR, gitHubUrls, "master_text.json")

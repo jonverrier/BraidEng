@@ -7,13 +7,13 @@ import { MessageActivityRecord } from '../core/MessageActivityRecord';
 import { SessionKey } from '../core/Keys';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 import { ActivityRepositoryMongo } from '../core/ActivityRepositoryMongo';
-import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
+import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
 import { throwIfUndefined } from '../core/Asserts';
 
-const keyGenerator = new UuidKeyGenerator();
+const keyGenerator = getDefaultKeyGenerator();
 
 var myId: string = "1234";
 var myConversationId = "1234;"
