@@ -94,7 +94,20 @@ export class EmbeddingRepositoryFile implements IEmbeddingRepository {
       return new EmbeddingMatchAccumulator(similarityThresholdLo, howMany);
    }
 
-   async lookForSuggestedContent (url_: string | undefined, messageText: string) : Promise<Message | undefined> {
+   /**
+    * lookupUrlSummary 
+    * looks for summary given a URL
+    */      
+   async lookupUrlSummary (url: string) : Promise<string | undefined> {
+
+      await waitforEmbeddedingLoad();
+
+      let chunkIn = lookupUrl (embeddings as Array<LiteEmbedding>, url);
+
+      return chunkIn ? chunkIn.summary : undefined;
+   }
+
+   async lookForRelatedContent (url_: string | undefined, messageText: string) : Promise<Message | undefined> {
 
       let candidateChunk : Embedding | undefined = undefined;
       let haveUrl = true;

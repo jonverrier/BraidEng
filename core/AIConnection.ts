@@ -59,6 +59,18 @@ export class AIConnection {
                           directResponse, new Date(), enriched.chunks);                                                                        
    }    
 
+   // Asks the LLM for a question that relates to the context  
+   async makeFollowUpCall  (context: string) : Promise<Message> {
+      
+      let followUpQuery = this.buildFollowUpQuery (context);      
+
+      const [enrichedResponse] = await Promise.all ([this.makeSingleCall (followUpQuery)]);
+                              
+      let keyGenerator = getDefaultKeyGenerator();
+      return new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, undefined, 
+                          enrichedResponse, new Date());                                                                        
+   } 
+
       // Makes an Axios call to call web endpoint
    async createEmbedding  (input: string) : Promise<Array<number>> {
       
@@ -146,6 +158,21 @@ export class AIConnection {
 
       let lastMessage = messages[messages.length -1].content;
       let engineeredQuestion = EConfigStrings.kEnrichmentQuestionPrefix + lastMessage;      
+      let entry = { role: 'user', content: engineeredQuestion };
+      builtQuery.push (entry);
+
+      return builtQuery; 
+   } 
+
+   buildFollowUpQuery (context: string): Array<AIMessageElement> {
+
+      let builtQuery = new Array<AIMessageElement> ();
+      
+      let engineeredPrompt = EConfigStrings.kFollowUpPrompt;
+      let prompt = { role: 'system', content: engineeredPrompt };
+      builtQuery.push (prompt);        
+
+      let engineeredQuestion = EConfigStrings.kFollowUpPrefix + context;      
       let entry = { role: 'user', content: engineeredQuestion };
       builtQuery.push (entry);
 

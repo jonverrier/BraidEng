@@ -158,14 +158,14 @@ describe("KnowledgeSource URLs", function () {
 
       it("Needs to identify related content given an input URL", async function () {
    
-         let message = await repository.lookForSuggestedContent ("https://www.youtube.com/watch?v=roEKOzxilq4&t=00h00m00s", "test");
+         let message = await repository.lookForRelatedContent ("https://www.youtube.com/watch?v=roEKOzxilq4&t=00h00m00s", "test");
    
          expect(typeof message === 'undefined').toEqual(false);     
       });
    
       it("Needs to identify starter content", async function () {
 
-         let message = await repository.lookForSuggestedContent (undefined, "test");         
+         let message = await repository.lookForRelatedContent (undefined, "test");         
    
          expect(typeof message === 'undefined').toEqual(false);       
       });

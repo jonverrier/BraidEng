@@ -60,6 +60,7 @@ export interface IConversationRowProps {
    conversation: Array<Message>;
    isBusy: boolean;   
    hasSuggestedContent: boolean;
+   suggestedContent: string;
    onSend (message_: string) : void;   
    onTrimConversation () : void;   
    onExitConversation () : void;
@@ -284,7 +285,8 @@ export const ConversationRow = (props: IConversationRowProps) => {
                      onSend={onSend}
                      onAddSuggestedContent={props.onAddSuggestedContent} 
                      isBusy={props.isBusy}
-                     hasSuggestedContent={props.hasSuggestedContent}>
+                     hasSuggestedContent={props.hasSuggestedContent}
+                     suggestedContent={props.suggestedContent}>
                      </InputView>          
                </div> 
             </div>
@@ -436,7 +438,7 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
       event.preventDefault();
 
       props.onClickUrl (segment.url);  
-      (window as any).open(segment.url, '_blank').focus();
+      (window as any).open(segment.url, '_blank');
    };
 
    relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
@@ -513,6 +515,7 @@ export interface IInputViewProps {
    
    isBusy: boolean;
    hasSuggestedContent: boolean;
+   suggestedContent: string;
    onSend (message_: string) : void;
    onAddSuggestedContent(): void;
 }
@@ -610,7 +613,7 @@ export const InputView = (props: IInputViewProps) => {
                   &nbsp;
                   <AnimatedIconButton animate={props.hasSuggestedContent} 
                      icon={EAnimatedIconButtonTypes.kLightBulb} 
-                     promptAnimated={EUIStrings.kAiHasSuggestedDocuments} 
+                     promptAnimated={props.suggestedContent} 
                      promptUnamimated={EUIStrings.kAiHasNoSuggestedDocuments}
                      onClick={props.onAddSuggestedContent}/>      
                   </div>
