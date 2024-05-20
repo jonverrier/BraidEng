@@ -12,144 +12,103 @@ import { throwIfUndefined } from './Asserts';
 import { ConnectionError, AssertionFailedError } from "./Errors";
 import { KeyRetriever } from "./KeyRetriever";
 import { Environment, EEnvironment } from "./Environment";
-import { EnrichedMessage } from "./Embedding";
 import { IEmbeddingRepository, kDefaultSearchChunkCount, kDefaultMinimumCosineSimilarity} from "./IEmbeddingRepository";
 import { getEmbeddingRepository } from "./IEmbeddingRepositoryFactory";
+import { getDefaultKeyGenerator } from "./IKeyGeneratorFactory";
 
 // We allow for the equivalent of 10 minutes of chat. 10 mins * 60 words = 600 words = 2400 tokens. 
 const kMaxTokens : number= 4096;
 
+export class AIMessageElement {
+   role: string;
+   content: string;
+}
+
 export class AIConnection {
 
    private _activeCallCount: number;
-   private _key: string;  
+   private _aiKey: string;  
    private _embeddings: IEmbeddingRepository;
 
    /**
     * Create an AIConnection object 
     */
-   constructor(key_: string) {
+   constructor(aiKey_: string, sessionKey_: SessionKey) {
 
       this._activeCallCount = 0;
-      this._key = key_;
-      this._embeddings = getEmbeddingRepository (new SessionKey (key_));
+      this._aiKey = aiKey_;
+      this._embeddings = getEmbeddingRepository (sessionKey_);
    }  
 
    // Makes an Axios call to call web endpoint
-   async queryAI  (mostRecent: string, allMessages: Array<Object>) : Promise<EnrichedMessage> {
+   async makeEnrichedCall  (allMessages: Array<AIMessageElement>) : Promise<Message> {
       
       this._activeCallCount++;
 
-      var response : any = null;
-
-      // OPENAI POST ('https://api.openai.com/v1/chat/completions', {
-      // AZURE POST https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/chat/completions?api-version={api-version}
-
-      await axios.post('https://braidlms.openai.azure.com/openai/deployments/braidlms/chat/completions?api-version=2024-02-01', {
-         messages: allMessages,
-         // OPENAI model: "gpt-3.5-turbo"
-         // OPENAI prompt: allMessages
-      },
-      {
-         headers: {
-            'Content-Type': 'application/json',
-            // OpenAI - 'Authorization': `Bearer ${this._key}`
-            'api-key': this._key
-         }
-      })
-      .then((resp : any) => {
-
-         response = resp;
-         this._activeCallCount--;         
-      })
-      .catch((error: any) => {
-
-         this._activeCallCount--;     
-
-         logApiError (EConfigStrings.kErrorConnectingToAiAPI, error);
-      });
+      var response : string = await this.makeSingleCall (allMessages); 
 
       if (!response)
          throw new ConnectionError(EConfigStrings.kErrorConnectingToAiAPI);      
 
-      let embedding = await this.createEmbedding (mostRecent);
+      let embedding = await this.createEmbedding (allMessages[allMessages.length - 1].content);
 
       let enriched = await this._embeddings.lookupMostSimilar (embedding, undefined, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);
 
-      return new EnrichedMessage (response.data.choices[0].message.content as string, enriched.chunks);
+      let keyGenerator = getDefaultKeyGenerator();
+      return new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, undefined, 
+                          response, new Date(), enriched.chunks);
    }    
 
       // Makes an Axios call to call web endpoint
    async createEmbedding  (input: string) : Promise<Array<number>> {
       
-      this._activeCallCount++;
+      let self = this;
+      self._activeCallCount++;
    
-      var response : any = null;
-   
-      // AZURE POST https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/embeddings?api-version={api-version}
-      // OPENAI POST 'https://api.openai.com/v1/embeddings'
+      let done = new Promise<Array<number>>(function(resolve, reject) {
 
-      await axios.post('https://braidlms.openai.azure.com/openai/deployments/braidlmse/embeddings?api-version=2024-02-01', {
-         input: input,
-         // OPENAI model: "text-embedding-ada-002",       
-      },
-      {
-         headers: {
-            'Content-Type': 'application/json',
-            // OpenAI - 'Authorization': `Bearer ${this._key}`
-            'api-key': this._key           
-         }
-      })
-      .then((resp : any) => {
+         // AZURE POST https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/embeddings?api-version={api-version}
+         // OPENAI POST 'https://api.openai.com/v1/embeddings'
+
+         axios.post('https://braidlms.openai.azure.com/openai/deployments/braidlmse/embeddings?api-version=2024-02-01', {
+            input: input,
+            // OPENAI model: "text-embedding-ada-002",       
+         },
+         {
+            headers: {
+               'Content-Type': 'application/json',
+               // OpenAI - 'Authorization': `Bearer ${this._key}`
+               'api-key': self._aiKey           
+            }
+         })
+         .then((resp : any) => {
    
-         response = resp;
-         this._activeCallCount--;         
-      })
-      .catch((error: any) => {
+            self._activeCallCount--;               
+            resolve (resp.data.data[0].embedding as Array<number>);      
+         })
+         .catch((error: any) => {
    
-         this._activeCallCount--;     
-   
-         logApiError (EConfigStrings.kErrorConnectingToAiAPI, error);
+            self._activeCallCount--;     
+            logApiError (EConfigStrings.kErrorConnectingToAiAPI, error);
+            reject();
+         });
       });
-   
-      if (!response)
-         throw new ConnectionError(EConfigStrings.kErrorConnectingToAiAPI);      
 
-      return response.data.data[0].embedding as Array<number>;
+      return done;
    } 
 
    isBusy () {
       return this._activeCallCount !== 0;
    }
 
-   static findEarliestMessageIndexWithinTokenLimit (messages: Array<Message>, authors: Map<string, Persona>) : number {
+   buildQuery (messages: Array<Message>, authors: Map<string, Persona>): Array<AIMessageElement> {
 
-      if (messages.length == 0)      
-         throw new AssertionFailedError ("Message array is zero length.");
-      if (messages.length == 1)
-         return 0;
-
-      let tokenAccumulator = 0;
-      let iLowest = 0;
-
-      for (let i = messages.length - 1; i >= 0 && tokenAccumulator < kMaxTokens; i--) {
-
-         tokenAccumulator += messages[i].tokens;
-
-         if (tokenAccumulator < kMaxTokens)
-            iLowest = i;
-      }      
-      return iLowest;
-   }
-
-   static makeOpenAIQuery (messages: Array<Message>, authors: Map<string, Persona>): Array<Object> {
-
-      let builtQuery = new Array<Object> ();
+      let builtQuery = new Array<AIMessageElement> ();
 
       let prompt = { role: 'system', content: EConfigStrings.kOpenAiPersonaPrompt };
       builtQuery.push (prompt);      
 
-      var start = AIConnection.findEarliestMessageIndexWithinTokenLimit(messages, authors);
+      var start = this.findEarliestMessageIndexWithinTokenLimit(messages, authors);
 
       for (let i = start; i < messages.length; i++) {
 
@@ -175,6 +134,66 @@ export class AIConnection {
 
       }
       return builtQuery; 
+   }   
+
+   // Makes an Axios call to call web endpoint
+   private async makeSingleCall  (input: Array<AIMessageElement>) : Promise<string> {
+      
+      let self = this;
+      self._activeCallCount++;
+
+      let done = new Promise<string>(function(resolve, reject) {
+
+         // OPENAI POST ('https://api.openai.com/v1/chat/completions', {
+         // AZURE POST https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/chat/completions?api-version={api-version}
+
+         axios.post('https://braidlms.openai.azure.com/openai/deployments/braidlms/chat/completions?api-version=2024-02-01', {
+            messages: input,
+            // OPENAI model: "gpt-3.5-turbo"
+            // OPENAI prompt: allMessages
+         },
+         {
+            headers: {
+               'Content-Type': 'application/json',
+               // OpenAI - 'Authorization': `Bearer ${this._key}`
+               'api-key': self._aiKey
+            }
+         })
+         .then((resp : any) => {
+            
+            self._activeCallCount--;   
+            resolve (resp.data.choices[0].message.content);   
+         })
+         .catch((error: any) => {
+
+            self._activeCallCount--;     
+
+            logApiError (EConfigStrings.kErrorConnectingToAiAPI, error);
+            reject();
+         });
+      });
+   
+      return done;
+   }    
+
+   private findEarliestMessageIndexWithinTokenLimit (messages: Array<Message>, authors: Map<string, Persona>) : number {
+
+      if (messages.length == 0)      
+         throw new AssertionFailedError ("Message array is zero length.");
+      if (messages.length == 1)
+         return 0;
+
+      let tokenAccumulator = 0;
+      let iLowest = 0;
+
+      for (let i = messages.length - 1; i >= 0 && tokenAccumulator < kMaxTokens; i--) {
+
+         tokenAccumulator += messages[i].tokens;
+
+         if (tokenAccumulator < kMaxTokens)
+            iLowest = i;
+      }      
+      return iLowest;
    }
 
    /**
@@ -192,7 +211,7 @@ export class AIConnection {
    /**
     * is a message invoking the LLM - look at the author, and if the message contains the LLM name 
     */
-      static isRequestForLLM (message: Message, authors: Map<string, Persona>) : boolean {
+   static isRequestForLLM (message: Message, authors: Map<string, Persona>) : boolean {
 
       let author = Persona.safeAuthorLookup (authors, message.authorId);
       throwIfUndefined (author);
@@ -204,9 +223,9 @@ export class AIConnection {
   /**
     * is a message an attempt to invoke the LLM - look at the author, and if the message contains miss-spellings of LLM name 
     */
-      static mightBeMissTypedRequestForLLM (message: Message, authors: Map<string, Persona>) : boolean {
+   static mightBeMissTypedRequestForLLM (message: Message, authors: Map<string, Persona>) : boolean {
 
-      if (AIConnection.isRequestForLLM (message, authors))
+      if (this.isRequestForLLM (message, authors))
          return false;
 
       let author = Persona.safeAuthorLookup (authors, message.authorId);
@@ -215,7 +234,6 @@ export class AIConnection {
       return (author.icon === EIcon.kPersonPersona) && 
          (message.text.includes (EConfigStrings.kLLMNearRequestSignature) || message.text.includes (EConfigStrings.kLLMNearRequestSignatureLowerCase));
    }   
-
 }
 
 export class AIConnector {
@@ -234,6 +252,6 @@ export class AIConnector {
                                        EConfigStrings.kSessionParamName, 
                                        sessionKey_);
 
-      return new AIConnection (aiKey);
+      return new AIConnection (aiKey, sessionKey_);
    }
 }

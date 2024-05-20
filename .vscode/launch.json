@@ -20,7 +20,7 @@
             "args": [
                 "-r",
                 "ts-node/register",
-                "${workspaceRoot}/test/ai*.ts",
+                "${workspaceRoot}/test/aiconnect*.ts",
                 "--no-timeouts"
             ],
             "cwd": "${workspaceRoot}"

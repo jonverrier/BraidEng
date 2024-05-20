@@ -19,13 +19,11 @@ import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } fr
 import { AIConnection, AIConnector } from '../core/AIConnection';
 import { EUIStrings } from './UIStrings';
 import { EConfigNumbers, EConfigStrings } from '../core/ConfigStrings';
-import { EnrichedMessage } from '../core/Embedding';
-import { IEmbeddingRepository } from '../core/IEmbeddingRepository';
 import { getEmbeddingRepository } from '../core/IEmbeddingRepositoryFactory';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 import { UrlActivityRecord } from '../core/UrlActivityRecord';
 import { MessageActivityRecord } from '../core/MessageActivityRecord';
-import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
+import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 
 export interface IConversationControllerProps {
 
@@ -237,7 +235,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    function onClickUrl (url_: string) : void {
       
-      let keyGenerator = new UuidKeyGenerator();
+      let keyGenerator = getDefaultKeyGenerator();
 
       let repository = getRecordRepository(props.sessionKey);
       let email = props.localPersona.name;
@@ -285,7 +283,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       fluidMessagesConnection.participantCaucus().add (storedPerson.id, storedPerson);    
       
       // Save it to the DB - asyc
-      let keyGenerator = new UuidKeyGenerator();      
+      let keyGenerator = getDefaultKeyGenerator();      
       let repository = getRecordRepository(props.sessionKey);
       let email = props.localPersona.name;
       let record = new MessageActivityRecord (keyGenerator.generateKey(), 
@@ -309,20 +307,12 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
          connectionPromise.then ( (connection : AIConnection) => {
 
-            let query = AIConnection.makeOpenAIQuery (messageArray, audienceMap);
+            let query = connection.buildQuery (messageArray, audienceMap);
 
-            connection.queryAI (messageText_, query).then ((result_: EnrichedMessage) => {
+            connection.makeEnrichedCall (query).then ((result_: Message) => {
                
-               // set up a message to append
-               let response = new Message ();
-               response.authorId = EConfigStrings.kLLMGuid;
-               response.text = result_.message;
-               response.sentAt = new Date();
-               response.responseToId = message.id;
-               response.chunks = result_.segments; // Add KnowledgeSegments
-
                // Push it to shared data
-               addMessage (fluidMessagesConnection, response);
+               addMessage (fluidMessagesConnection, result_);
 
                setIsBusy(false);                         
 

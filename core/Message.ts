@@ -4,13 +4,13 @@ import GPT4Tokenizer from 'gpt4-tokenizer';
 
 import { InvalidParameterError } from './Errors';
 import { throwIfUndefined } from './Asserts'; 
-import { IKeyGenerator } from '../core/KeyGenerator';
-import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
+import { IKeyGenerator } from './IKeyGenerator';
+import { getDefaultKeyGenerator } from './IKeyGeneratorFactory';
 import { MDynamicStreamable, DynamicStreamableFactory } from "./StreamingFramework";
 import { areSameDate, areSameDeepArray } from './Utilities';
 import { Embedding } from './Embedding';
 
-var keyGenerator: IKeyGenerator = new UuidKeyGenerator();
+var keyGenerator: IKeyGenerator = getDefaultKeyGenerator();
 
 const className = "Message";
 

@@ -4,8 +4,8 @@ import { expect } from 'expect';
 import { describe, it } from 'mocha';
 import axios from "axios";
 
-import { IKeyGenerator } from '../core/KeyGenerator';
-import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
+import { IKeyGenerator } from '../core/IKeyGenerator';
+import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 import { KeyRetriever } from '../core/KeyRetriever';
 import { EConfigStrings, KStubEnvironmentVariables } from '../core/ConfigStrings';
 import { EEnvironment, Environment } from '../core/Environment';
@@ -13,7 +13,7 @@ import { SessionKey } from '../core/Keys';
 
 const badUuid = "9a0583f5xca56-421b-8545-aa23032d6c93"
 
-let keyGenerator : IKeyGenerator = new UuidKeyGenerator();
+let keyGenerator : IKeyGenerator = getDefaultKeyGenerator();
 
 describe("KeyRetriever", function () {
    

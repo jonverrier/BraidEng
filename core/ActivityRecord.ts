@@ -2,10 +2,10 @@
 
 import { InvalidParameterError } from './Errors';
 import { MDynamicStreamable, DynamicStreamableFactory } from "./StreamingFramework";
-import { UuidKeyGenerator } from '../core/UuidKeyGenerator';
+import { getDefaultKeyGenerator } from './IKeyGeneratorFactory'; 
 
 const activityRecordClassName = "ActivityRecord";
-const keyGenerator = new UuidKeyGenerator();
+const keyGenerator = getDefaultKeyGenerator();
 
 // ActivityRecord - conversation ID, email of a person and a datestamp. Will have many derived classes according to different activity types. 
 export class ActivityRecord extends MDynamicStreamable {

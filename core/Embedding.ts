@@ -2,7 +2,6 @@
  
 import { MStreamable } from "./StreamingFramework";
 import { areSameDate, areSameShallowArray, areSameDeepArray} from './Utilities';
-import { LiteEmbedding} from "./EmbeddingFormats";
 import { InvalidParameterError } from "./Errors";
 
 function copyTimeStamp (stamp: Date | undefined) : Date | undefined {
@@ -375,91 +374,4 @@ export class EmbeddingMatchAccumulator {
 
       return false;
    }    
-}
-
-export class EnrichedMessage  {
-
-   private _message: string;
-   private _segments: Array<Embedding>;
-
-   /**
-    * Create an empty EnrichedMessage object 
-    */
-   public constructor();
-
-   /**
-    * Create a EnrichedMessage object
-    * @param message_: the message back from the AI 
-    * @param segments_: array of the best source objects
-    */
-   public constructor(message_: string, segments_: Array<Embedding>);
-
-   /**
-    * Create a EnrichedMessage object
-    * @param source - object to copy from - should work for JSON format and for real constructed objects
-    */
-   public constructor(source: EnrichedMessage);
-
-   public constructor(...arr: any[])
-   {
-      if (arr.length === 0) {   
-
-         this._message = "";         
-         this._segments = new Array<Embedding> ();                          
-         return;
-      }
-
-      if (arr.length === 1) {
-         this._message = arr[0]._message;
-         this._segments = arr[0]._segments; 
-      }
-      else {
-         this._message = arr[0];
-         this._segments = arr[1];      
-      }
-   }
-
-   /**
-   * set of 'getters' for private variables
-   */
-   get message (): string {
-      return this._message;
-   }     
-   get segments (): Array<Embedding> {
-      return this._segments;
-   }   
-
-   /**
-   * set of 'setters' for private variables
-   */
-   set message(message_: string) {
-
-      this._message = message_;
-   }   
-   set segments(segments_: Array<Embedding>) {
-
-      this._segments = segments_;
-   }   
-
-   /**
-    * test for equality - checks all fields are the same. 
-    * Uses field values, not identity bcs if objects are streamed to/from JSON, field identities will be different. 
-    * @param rhs - the object to compare this one to.  
-    */
-   equals(rhs: EnrichedMessage): boolean {
-
-      return (this._message === rhs._message && areSameDeepArray (this._segments, rhs._segments));
-   }
-
-   /**
-    * assignment operator 
-    * @param rhs - the object to assign this one from.  
-    */
-   assign(rhs: EnrichedMessage): EnrichedMessage {
-
-      this._message = rhs._message;
-      this._segments = rhs._segments;
-
-      return this;
-   }
 }

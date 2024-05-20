@@ -1,7 +1,7 @@
 'use strict';
 // Copyright Braid Technologies ltd, 2024
 import { SessionKey } from '../core/Keys';
-import { Embedding, EmbeddingMatchAccumulator, EnrichedMessage, lookLikeSameSource} from '../core/Embedding';
+import { Embedding, EmbeddingMatchAccumulator, lookLikeSameSource} from '../core/Embedding';
 import { kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount} from '../core/IEmbeddingRepository';
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -117,60 +117,6 @@ describe("KnowledgeSourceBuilder", function () {
    });
 });
 
-describe("KnowledgeEnrichedMessage", function () {
-
-   let ks1 = new Embedding(myUrl, mySummary, myAda, myTimeStamp, myRelevance);
-   let sources1 = new Array<Embedding> ();
-   sources1.push (ks1);
-   let enriched1 = new EnrichedMessage (mySummary, sources1);
-
-   let ks2 = new Embedding(someoneElsesUrl, someoneElsesSummary, someoneElseAda, someoneElsesTimeStamp, someoneElsesRelevance);
-   let sources2 = new Array<Embedding> ();
-   sources2.push (ks2);  
-   let enriched2 = new EnrichedMessage (someoneElsesSummary, sources2);    
-
-   it("Needs to construct an empty object", function () {
-
-      var enrichedMsgEmpty = new EnrichedMessage();
-
-      expect(enrichedMsgEmpty.segments.length).toEqual(0);     
-   });
-
-   it("Needs to compare for equality and inequality", function () {
-
-      let enrichedNew = new EnrichedMessage(mySummary, sources1);        
-
-      expect(enriched1.equals(enriched1)).toEqual(true);     
-      expect(enriched1.equals(enrichedNew)).toEqual(true);
-      expect(enriched1.equals(enriched2)).toEqual(false);
-   });
-      
-
-   it("Needs to correctly store attributes", function () {
-         
-      expect(enriched1.segments[0].summary === mySummary).toEqual(true);
-      throwIfUndefined (enriched1.segments[0].timeStamp);
-      expect(enriched1.segments[0].timeStamp.getTime() === myTimeStamp.getTime()).toEqual(true);
-   });
-
-   it("Needs to copy construct", function () {
-
-      let enriched2: EnrichedMessage = new EnrichedMessage(enriched1);
-
-      expect(enriched1.equals(enriched2) === true).toEqual(true);
-   });
-
-   it("Needs to correctly change attributes", function () {
-
-      var enrichedNew: EnrichedMessage = new EnrichedMessage(enriched1);
-
-      expect(enriched1.equals (enrichedNew)).toEqual(true);      
-
-      enrichedNew.segments = sources2;
-     
-      expect(enriched1.equals (enrichedNew)).toEqual(false);
-   });
-});
 
 describe("KnowledgeSource URLs", function () {
 
