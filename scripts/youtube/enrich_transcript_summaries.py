@@ -30,7 +30,7 @@ class Counter:
 
 @retry(
     wait=wait_random_exponential(min=10, max=45),
-    stop=stop_after_attempt(20),
+    stop=stop_after_attempt(15),
     retry=retry_if_not_exception_type(openai.InvalidRequestError),
 )
 def chatgpt_summary(config, text, logger):
@@ -77,12 +77,12 @@ def process_queue(config, progress, task, q, counter, logger, output_chunks, cur
 
         chunk = q.get()
         found = False
-        
+
         for i in current_chunks: 
            if i.get('sourceId') == chunk.get('sourceId'):
               current_summary = i.get("summary")
               current_ada = i.get("ada_v2")
-              if current_summary and len(current_summary) >= 10 and current_ada and len(current_ada) >= 10: 
+              if current_summary and len(current_summary) >= 10: 
                  chunk["summary"] = current_summary
                  chunk["ada_v2"] = current_ada                    
                  found = True  
@@ -90,27 +90,21 @@ def process_queue(config, progress, task, q, counter, logger, output_chunks, cur
 
         if not found:           
            text = chunk.get("text")
-           existing = chunk.get("summary")
 
-           if (not existing or existing.len == 0):
-
-              # get a summary of the text using chatgpt
-              try:
-                 summary = chatgpt_summary(config, text, logger)
-              except openai.InvalidRequestError as invalid_request_error:
-                 logger.warning("Error: %s", invalid_request_error)
-                 summary = text
-              except Exception as e:
-                 logger.warning("Error: %s", e)
-                 summary = text
-
+           # get a summary of the text using chatgpt
+           try:
+              summary = chatgpt_summary(config, text, logger)
               # add the summary to the segment dictionary
               chunk["summary"] = summary
+              output_chunks.append(chunk.copy())
+           except openai.InvalidRequestError as invalid_request_error:
+              logger.warning("Error: %s", invalid_request_error)
+           except Exception as e:
+              logger.warning("Error: %s", e)
 
         count = counter.increment()
         progress.update(task, advance=1)
 
-        output_chunks.append(chunk.copy())
         q.task_done()
 
 # convert time '00:01:20' to seconds

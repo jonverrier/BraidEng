@@ -278,7 +278,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
          addMessage (fluidMessagesConnection, suggested); 
       }
       else {
-         // Else its is text, so we play it as a message that makes a request to the LLM
+         // Else its is text, so we play it as a message that makes a request to the LLM, which sends all the context with it to the LLM
          let fullMessage = EConfigStrings.kLLMRequestSignature + " " + suggested.text;
          onSend (fullMessage);
       }

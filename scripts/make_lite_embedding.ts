@@ -7,7 +7,7 @@ import fs from 'node:fs/promises';
 
 import youTubeEmbeddingsFile from '../data/youtube/output/master_enriched.json';
 import markdownEmbeddingsFile from '../data/github/output/master_enriched.json';
-import htmlEmbeddingsFile from '../data/html/output/master_enriched.json';
+import htmlEmbeddingsFile from '../data/web/output/master_enriched.json';
 import { FullEmbedding, LiteEmbedding, MakeEmbeddingUrlFnFull, 
    makeYouTubeUrlFromFullEmbedding, makeGithubUrlFromFullEmbedding, makeHtmlUrlfromFullEmbedding} from '../core/EmbeddingFormats';
 
