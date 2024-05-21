@@ -21,9 +21,10 @@ import { EUIStrings } from './UIStrings';
 import { EConfigNumbers, EConfigStrings } from '../core/ConfigStrings';
 import { getEmbeddingRepository } from '../core/IEmbeddingRepositoryFactory';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
-import { UrlActivityRecord } from '../core/UrlActivityRecord';
+import { UrlActivityRecord } from '../core/ActivityRecordUrl';
 import { MessageActivityRecord } from '../core/MessageActivityRecord';
 import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
+import { LikeDislikeActivityRecord } from '../core/ActivityRecordLikeDislike';
 
 export interface IConversationControllerProps {
 
@@ -232,16 +233,47 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       refreshAfterTrim ();        
    }
 
+   function onDislikeUrl (url_: string) : void {
+      
+      let keyGenerator = getDefaultKeyGenerator();
+
+      let repository = getRecordRepository(props.sessionKey);
+      let email = props.localPersona.email;
+      let record = new LikeDislikeActivityRecord (keyGenerator.generateKey(), 
+         props.conversationKey.toString(),
+         email, new Date(), url_, false);
+      repository.save (record);                                                            
+   }
+
+   function onLikeUrl (url_: string) : void {
+      
+      let keyGenerator = getDefaultKeyGenerator();
+
+      let repository = getRecordRepository(props.sessionKey);
+      let email = props.localPersona.email;
+      let record = new LikeDislikeActivityRecord (keyGenerator.generateKey(), 
+         props.conversationKey.toString(),
+         email, new Date(), url_, true);
+      repository.save (record); 
+
+      onPostiveUseOfUrl (url_);                                                            
+   }
+
    function onClickUrl (url_: string) : void {
       
       let keyGenerator = getDefaultKeyGenerator();
 
       let repository = getRecordRepository(props.sessionKey);
-      let email = props.localPersona.name;
+      let email = props.localPersona.email;
       let record = new UrlActivityRecord (keyGenerator.generateKey(), 
          props.conversationKey.toString(),
          email, new Date(), url_);
-      repository.save (record);   
+      repository.save (record); 
+
+      onPostiveUseOfUrl (url_);                                                            
+   }
+
+   function onPostiveUseOfUrl (url_: string) : void {
       
       let embeddingRespository = getEmbeddingRepository (props.sessionKey);
 
@@ -307,7 +339,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       // Save it to the DB - asyc
       let keyGenerator = getDefaultKeyGenerator();      
       let repository = getRecordRepository(props.sessionKey);
-      let email = props.localPersona.name;
+      let email = props.localPersona.email;
       let record = new MessageActivityRecord (keyGenerator.generateKey(), 
          props.conversationKey.toString(),
          email, new Date(), messageText_);
@@ -390,6 +422,8 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
              onTrimConversation={onTrimConversation}
              onExitConversation={onExitConversation}             
              onClickUrl={onClickUrl}
+             onLikeUrl={onLikeUrl}    
+             onDislikeUrl={onDislikeUrl}                      
              >
          </ConversationRow>
       );

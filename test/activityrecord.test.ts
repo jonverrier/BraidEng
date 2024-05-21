@@ -2,8 +2,9 @@
 // Copyright Braid technologies ltd, 2024
 import { MDynamicStreamable } from '../core/StreamingFramework';
 import { ActivityRecord} from '../core/ActivityRecord';
-import { UrlActivityRecord } from '../core/UrlActivityRecord';
+import { UrlActivityRecord } from '../core/ActivityRecordUrl';
 import { MessageActivityRecord } from '../core/MessageActivityRecord';
+import { LikeDislikeActivityRecord } from '../core/ActivityRecordLikeDislike';
 import { SessionKey } from '../core/Keys';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 import { ActivityRepositoryMongo } from '../core/ActivityRepositoryMongo';
@@ -12,6 +13,7 @@ import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
 import { throwIfUndefined } from '../core/Asserts';
+import { truncateSync } from 'fs';
 
 const keyGenerator = getDefaultKeyGenerator();
 
@@ -284,7 +286,107 @@ describe("UrlActivityRecord", function () {
 
       expect(activity1.equals(activityNew)).toEqual(true);
    });
+});
 
+describe("LikeDislikeActivityRecord", function () {
+
+   var activity1: LikeDislikeActivityRecord, activity2: LikeDislikeActivityRecord, activityErr:LikeDislikeActivityRecord;
+
+   activity1 = new LikeDislikeActivityRecord(myId, myConversationId, myEmail, myHappenedAt, myUrl, true);
+
+   activity2 = new LikeDislikeActivityRecord(someoneElsesId, someoneElsesConversationId, someoneElsesEmail, someoneElsesHappenedAt, someoneElsesUrl, true);
+
+   it("Needs to construct an empty object", function () {
+
+      var activityEmpty = new LikeDislikeActivityRecord();
+
+      expect(activityEmpty.url).toEqual("");  
+      expect(activityEmpty.like).toEqual(true);         
+   });
+
+
+   it("Needs to detect invalid url", function () {
+
+      var caught: boolean = false;
+      try {
+         let activityErr = new LikeDislikeActivityRecord(myId, myConversationId, myEmail, myHappenedAt, undefined as unknown as string, true);
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).toEqual(true);
+   });
+
+
+   it("Needs to compare for equality and inequality", function () {
+
+      let activityNew = new LikeDislikeActivityRecord(activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt, activity1.url, true);
+
+      expect(activity1.equals(activity1)).toEqual(true);
+      expect(activity1.equals(activityNew)).toEqual(true);
+      expect(activity1.equals(activity2)).toEqual(false);
+   });
+
+
+   it("Needs to correctly store attributes", function () {
+         
+      expect(activity1.url === myUrl).toEqual(true);
+      expect(activity1.like).toEqual(true);      
+   });
+
+   it("Needs to copy construct", function () {
+
+      let activity2 = new LikeDislikeActivityRecord(activity1);
+
+      expect(activity1.equals(activity2) === true).toEqual(true);
+   });
+
+   it("Needs to correctly change attributes", function () {
+
+      let activityNew = new LikeDislikeActivityRecord(activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt, activity1.url, true);
+
+      activityNew.id = someoneElsesId;
+      activityNew.email = someoneElsesEmail;
+      activityNew.happenedAt = someoneElsesHappenedAt;
+      activityNew.url = someoneElsesUrl;      
+      activityNew.like = true;
+
+      expect(activity2.equals (activityNew)).toEqual(true);
+   });
+
+   it("Needs to throw errors on change url attribute", function () {
+
+      var caught: boolean = false;
+      try {
+         activity1.url = undefined as unknown as string;
+      } catch (e) {
+         caught = true;
+      }
+      expect(caught).toEqual(true);
+
+   });
+
+   it("Needs to convert to and from JSON()", function () {
+
+      var stream: string = activity1.streamOut();
+
+      let activityNew = new LikeDislikeActivityRecord (activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt, activity1.url, activity1.like);
+      activityNew.streamIn(stream);
+
+      expect(activity1.equals(activityNew)).toEqual(true);
+   });
+
+   it("Needs to dynamically create ActivityRecord to and from JSON()", function () {
+
+      let stream = activity1.flatten();
+
+      let activityNew = new LikeDislikeActivityRecord();
+
+      expect(activity1.equals(activityNew)).toEqual(false);
+
+      activityNew = MDynamicStreamable.resurrect(stream) as LikeDislikeActivityRecord;
+
+      expect(activity1.equals(activityNew)).toEqual(true);
+   });
 });
 
 var myMessage: string = "message";
@@ -402,7 +504,7 @@ describe("ActivityRepository", function () {
    throwIfUndefined (sessionKey);
    let repository = getRecordRepository(new SessionKey (sessionKey));
 
-   it("Needs to save a record", async function () {
+   it("Needs to save a URL record", async function () {
 
       var activity = new UrlActivityRecord(keyGenerator.generateKey(), "madeupconversationKey", 
                                  "jonathanverrier@hotmail.com", new Date(), 
@@ -413,6 +515,27 @@ describe("ActivityRepository", function () {
       expect(saved).toEqual(true);     
    });
 
+   it("Needs to save a LikeDislike record", async function () {
+
+      var activity = new LikeDislikeActivityRecord (keyGenerator.generateKey(), "madeupconversationKey", 
+                                 "jonathanverrier@hotmail.com", new Date(), 
+                                 "https://test.cosmos", true);
+
+      let saved = await repository.save (activity);
+
+      expect(saved).toEqual(true);     
+   });   
+
+   it("Needs to save a Message record", async function () {
+
+      var activity = new MessageActivityRecord (keyGenerator.generateKey(), "madeupconversationKey", 
+                                 "jonathanverrier@hotmail.com", new Date(), 
+                                 "Test message");
+
+      let saved = await repository.save (activity);
+
+      expect(saved).toEqual(true);     
+   });   
 
    it("Needs to load a record", async function () {
 
@@ -447,6 +570,27 @@ describe("ActivityRepositoryMongo", function () {
       expect(saved).toEqual(true);     
    });
 
+   it("Needs to save a LikeDislike record", async function () {
+
+      var activity = new LikeDislikeActivityRecord (keyGenerator.generateKey(), "madeupconversationKey", 
+                                 "jonathanverrier@hotmail.com", new Date(), 
+                                 "https://test.cosmos", true);
+
+      let saved = await repository.save (activity);
+
+      expect(saved).toEqual(true);     
+   });   
+
+   it("Needs to save a Message record", async function () {
+
+      var activity = new MessageActivityRecord (keyGenerator.generateKey(), "madeupconversationKey", 
+                                 "jonathanverrier@hotmail.com", new Date(), 
+                                 "Test message");
+
+      let saved = await repository.save (activity);
+
+      expect(saved).toEqual(true);     
+   });     
 
    it("Needs to load a record", async function () {
 

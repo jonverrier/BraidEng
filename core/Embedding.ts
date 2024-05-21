@@ -268,6 +268,11 @@ export class EmbeddingMatchAccumulator {
       return this._howMany;
    }        
    get chunks (): Array<Embedding> {
+      this._chunks.sort ((a: Embedding, b: Embedding) : number => {
+          if (!a.relevance || !b.relevance)
+             return 0;
+          return b.relevance - a.relevance;
+      });
       return this._chunks;
    }   
 
