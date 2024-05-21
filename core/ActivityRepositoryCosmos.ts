@@ -12,7 +12,7 @@ import { KeyRetriever } from "./KeyRetriever";
 import { logDbError, logApiError } from "./Logging";
 import { DynamicStreamableFactory } from "./StreamingFramework";
 import { ActivityRecord } from './ActivityRecord';
-import { UrlActivityRecord } from "./UrlActivityRecord";
+import { UrlActivityRecord } from "./ActivityRecordUrl";
 import { MessageActivityRecord } from "./MessageActivityRecord";
 import { SessionKey } from "./Keys";
 import { IActivityRepository } from "./IActivityRepository";

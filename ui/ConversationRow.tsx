@@ -66,8 +66,10 @@ export interface IConversationRowProps {
    onSend (message_: string) : void;   
    onTrimConversation () : void;   
    onExitConversation () : void;
-   onClickUrl (url_: string): void;   
    onAddSuggestedContent (): void;
+   onClickUrl (url_: string): void;   
+   onLikeUrl (url_: string): void;   
+   onDislikeUrl (url_: string): void;          
 }
 
 const headerRowStyles = makeStyles({
@@ -271,7 +273,9 @@ export const ConversationRow = (props: IConversationRowProps) => {
                               key={message.id}
                               author={Persona.safeAuthorLookup (audience, message.authorId)}
                               showAiWarning={message.authorId === EConfigStrings.kLLMGuid}
-                              onClickUrl={props.onClickUrl}                                 
+                              onClickUrl={props.onClickUrl}  
+                              onLikeUrl={props.onLikeUrl}   
+                              onDislikeUrl={props.onDislikeUrl}                                                            
                            />
                         )                     
                      })}                          
@@ -303,7 +307,9 @@ export interface ISingleMessageViewProps {
    message: Message;  
    author: Persona;
    showAiWarning: boolean;
-   onClickUrl (url_: string) : void;     
+   onClickUrl (url_: string) : void;    
+   onLikeUrl (url_: string) : void;  
+   onDislikeUrl (url_: string) : void;     
 }
 
  export interface IAuthorIconProps {
@@ -317,6 +323,8 @@ export interface IKnowledgeSegmentProps {
    segment: Embedding;  
    key: string;
    onClickUrl (url_: string) : void;    
+   onLikeUrl (url_: string) : void;  
+   onDislikeUrl (url_: string) : void;      
 }
 
 const glow = makeStyles({
@@ -455,12 +463,16 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
       // NB we call 'prevent default' as we want to control the action  
       event.stopPropagation();
       event.preventDefault();
+
+      props.onLikeUrl (segment.url);        
    }   
 
    const onClickDislike = (event: React.MouseEvent<HTMLButtonElement>): void => {
       // NB we call 'prevent default' as we want to control the action  
       event.stopPropagation();
       event.preventDefault();
+
+      props.onDislikeUrl (segment.url);       
    }   
 
    let relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
@@ -518,7 +530,9 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
 
          aiSources = props.message.chunks.map ((segment : Embedding) => {
             return <KowledgeSegmentsView sessionKey={props.sessionKey} segment={segment} key={segment.url} 
-                    onClickUrl={props.onClickUrl}/>
+                    onClickUrl={props.onClickUrl}
+                    onLikeUrl={props.onLikeUrl}
+                    onDislikeUrl={props.onDislikeUrl}/>
          })   
          aiFooter = <Text size={100}> {EUIStrings.kAiContentWarning} </Text>;   
       }
