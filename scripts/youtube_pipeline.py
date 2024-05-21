@@ -7,7 +7,7 @@ from youtube.enrich_transcript_summaries import enrich_transcript_summaries
 from youtube.enrich_transcript_embeddings import enrich_transcript_embeddings
 from text.enrich_lite import enrich_lite
 
-TRANSCRIPT_DESTINATION_DIR = "data/transcripts"
+TRANSCRIPT_DESTINATION_DIR = "data/youtube"
 
 config = ApiConfiguration()
 

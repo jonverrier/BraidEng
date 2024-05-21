@@ -6,7 +6,7 @@ from text.enrich_text_summaries import enrich_text_summaries
 from text.enrich_text_embeddings import enrich_text_embeddings
 from text.enrich_lite import enrich_lite
 
-HTML_DESTINATION_DIR = "data/html"
+HTML_DESTINATION_DIR = "data/web"
 
 config = ApiConfiguration()
 

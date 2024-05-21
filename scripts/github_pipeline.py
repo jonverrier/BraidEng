@@ -6,7 +6,7 @@ from text.enrich_text_summaries import enrich_text_summaries
 from text.enrich_text_embeddings import enrich_text_embeddings
 from text.enrich_lite import enrich_lite
 
-MARKDOWN_DESTINATION_DIR = "data/markdown"
+MARKDOWN_DESTINATION_DIR = "data/github"
 
 config = ApiConfiguration()
 

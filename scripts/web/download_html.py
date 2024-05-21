@@ -7,7 +7,6 @@ import time
 import threading
 import queue
 from pathlib import Path
-from markdown import markdown
 from bs4 import BeautifulSoup
 import requests
 import time
@@ -189,7 +188,6 @@ def build_page_list (sourceUrl, q, minimumPageTokenCount, logger, recurse):
    recurse_page_list (sourceUrl, links, 0, logger, recurse)
 
    for url in links:
-      print(url)
       q.put(url)
     
 def download_html (sourceUrl, recurse, htmlDesitinationDir, minimumPageTokenCount): 
