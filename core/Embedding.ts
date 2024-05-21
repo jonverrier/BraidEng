@@ -352,18 +352,19 @@ export class EmbeddingMatchAccumulator {
          return false;
       }
 
+      // Now check we are not piling up multiple references to the same source
+      // If it is, we bail 
+      for (let i = 0; i < this._chunks.length; i++) {
+         if (lookLikeSameSource (candidate.url, this._chunks[i].url))
+            return false;         
+      }
+            
       // If the array can grow we just add the new candidate
       if (this._chunks.length < this._howMany) {
          if (typeof candidate.relevance !== 'undefined' && candidate.relevance >= this._similarityThresholdLo) {
             this._chunks.push (candidate);
          }
          return true;
-      }
-      // Now check we are not piling up multiple references to the same source
-      // If it is, we bail 
-      for (let i = 0; i < this._chunks.length; i++) {
-         if (lookLikeSameSource (candidate.url, this._chunks[i].url))
-            return false;         
       }
 
       // Else we do a search and insert the new one if it is better than a current candidate

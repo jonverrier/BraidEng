@@ -30,7 +30,7 @@ class Counter:
 
 @retry(
     wait=wait_random_exponential(min=10, max=45),
-    stop=stop_after_attempt(20),
+    stop=stop_after_attempt(15),
     retry=retry_if_not_exception_type(openai.InvalidRequestError),
 )
 def chatgpt_summary(config, text, logger):
@@ -71,35 +71,40 @@ def chatgpt_summary(config, text, logger):
     return text
 
 
-def process_queue(config, progress, task, q, counter, logger, output_chunks):
+def process_queue(config, progress, task, q, counter, logger, output_chunks, current_chunks):
     """process the queue"""
     while not q.empty():
 
         chunk = q.get()
+        found = False
 
-        text = chunk.get("text")
+        for i in current_chunks: 
+           if i.get('sourceId') == chunk.get('sourceId'):
+              current_summary = i.get("summary")
+              current_ada = i.get("ada_v2")
+              if current_summary and len(current_summary) >= 10: 
+                 chunk["summary"] = current_summary
+                 chunk["ada_v2"] = current_ada                    
+                 found = True  
+                 break
 
-        existing = chunk.get("summary")
-
-        if (not existing or existing.len == 0):
+        if not found:           
+           text = chunk.get("text")
 
            # get a summary of the text using chatgpt
            try:
               summary = chatgpt_summary(config, text, logger)
+              # add the summary to the segment dictionary
+              chunk["summary"] = summary
+              output_chunks.append(chunk.copy())
            except openai.InvalidRequestError as invalid_request_error:
               logger.warning("Error: %s", invalid_request_error)
-              summary = text
            except Exception as e:
               logger.warning("Error: %s", e)
-              summary = text
-
-           # add the summary to the segment dictionary
-           chunk["summary"] = summary
 
         count = counter.increment()
         progress.update(task, advance=1)
 
-        output_chunks.append(chunk.copy())
         q.task_done()
 
 # convert time '00:01:20' to seconds
@@ -149,13 +154,19 @@ def enrich_transcript_summaries (config, transcriptDestinationDir):
    for chunk in chunks:
       q.put(chunk)
 
+   # load the existing chunks from a json file
+   cache_file = os.path.join(transcriptDestinationDir, "output", "master_enriched.json")
+   if os.path.isfile(cache_file):
+      with open(cache_file, "r", encoding="utf-8") as f:
+         current = json.load(f)  
+
    with Progress() as progress:
       task1 = progress.add_task("[purple]Enriching Summaries...", total=total_chunks)
 
       # create multiple threads to process the queue
       threads = []
       for i in range(config.processingThreads):
-         t = threading.Thread(target=process_queue, args=(config, progress, task1, q, counter, logger, output_chunks))
+         t = threading.Thread(target=process_queue, args=(config, progress, task1, q, counter, logger, output_chunks, current))
          t.start()
          threads.append(t)
 

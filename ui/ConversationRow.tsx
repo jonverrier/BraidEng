@@ -27,7 +27,9 @@ import {
    Send24Regular,
    Copy24Regular,
    Delete24Regular, 
-   DoorArrowLeft24Regular
+   DoorArrowLeft24Regular,
+   ThumbLikeRegular,
+   ThumbDislikeRegular
 } from '@fluentui/react-icons';
 
 import { EIcon } from '../core/Icons';
@@ -389,29 +391,39 @@ const padAfterMessage = makeStyles({
 
 const linkStyles = makeStyles({
    root: {    
-      marginRight: '10px'
-    
+      marginRight: '10px',
+      justifySelf: 'centre'      
    },
 });
 
 const greenStyles = makeStyles({
    root: {    
-      color: 'green'    
+      color: 'green',
+      justifySelf: 'centre'       
    },
 });
 
 const amberStyles = makeStyles({
    root: {    
-      color: 'orange'    
+      color: 'orange',
+      justifySelf: 'centre'  
    },
 });
 
-const segmentStyles = makeStyles({
+const chunkHeaderStyles = makeStyles({
    root: {    
       display: 'flex',
       flexDirection: 'row',
-      alignItems: 'left'
+      alignItems: 'center'
    },
+});
+
+const likeDislikeStyles = makeStyles({
+   root: {    
+      alignSelf: 'centre',
+      marginLeft: '5px',
+      marginRight: '5px'
+   }
 });
 
 const buttonStyles = makeStyles({
@@ -429,8 +441,6 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
 
    let segment = props.segment;
    let relevanceText = segment.relevance ? (segment.relevance * 100).toPrecision(2) + '%': "";
-
-   var relevanceClasses, linkClasses, segmentClasses;
    
    const onClickLink = (event: React.MouseEvent<HTMLAnchorElement>): void => {
       // NB we call 'prevent default' as we want to control the action i.e. open a  new tab. 
@@ -441,9 +451,22 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
       (window as any).open(segment.url, '_blank');
    };
 
-   relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
-   linkClasses = linkStyles();
-   segmentClasses = segmentStyles();     
+   const onClickLike = (event: React.MouseEvent<HTMLButtonElement>): void => {
+      // NB we call 'prevent default' as we want to control the action  
+      event.stopPropagation();
+      event.preventDefault();
+   }   
+
+   const onClickDislike = (event: React.MouseEvent<HTMLButtonElement>): void => {
+      // NB we call 'prevent default' as we want to control the action  
+      event.stopPropagation();
+      event.preventDefault();
+   }   
+
+   let relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
+   let linkClasses = linkStyles();
+   let chunkHeaderClasses = chunkHeaderStyles();  
+   let likeDislikeCLasses = likeDislikeStyles();   
    
    let linkText = segment.url;
    if (linkText.length > EConfigNumbers.kMaximumLinkTextlength + 3) {
@@ -451,13 +474,28 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
    }
 
    return (<div className={sourcesClasses.root} key={segment.url}>
-              <div className={segmentClasses.root}>
+              <div className={chunkHeaderClasses.root}>
                  <Link className={linkClasses.root} 
                     href={segment.url} onClick={onClickLink} inline>{linkText}                
                   </Link>
                   <Body1 className={relevanceClasses.root}> {relevanceText} </Body1>
+                  <Toolbar aria-label="Like/dislike control toolbar" >                        
+                  <ToolbarDivider />                  
+                  <Tooltip content={EUIStrings.kLikedThis} relationship="label" positioning={'above'}>                     
+                     <ToolbarButton
+                        className={likeDislikeCLasses.root}
+                        icon={<ThumbLikeRegular/>} 
+                        onClick={onClickLike}/>   
+                  </Tooltip>  
+                  <Tooltip content={EUIStrings.kDidNotLikeThis} relationship="label" positioning={'above'}>                                           
+                     <ToolbarButton 
+                        className={likeDislikeCLasses.root}                     
+                        icon={<ThumbDislikeRegular/>} 
+                        onClick={onClickDislike}/>  
+                  </Tooltip>     
+                  </Toolbar>                                              
                </div>
-               <Body1 className={segmentClasses.root}> {segment.summary} </Body1>
+               <Body1 className={chunkHeaderClasses.root}> {segment.summary} </Body1>
             </div>      
          );
 }

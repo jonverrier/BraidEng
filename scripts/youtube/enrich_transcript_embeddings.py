@@ -33,8 +33,8 @@ def normalize_text(s, sep_token=" \n "):
 
 
 @retry(
-    wait=wait_random_exponential(min=6, max=30),
-    stop=stop_after_attempt(20),
+    wait=wait_random_exponential(min=10, max=45),
+    stop=stop_after_attempt(15),
     retry=retry_if_not_exception_type(openai.InvalidRequestError),
 )
 def get_text_embedding(config, text: str):
@@ -48,18 +48,35 @@ def get_text_embedding(config, text: str):
     return embedding
 
 
-def process_queue(config, progress, task, q, output_chunks):
+def process_queue(config, progress, task, q, logger, output_chunks, current_chunks):
     """process the queue"""
 
     while not q.empty():
         chunk = q.get()
+        found = False
 
-        if "ada_v2" in chunk:
-           output_chunks.append(chunk.copy())        
-        else:
-           embedding = get_text_embedding(config, chunk["text"])
-           chunk["ada_v2"] = embedding.copy()
-           output_chunks.append(chunk.copy())
+        for i in current_chunks: 
+           if i.get('sourceId') == chunk.get('sourceId'):           
+              current_ada = i.get("ada_v2")
+              if current_ada and len(current_ada) >= 10: 
+                 found = True  
+                 chunk["ada_v2"] = current_ada                 
+                 break
+        
+        if not found:
+           if "ada_v2" in chunk:
+              output_chunks.append(chunk.copy())        
+           else:
+              # get am embedding using chatgpt
+              try:
+                 embedding = get_text_embedding(config, chunk["text"])
+                 chunk["ada_v2"] = embedding.copy()                 
+              except openai.InvalidRequestError as invalid_request_error:
+                 logger.warning("Error: %s %s", chunk.get('sourceId'), invalid_request_error)
+              except Exception as e:
+                 logger.warning("Error: %s %s", chunk.get('sourceId'), 'Unknown error')
+          
+              output_chunks.append(chunk.copy())
 
         progress.update(task, advance=1)
         q.task_done()
@@ -107,12 +124,18 @@ def enrich_transcript_embeddings (config, transcriptDestinationDir):
    for chunk in chunks:
       q.put(chunk)
 
+   # load the existing chunks from a json file
+   cache_file = os.path.join(transcriptDestinationDir, "output", "master_enriched.json")
+   if os.path.isfile(cache_file):
+      with open(cache_file, "r", encoding="utf-8") as f:
+         current = json.load(f) 
+
    with Progress() as progress:
       task1 = progress.add_task("[green]Enriching Embeddings...", total=total_chunks)
       # create multiple threads to process the queue
       threads = []
       for i in range(config.processingThreads):
-         t = threading.Thread(target=process_queue, args=(config, progress, task1, q, output_chunks))
+         t = threading.Thread(target=process_queue, args=(config, progress, task1, q, logger, output_chunks, current))
          t.start()
          threads.append(t)
 
