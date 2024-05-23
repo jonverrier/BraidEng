@@ -24,6 +24,7 @@ scripts/youtube/__pycache__/*
 scripts/web/__pycache__/*
 scripts/text/__pycache__/*
 scripts/github/__pycache__/*
+scripts/test/__pycache__/*
 coverage/*
 .nyc_output/*
 dist/*

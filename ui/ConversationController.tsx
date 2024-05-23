@@ -336,7 +336,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       storedPerson.lastSeenAt = message.sentAt;
       fluidMessagesConnection.participantCaucus().add (storedPerson.id, storedPerson);    
       
-      // Save it to the DB - asyc
+      // Save it to the DB - async
       let keyGenerator = getDefaultKeyGenerator();      
       let repository = getRecordRepository(props.sessionKey);
       let email = props.localPersona.email;
