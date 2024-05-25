@@ -7,7 +7,7 @@ const {
 module.exports = {
    devtool: 'source-map',
    entry: "./ui/AppEntry.tsx",
-   mode: "production",
+   mode: "development",
    target: 'web', 
    externals: [],
    output: {
