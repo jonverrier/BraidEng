@@ -4,7 +4,7 @@
 import { EmbeddingMatchAccumulator } from "./Embedding";
 import { Message } from "./Message";
 
-export const kDefaultSearchChunkCount: number = 3;
+export const kDefaultSearchChunkCount: number = 2;
 export const kDefaultMinimumCosineSimilarity = 0.8;
 
 export interface IEmbeddingRepository  {

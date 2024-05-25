@@ -28,9 +28,9 @@ class ApiConfiguration:
         self.processingThreads = 4
         self.openAiRequestTimeout = 60
         self.summaryWordCount = 50      # 50 word summary
-        self.chunkDurationMins = 10 # 10 minute long video clips
+        self.chunkDurationMins = 10     # 10 minute long video clips
         self.maxTokens = 4096           # Upper limit on total tokens in an API call. 10 minutes of video = 600 words = 2400 tokens, plus approx 2x headroom
-        self.discardIfBelow = 100       # Dont index if less than 100 tokens
+        self.discardIfBelow = 100       # Dont index if less than 100 tokens in an article
 
     apiType: str
     apiKey: str

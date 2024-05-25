@@ -43,6 +43,7 @@ import { SessionKey, ConversationKey } from '../core/Keys';
 import { JoinDetails } from '../core/JoinDetails';
 import { AnimatedIconButton, EAnimatedIconButtonTypes } from './AnimatedIconButton';
 import { MessagePrompt } from './MessagePrompt';
+import { Media } from '../core/Media';
 
 export interface IConversationHeaderProps {
 
@@ -481,8 +482,14 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
    let likeDislikeCLasses = likeDislikeStyles();   
    
    let linkText = segment.url;
-   if (linkText.length > EConfigNumbers.kMaximumLinkTextlength + 3) {
-      linkText = linkText.slice (0, EConfigNumbers.kMaximumLinkTextlength) + '...';
+   
+   let media = new Media();
+   let maxLength = EConfigNumbers.kMaximumLinkTextlength;
+   if (media.isSmallFormFactor()) 
+      maxLength = EConfigNumbers.kMaximumLinkTextlengthMobile;
+
+   if (linkText.length > maxLength + 3) {
+      linkText = linkText.slice (0, maxLength) + '...';
    }
 
    return (<div className={sourcesClasses.root} key={segment.url}>
