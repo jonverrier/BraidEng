@@ -8,7 +8,7 @@ export enum EEnvironment {
    
 };
 
-let environment = EEnvironment.kLocal;
+let environment = EEnvironment.kProduction;
 
 export class Environment {
 
