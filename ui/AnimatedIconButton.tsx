@@ -6,12 +6,19 @@ import React, { useState, useEffect } from 'react';
 // Fluent
 import {
    makeStyles, 
-   Button, Tooltip
+   Button, Tooltip,
+   Menu,
+   MenuButton,
+   MenuItem,
+   MenuList,
+   MenuPopover,
+   MenuTrigger,   
 } from '@fluentui/react-components';
 
 import {
    Lightbulb24Filled
 } from '@fluentui/react-icons';
+import { EUIStrings } from './UIStrings';
 
 const animatedGlowIcon = makeStyles({
   root: {        
@@ -29,6 +36,7 @@ interface IAnimatedIconButtonProps {
    promptAnimated: string;
    promptUnamimated: string; 
    onClick () : void;
+   onCancel () : void;
 }
 
 let animatedColourSequence = ['#333333', '#444444', '#555555', '#666666', '#777777', '#888888', '#999999', '#AAAAAA', '#BBBBBB', '#CCCCCC', '#DDDDDD', '#EEEEEE', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF'];
@@ -70,18 +78,40 @@ export const AnimatedIconButton = (props: IAnimatedIconButtonProps) => {
 
    const animatedGlowIconClasses = animatedGlowIcon();
 
-   const onClick = (ev: React.MouseEvent<HTMLButtonElement>) => {
+   const onClick = (ev: React.MouseEvent<HTMLDivElement>) => {
       props.onClick ();
    }
+   const onCancel = (ev: React.MouseEvent<HTMLDivElement>) => {
+      props.onCancel ();
+   }   
 
    return (
-      <Tooltip content={props.animate ? props.promptAnimated : props.promptUnamimated} relationship="label">
+         <Menu>
+            <MenuTrigger disableButtonEnhancement>
+               <MenuButton  disabled={!props.animate}
+                  icon={<Lightbulb24Filled 
+                  className={animatedGlowIconClasses.root} 
+                  primaryFill={props.animate ? animatedColourSequence[seq] : staticColourSeqeunce[0]}/>} 
+                   />
+            </MenuTrigger>
+
+            <MenuPopover>
+               <MenuList>
+                  <MenuItem onClick={onClick}>{props.promptAnimated}</MenuItem>
+                  <MenuItem onClick={onCancel}>{EUIStrings.kNoThanks}</MenuItem>
+               </MenuList>
+            </MenuPopover>
+         </Menu>              
+  );
+
+         /* 
+         <Tooltip content={props.animate ? props.promptAnimated : props.promptUnamimated} relationship="label">
          <Button 
             disabled={!props.animate}
             icon={<Lightbulb24Filled 
                className={animatedGlowIconClasses.root} 
                primaryFill={props.animate ? animatedColourSequence[seq] : staticColourSeqeunce[0]}/>} 
-            onClick={onClick}/>
-      </Tooltip> 
-  );
+            onClick={onClick}/>       
+            </Tooltip> 
+            */  
 };

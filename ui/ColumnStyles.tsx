@@ -9,7 +9,7 @@ export const innerColumnStyles = makeStyles({
       flexDirection: 'column',
       justifyContent: 'flex-start',    // start layout at the top       
       alignItems: 'center',
-      maxWidth: '720px'
+      maxWidth: '896px'
    },
 });
 
