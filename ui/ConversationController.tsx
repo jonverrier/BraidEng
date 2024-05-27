@@ -318,6 +318,10 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       setSuggested (undefined);
    }
 
+   function onCancelSuggestedContent () {
+      setSuggested (undefined);
+   }
+
    function onSend (messageText_: string) : void {
 
       throwIfUndefined (fluidConnection);
@@ -419,6 +423,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
              suggestedContent={suggested ? suggested.text: ""}
              onSend={onSend} 
              onAddSuggestedContent={onAddSuggestedContent}
+             onCancelSuggestedContent={onCancelSuggestedContent}
              onTrimConversation={onTrimConversation}
              onExitConversation={onExitConversation}             
              onClickUrl={onClickUrl}

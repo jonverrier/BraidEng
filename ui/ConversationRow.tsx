@@ -68,6 +68,7 @@ export interface IConversationRowProps {
    onTrimConversation () : void;   
    onExitConversation () : void;
    onAddSuggestedContent (): void;
+   onCancelSuggestedContent (): void;
    onClickUrl (url_: string): void;   
    onLikeUrl (url_: string): void;   
    onDislikeUrl (url_: string): void;          
@@ -290,10 +291,11 @@ export const ConversationRow = (props: IConversationRowProps) => {
                   {props.isBusy ? <DefaultSpinner/> : <div/>}              
                   <InputView 
                      onSend={onSend}
-                     onAddSuggestedContent={props.onAddSuggestedContent} 
+                     suggestedContent={props.suggestedContent} 
                      isBusy={props.isBusy}
                      hasSuggestedContent={props.hasSuggestedContent}
-                     suggestedContent={props.suggestedContent}>
+                     onAddSuggestedContent={props.onAddSuggestedContent}
+                     onCancelSuggestedContent={props.onCancelSuggestedContent}>
                      </InputView>          
                </div> 
             </div>
@@ -577,6 +579,7 @@ export interface IInputViewProps {
    suggestedContent: string;
    onSend (message_: string) : void;
    onAddSuggestedContent(): void;
+   onCancelSuggestedContent() : void;
 }
 
  const inputGroupStyles = makeStyles({
@@ -661,20 +664,19 @@ export const InputView = (props: IInputViewProps) => {
             </div>
             &nbsp;           
             <div className={buttonColumnClasses.root}>
-               <div className={buttonRowClasses.root}>
-                  <Tooltip content={EUIStrings.kSendButtonPrompt} relationship="label" positioning={'above'}>            
-                     <Button 
-                        className={buttonClasses.root}
-                        disabled={(!canSend) || (props.isBusy)}
-                        icon={<Send24Regular/>} 
-                        onClick={onMessageSend}/>                  
-                  </Tooltip>                              
-                  &nbsp;
+               <div className={buttonRowClasses.root}>                              
+                  <Button 
+                     className={buttonClasses.root}
+                     disabled={(!canSend) || (props.isBusy)}
+                     icon={<Send24Regular/>} 
+                     onClick={onMessageSend}/>                                               
+                  &nbsp;                  
                   <AnimatedIconButton animate={props.hasSuggestedContent} 
                      icon={EAnimatedIconButtonTypes.kLightBulb} 
                      promptAnimated={props.suggestedContent} 
                      promptUnamimated={EUIStrings.kAiHasNoSuggestedDocuments}
-                     onClick={props.onAddSuggestedContent}/>      
+                     onClick={props.onAddSuggestedContent}
+                     onCancel={props.onCancelSuggestedContent}/>                               
                   </div>
             </div>       
          </div>   

@@ -177,7 +177,7 @@ def run_tests(config, testDestinationDir, sourceDir, questions):
          similarity = cosine_similarity (ada, embedding)
 
          # If we pass a reasonableness threshold, count it as a hit
-         if similarity > 0.75:
+         if similarity > 0.8:
             result.hit = True
          
          # If it is the best hit so far, record the match
