@@ -11,7 +11,7 @@ module.exports = {
    target: 'web', 
    externals: [],
    output: {
-      filename: "aibot.pack.js",
+      filename: "aibot.min.js",
       devtoolModuleFilenameTemplate: '[resource-path]',  // removes the webpack:/// prefix
       libraryTarget: 'window'
    },
