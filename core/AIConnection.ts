@@ -132,13 +132,20 @@ export class AIConnection {
                // Remove the name of our LLM
                let edited = message.text.replace (EConfigStrings.kLLMRequestSignature, "");   
                
-               // Expamd 'LLM' as that seems to make a big difference to document hits 
-               if (edited.includes ("an LLM")) 
-                  edited = edited.replace ("an LLM", "a Large Language Model (LLM)");
-               if (edited.includes ("LLMs")) 
-                  edited = edited.replace ("LLMs", "Large Language Models (LLMs)");
-               if (edited.includes (" LLM "))
-                  edited = edited.replace (" LLM ", " Large Language Models (LLM) ");             
+               // Expand 'LLM' to Large Language Model (LLM) as that seems to make a big difference to document hits 
+               // This includes some common typos
+               let lookFor = [EConfigStrings.kPromptLookFor1, EConfigStrings.kPromptLookFor2, ,
+                  EConfigStrings.kPromptLookFor4, EConfigStrings.kPromptLookFor5, EConfigStrings.kPromptLookFor6
+               ] as Array<string>;
+
+               let replaceWith = [EConfigStrings.kPromptReplaceWith1, EConfigStrings.kPromptReplaceWith2, EConfigStrings.kPromptReplaceWith3,
+                  EConfigStrings.kPromptReplaceWith4, EConfigStrings.kPromptReplaceWith5, EConfigStrings.kPromptReplaceWith6
+               ] as Array<string>;
+
+               for (let i = 0; i < lookFor.length; i++) {
+                  if (edited.includes (lookFor[i])) 
+                     edited = edited.replace (lookFor[i], replaceWith[i]);
+               }             
 
                let engineeredQuestion = EConfigStrings.kInitialQuestionPrompt + EConfigStrings.kEnrichmentQuestionPrefix + edited;      
                let entry = { role: 'user', content: engineeredQuestion };
