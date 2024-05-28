@@ -16,9 +16,18 @@ import numpy as np
 from numpy.linalg import norm
 from common.ApiConfiguration import ApiConfiguration
 
+
+kOpenAiPersonaPrompt = "You are an AI assistant helping an application developer understand generative AI. You explain complex concepts in simple language, using Python examples if it helps. You limit replies to 50 words or less. If you don't know the answer, say 'I don't know'. If the question is not related to building AI applications, Python, or Large Language Models (LLMs), say 'That doesn't seem to be about AI'."
+kInitialQuestionPrompt = "You are an AI assistant helping an application developer understand generative AI. You will be presented with a question. Answer the question in a few sentences, using language a suitable for a technical graduate student will understand. Limit your reply to 50 words or less. If you don't know the answer, say 'I don't know'. If the question is not related to building AI applications, Python, or Large Language Models (LLMs), say 'That doesn't seem to be about AI'.\n"
+kEnrichmentPrompt = "You will be provided with a question about building applications that use generative AI technology. Write a 50 word summary of an article that would be a great answer to the question. Consider enriching the question with additional topics that the question asker might want to understand. Write the summary in the present tense, as though the article exists. If the question is not related to building AI applications, Python, or Large Language Models (LLMs), say 'That doesn't seem to be about AI'.\n"
+kFollowUpPrompt = "You will be provided with a summary of an article about building applications that use generative AI technology. Write a question of no more than 10 words that a reader might ask as a follow up to reading the article."
+kEnrichmentQuestionPrefix = "Question:"
+kFollowUpPrefix = "Article summary: "
+
 class test_result:
     def __init__(self) -> None:
         self.question = ""
+        self.enriched_question = ""        
         self.hit = False 
         self.hitRelevance = 0
         self.hitSummary = ""
@@ -26,11 +35,57 @@ class test_result:
         self.followUpOnTopic = ""
 
     question: str
+    enriched_question: str    
     hit: bool
     hitRelevance: float
     hitSummary: str
     followUp: str
     followUpOnTopic : str
+
+@retry(
+    wait=wait_random_exponential(min=5, max=15),
+    stop=stop_after_attempt(15),
+    retry=retry_if_not_exception_type(openai.InvalidRequestError),
+)
+def get_enriched_question(config: ApiConfiguration, text : str, logger):
+    """generate a summary using chatgpt"""
+
+    messages = [
+        {
+            "role": "system",
+            "content": kOpenAiPersonaPrompt,
+        },
+        {
+           "role": "user", 
+           "content": kEnrichmentPrompt + kEnrichmentQuestionPrefix + text
+        },
+    ]
+
+    response = openai.ChatCompletion.create(
+        deployment_id=config.azureDeploymentName,
+        model=config.modelName,
+        messages=messages,
+        temperature=0.7,
+        max_tokens=config.maxTokens,
+        top_p=0.0,
+        frequency_penalty=0,
+        presence_penalty=0,
+        stop=None,
+        request_timeout=config.openAiRequestTimeout,
+    )
+
+    text = response.get("choices", [])[0].get("message", {}).get("content", text)
+    finish_reason = response.get("choices", [])[0].get("finish_reason", "")
+
+    # print(finish_reason)
+    if finish_reason != "stop" and finish_reason != 'length' and finish_reason != "":
+        logger.warning("Stop reason: %s", finish_reason)
+        logger.warning("Text: %s", text)
+        logger.warning("Increase Max Tokens and try again")
+        exit(1)
+
+    return text
+
 
 @retry(
     wait=wait_random_exponential(min=5, max=15),
@@ -47,6 +102,7 @@ def get_text_embedding(config : ApiConfiguration, text: str, logger):
                               timeout=config.openAiRequestTimeout)
     return embedding
 
+
 @retry(
     wait=wait_random_exponential(min=5, max=15),
     stop=stop_after_attempt(15),
@@ -58,11 +114,12 @@ def get_followup_question(config: ApiConfiguration, text : str, logger):
     messages = [
         {
             "role": "system",
-            "content": "You will be provided with a summary of an article about building applications that use generative AI technology. Write a question of no more than 10 words that a reader might ask as a follow up to reading the article.",
+            "content": kFollowUpPrompt,
         },
         {
            "role": "user", 
-           "content": text},
+           "content": text
+        },
     ]
 
     response = openai.ChatCompletion.create(
@@ -105,7 +162,8 @@ def assess_followup_question(config: ApiConfiguration, text : str, logger):
         },
         {
            "role": "user", 
-           "content": text},
+           "content": text
+        },
     ]
 
     response = openai.ChatCompletion.create(
@@ -166,8 +224,10 @@ def run_tests(config, testDestinationDir, sourceDir, questions):
       result = test_result()
       result.question = question
 
-      # Convert the text of the question to a vector embedding
-      embedding = get_text_embedding(config, question, logger)
+      result.enriched_qustion = get_enriched_question (config, question, logger)
+
+      # Convert the text of the enriched question to a vector embedding
+      embedding = get_text_embedding(config, result.enriched_qustion, logger)
    
       # Iterate through the chunks we have stored 
       for chunk in current:
@@ -198,6 +258,7 @@ def run_tests(config, testDestinationDir, sourceDir, questions):
    for result in results:
       output = dict()
       output["question"] = result.question
+      output["enriched_question"] = result.enriched_qustion
       output["hit"] = result.hit   
       output["summary"] = result.hitSummary        
       output["hitRelevance"] = result.hitRelevance      

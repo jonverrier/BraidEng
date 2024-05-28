@@ -3,19 +3,18 @@ import axios from "axios";
 
 // Local
 import { SessionKey } from "./Keys";
-import { logApiError } from "./Logging";
+import { logApiError, logApiInfo } from "./Logging";
 import { Message } from './Message';
 import { Persona } from './Persona';
 import { EIcon } from './Icons';
 import { EConfigStrings } from './ConfigStrings';
 import { throwIfUndefined } from './Asserts';
-import { ConnectionError, AssertionFailedError } from "./Errors";
+import { AssertionFailedError } from "./Errors";
 import { KeyRetriever } from "./KeyRetriever";
 import { Environment, EEnvironment } from "./Environment";
 import { IEmbeddingRepository, kDefaultSearchChunkCount, kDefaultMinimumCosineSimilarity} from "./IEmbeddingRepository";
 import { getEmbeddingRepository } from "./IEmbeddingRepositoryFactory";
 import { getDefaultKeyGenerator } from "./IKeyGeneratorFactory";
-import { EUIStrings } from "../ui/UIStrings";
 
 // We allow for the equivalent of 10 minutes of chat. 10 mins * 60 words = 600 words = 2400 tokens. 
 const kMaxTokens : number= 4096;
@@ -50,6 +49,7 @@ export class AIConnection {
 
       const [directResponse, enrichedResponse] = await Promise.all ([this.makeSingleCall (allMessages), 
                                                                      this.makeSingleCall (enrichedQuery)]);
+      logApiInfo ("Enriched question for lookup:", enrichedResponse);                                                                     
       let embedding = await this.createEmbedding (enrichedResponse);
 
       let enriched = await this._embeddings.lookupMostSimilar (embedding, undefined, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);
@@ -129,7 +129,17 @@ export class AIConnection {
          if (AIConnection.isRequestForLLM(message, authors)) {
 
             if (i === messages.length -1) {
-               let edited = message.text.replace (EConfigStrings.kLLMRequestSignature, "");               
+               // Remove the name of our LLM
+               let edited = message.text.replace (EConfigStrings.kLLMRequestSignature, "");   
+               
+               // Expamd 'LLM' as that seems to make a big difference to document hits 
+               if (edited.includes ("an LLM")) 
+                  edited = edited.replace ("an LLM", "a Large Language Model (LLM)");
+               if (edited.includes ("LLMs")) 
+                  edited = edited.replace ("LLMs", "Large Language Models (LLMs)");
+               if (edited.includes (" LLM "))
+                  edited = edited.replace (" LLM ", " Large Language Models (LLM) ");             
+
                let engineeredQuestion = EConfigStrings.kInitialQuestionPrompt + EConfigStrings.kEnrichmentQuestionPrefix + edited;      
                let entry = { role: 'user', content: engineeredQuestion };
                builtQuery.push (entry);
