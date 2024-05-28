@@ -128,9 +128,18 @@ export class AIConnection {
 
          if (AIConnection.isRequestForLLM(message, authors)) {
 
-            let edited = message.text.replace (EConfigStrings.kLLMRequestSignature, "");
-            let entry = { role: 'user', content: edited };
-            builtQuery.push (entry);
+            if (i === messages.length -1) {
+               let edited = message.text.replace (EConfigStrings.kLLMRequestSignature, "");               
+               let engineeredQuestion = EConfigStrings.kInitialQuestionPrompt + EConfigStrings.kEnrichmentQuestionPrefix + edited;      
+               let entry = { role: 'user', content: engineeredQuestion };
+               builtQuery.push (entry);
+            } 
+            else {
+
+               let edited = message.text.replace (EConfigStrings.kLLMRequestSignature, "");
+               let entry = { role: 'user', content: edited };
+               builtQuery.push (entry);
+            }
          }
 
          if (AIConnection.isFromLLM(message, authors)) {

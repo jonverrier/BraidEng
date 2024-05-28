@@ -27,30 +27,26 @@ webUrls = [
 ["The Illustrated Transformer by Jay Alammar (jalammar.github.io)", "https://jalammar.github.io/illustrated-transformer/", False],
 ["The Annotated Transformer (harvard.edu)", "https://nlp.seas.harvard.edu/annotated-transformer/", False],
 ["The Illustrated Stable Diffusion by Jay Alammar Visualizing machine learning one concept at a time. (jalammar.github.io)", "https://jalammar.github.io/illustrated-stable-diffusion/", False],
-["RLHF: Reinforcement Learning from Human Feedback (huyenchip.com)", "https://huyenchip.com/2023/05/02/rlhf.html", False],
+["Huyen Chip's Blog", "https://huyenchip.com/blog/", False],
 ["Stamford CS234 - Large Language Models", "https://stanford-cs324.github.io/winter2022/lectures/", True],
 ["The Scaling Hypothesis · Gwern.net", "https://gwern.net/scaling-hypothesis", False],
 ["chinchilla's wild implications — LessWrong", "https://www.lesswrong.com/posts/6Fpvch8RR29qLEWNH/chinchilla-s-wild-implications", False],
 ["The AI Revolution: How Auto-GPT Unleashes a New Era of Automation and Creativity | by Sriram Parthasarathy | Towards AI", "https://pub.towardsai.net/the-ai-revolution-how-auto-gpt-unleashes-a-new-era-of-automation-and-creativity-2008aa2ca6ae", False],
 ["The Waluigi Effect (mega-post) — LessWrong", "https://www.lesswrong.com/posts/D7PumeYTDPfBTp3i7/the-waluigi-effect-mega-post", False],
 ["Build a GitHub Support Bot with GPT3, LangChain, and Python | Dagster Blog", "https://dagster.io/blog/chatgpt-langchain", False],
-["Building LLM applications for production (huyenchip.com)", "https://huyenchip.com/2023/04/11/llm-engineering.html", False],
 ["Prompt Engineering Guide | Prompt Engineering Guide (promptingguide.ai)", "https://www.promptingguide.ai/", False],
 ["Learn | Pinecone", "https://www.pinecone.io/learn/", True],
 ["Use Cases | Langchain", "https://python.langchain.com/v0.1/docs/use_cases/", True],
-["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter1/1", True],
-["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter2/1", True],
-["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter3/1", True],
-["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter4/1", True],
-["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter5/1", True],
-["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter6/1", True],
-["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter7/1", True],
-["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter8/1", True],
-["Introduction - Hugging Face NLP Course", "https://huggingface.co/learn/nlp-course/chapter9/1", True],
+["Hugging Face Cookbook", "https://huggingface.co/learn/cookbook", True],
 ["Open AI Cookbook", "https://cookbook.openai.com/", True],
 ["State of Open Source AI - 2023 Edition", "https://book.premai.io/state-of-open-source-ai/", True],
 ["Scaled Agile Framework 6.0", "https://scaledagileframework.com/", True],
-["Interaction Design Foundation", "https://www.interaction-design.org/literature/topics/design-thinking", True]
+["Interaction Design Foundation", "https://www.interaction-design.org/literature/topics/design-thinking", True],
+["McKinsey on AI", "https://www.mckinsey.com/capabilities/mckinsey-digital/our-insights/the-economic-potential-of-generative-ai-the-next-productivity-frontier", True],
+["A16Z Market Analysis", "https://a16z.com/for-b2b-generative-ai-apps-is-less-more/", True],
+["A16Z Market Analysis", "https://a16z.com/navigating-the-high-cost-of-ai-compute/", True],
+["A16Z Market Analysis", "https://a16z.com/financial-services-will-embrace-generative-ai-faster-than-you-think/", True],
+["A16Z Market Analysis", "https://a16z.com/who-owns-the-generative-ai-platform/", True],
 ]
 
 class UrlHit:
@@ -97,6 +93,11 @@ def countUrlHits (destinationDir, urls, fileName):
    # iterate through chunks accumulating hit count 
    for chunk in chunks:
       haveHit = False
+      haveAda = False
+
+      ada = chunk.get('hitTrackingId')  
+      if (len(ada) > 0):  
+         haveAda = True
 
       for hit in hits:
          source = chunk.get('hitTrackingId')
@@ -105,7 +106,10 @@ def countUrlHits (destinationDir, urls, fileName):
             haveHit = True
     
       #if not haveHit:
-         #raise AssertionError ('All chunks should have a hit')
+      #   raise AssertionError ('All chunks should have a hit:' + chunk.get('sourceId'))
+      
+      if not haveAda:
+         raise AssertionError ('All chunks should have a ada')      
 
    for hit in hits:  
       print (hit.desc + ', ' + hit.path + ', ' + str(hit.hits))    
