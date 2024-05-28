@@ -37,6 +37,21 @@ export enum EConfigStrings {
    kEnrichmentQuestionPrefix = "Question: ",
    kFollowUpPrefix = "Article summary: ",
 
+   // These are applied serially - watch out for adding terms in early edits that then get replaced again later on
+   // Spaces are significant
+   kPromptLookFor1 = "an LLM",
+   kPromptReplaceWith1 = "a Large Language Model (LLM)",
+   kPromptLookFor2 = "LLMs",
+   kPromptReplaceWith2 = "Large Language Models (LLMs)",   
+   kPromptLookFor3 = " LLM ",
+   kPromptReplaceWith3 = " Large Language Model (LLM) ",   
+   kPromptLookFor4 = " LLm ",
+   kPromptReplaceWith4 = " Large Language Model (LLM) ", 
+   kPromptLookFor5 = " lLM ",
+   kPromptReplaceWith5 = " Large Language Model (LLM) ",
+   kPromptLookFor6 = " LlM ",
+   kPromptReplaceWith6 = " Large Language Model (LLM) ",
+
    kErrorConnectingToKeyAPI = "Error connecting to Braid server.",
    kErrorConnectingToAiAPI = "Error connecting to AI server.",
 
@@ -53,7 +68,7 @@ export enum EConfigStrings {
    kDemoConversationKey = "acb4f61a-a825-4c73-887d-336078160df1",
 
    kEmbeddingFileUrlLocal = 'http://localhost:1337/embeddings_lite.json',
-   kEmbeddingFileUrlProduction = 'https://braidapps.io/embeddings_lite.json',   
+   kEmbeddingFileUrlProduction = 'https://braidapps.io/embeddings_lite.json'   
 };
 
 export enum EConfigNumbers {
