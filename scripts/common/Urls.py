@@ -41,12 +41,13 @@ webUrls = [
 ["Open AI Cookbook", "https://cookbook.openai.com/", True],
 ["State of Open Source AI - 2023 Edition", "https://book.premai.io/state-of-open-source-ai/", True],
 ["Scaled Agile Framework 6.0", "https://scaledagileframework.com/", True],
-["Interaction Design Foundation", "https://www.interaction-design.org/literature/topics/design-thinking", True],
 ["McKinsey on AI", "https://www.mckinsey.com/capabilities/mckinsey-digital/our-insights/the-economic-potential-of-generative-ai-the-next-productivity-frontier", True],
 ["A16Z Market Analysis", "https://a16z.com/for-b2b-generative-ai-apps-is-less-more/", True],
 ["A16Z Market Analysis", "https://a16z.com/navigating-the-high-cost-of-ai-compute/", True],
 ["A16Z Market Analysis", "https://a16z.com/financial-services-will-embrace-generative-ai-faster-than-you-think/", True],
 ["A16Z Market Analysis", "https://a16z.com/who-owns-the-generative-ai-platform/", True],
+["Interaction Design Foundation", "https://www.interaction-design.org/literature/topics/design-thinking", True],
+["UX for AI", "https://www.uxforai.com/", True]
 ]
 
 class UrlHit:
