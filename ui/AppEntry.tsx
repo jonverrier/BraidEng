@@ -27,8 +27,7 @@ export interface IAppProps {
 
 const fluidFillPageStyles = makeStyles({
    root: {
-      minHeight: "256px", // Ask for enough for at least the error message
-      minWidth: "512px",  // Ask for enough for at least the error message, plus dont crowd the entry text box - this is a trial value at 512    
+      minWidth: "512px",  // Ask for enough for at least the error message, plus don't crowd the entry text box - this is a trial value at 512    
    },
 });
 
