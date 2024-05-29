@@ -27,8 +27,8 @@ export interface IAppProps {
 
 const fluidFillPageStyles = makeStyles({
    root: {
-      height: '100vh', /* fill the screen with flex layout */ 
-      width: '100vw',  /* fill the screen with flex layout */       
+      minHeight: "256px", // Ask for enough for at least the error message
+      minWidth: "512px",  // Ask for enough for at least the error message, plus dont crowd the entry text box - this is a trial value at 512    
    },
 });
 
@@ -39,9 +39,7 @@ const pageOuterStyles = makeStyles({
       alignItems: 'stretch',  /* for a row, the main axis is vertical, flex-end is items aligned to the bottom of the row */
       justifyContent: 'center', /* for a row, the cross-axis is horizontal, center means vertically centered */
       height: '100vh', /* fill the screen with flex layout */ 
-      width: '100vw',  /* fill the screen with flex layout */       
-      minHeight: "256px", // Ask for enough for at least the error message
-      minWidth: "512px",  // Ask for enough for at least the error message, plus dont crowd the entry text box - this is a trial value at 512
+      width: '100%',  /* fill the screen with flex layout */       
       marginLeft: '0px',
       marginRight: '0px',
       marginTop: '0px',
