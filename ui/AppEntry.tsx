@@ -25,6 +25,13 @@ export interface IAppProps {
 
 }
 
+const fluidFillPageStyles = makeStyles({
+   root: {
+      height: '100vh', /* fill the screen with flex layout */ 
+      width: '100vw',  /* fill the screen with flex layout */       
+   },
+});
+
 const pageOuterStyles = makeStyles({
    root: {
       display: 'flex',
@@ -34,7 +41,7 @@ const pageOuterStyles = makeStyles({
       height: '100vh', /* fill the screen with flex layout */ 
       width: '100vw',  /* fill the screen with flex layout */       
       minHeight: "256px", // Ask for enough for at least the error message
-      minWidth: "384px",  // Ask for enough for at least the error message
+      minWidth: "512px",  // Ask for enough for at least the error message, plus dont crowd the entry text box - this is a trial value at 512
       marginLeft: '0px',
       marginRight: '0px',
       marginTop: '0px',
@@ -70,6 +77,7 @@ export const App = (props: IAppProps) => {
    const [sessionKey, setSessionKey] = useState<SessionKey>(joinAttempt.session);
    const [conversationKey, setConversationKey] = useState<ConversationKey>(joinAttempt.conversation);
 
+   const fluidFillPageClasses = fluidFillPageStyles();
    const pageOuterClasses = pageOuterStyles();
    const innerColumnClasses = innerColumnStyles();
 
@@ -116,7 +124,7 @@ export const App = (props: IAppProps) => {
    }
 
    return (
-         <FluentProvider theme={teamsDarkTheme} >            
+         <FluentProvider theme={teamsDarkTheme} className={fluidFillPageClasses.root}>            
             <div className={pageOuterClasses.root}>    
                <div className={innerColumnClasses.root}>             
       
