@@ -6,10 +6,10 @@ import React, { useState, useEffect } from 'react';
 // Fluent
 import {
    makeStyles, 
-   Button, Tooltip,
    Menu,
    MenuButton,
    MenuItem,
+   MenuDivider,
    MenuList,
    MenuPopover,
    MenuTrigger,   
@@ -98,6 +98,7 @@ export const AnimatedIconButton = (props: IAnimatedIconButtonProps) => {
             <MenuPopover>
                <MenuList>
                   <MenuItem onClick={onClick}>{props.promptAnimated}</MenuItem>
+                  <MenuDivider/>
                   <MenuItem onClick={onCancel}>{EUIStrings.kNoThanks}</MenuItem>
                </MenuList>
             </MenuPopover>

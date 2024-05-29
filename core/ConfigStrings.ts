@@ -52,6 +52,10 @@ export enum EConfigStrings {
    kPromptLookFor6 = " LlM ",
    kPromptReplaceWith6 = " Large Language Model (LLM) ",
 
+   // Use these to detect questions where we are not relevant
+   kResponseNotRelevantMarker = "That doesn't seem to be about AI",
+   kResponseDontKnowMarker = "I don't know",   
+
    kErrorConnectingToKeyAPI = "Error connecting to Braid server.",
    kErrorConnectingToAiAPI = "Error connecting to AI server.",
 
@@ -72,7 +76,7 @@ export enum EConfigStrings {
 };
 
 export enum EConfigNumbers {
-   kHelpfulPromptDelayMsecs = 3000,
+   kHelpfulPromptDelayMsecs = 1000,
    kMaximumLinkTextlength = 40,
    kMaximumLinkTextlengthMobile = 30,   
    kHelpfulPromptMinimumGapMins = 10,

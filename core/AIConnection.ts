@@ -45,18 +45,27 @@ export class AIConnection {
    // The reference summary is then used to look up good articles to add to the response.  
    async makeEnrichedCall  (messageId: string, allMessages: Array<AIMessageElement>) : Promise<Message> {
       
+      let keyGenerator = getDefaultKeyGenerator();      
       let enrichedQuery = this.buildEnrichmentQuery (allMessages);      
 
       const [directResponse, enrichedResponse] = await Promise.all ([this.makeSingleCall (allMessages), 
                                                                      this.makeSingleCall (enrichedQuery)]);
-      logApiInfo ("Enriched question for lookup:", enrichedResponse);                                                                     
-      let embedding = await this.createEmbedding (enrichedResponse);
+      logApiInfo ("Enriched question for lookup:", enrichedResponse);    
+      
+      if (!enrichedResponse.includes (EConfigStrings.kResponseNotRelevantMarker)
+      &&  !enrichedResponse.includes (EConfigStrings.kResponseDontKnowMarker)) {
 
-      let enriched = await this._embeddings.lookupMostSimilar (embedding, undefined, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);
+         let embedding = await this.createEmbedding (enrichedResponse);
+
+         let enriched = await this._embeddings.lookupMostSimilar (embedding, undefined, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);
                               
-      let keyGenerator = getDefaultKeyGenerator();
-      return new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, messageId, 
-                          directResponse, new Date(), enriched.chunks);                                                                        
+         return new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, messageId, 
+                          directResponse, new Date(), enriched.chunks);  
+      }  
+      else {
+         return new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, messageId, 
+                             enrichedResponse, new Date());         
+      }                                                                  
    }    
 
    // Asks the LLM for a question that relates to the context  
