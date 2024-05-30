@@ -134,6 +134,7 @@ def enrich_transcript_summaries (config, transcriptDestinationDir):
 
    chunks = []
    output_chunks = []
+   current = []
    total_chunks = 0
 
    counter = Counter()

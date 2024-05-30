@@ -92,7 +92,7 @@ def process_queue_for_summaries(config, progress, task, q, total_chunks, output_
         for i in current_chunks: 
            if i.get('sourceId') == chunk.get('sourceId'):
               current_summary = i.get("summary")
-              current_ada = i.get("ada_v2");
+              current_ada = i.get("ada_v2")
               if current_summary and len(current_summary) >= 10: 
                  chunk["summary"] = current_summary
                  chunk["ada_v2"] = current_ada                
