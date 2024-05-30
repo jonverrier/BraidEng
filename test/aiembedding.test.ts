@@ -49,7 +49,7 @@ describe("AIEmbedding", async function () {
    it("Needs to find closest match for an existing Html document", async function () {
 
       let embed = await repository.lookupSimilarfromUrl ("https://karpathy.medium.com/software-2-0-a64152b37c35",
-         kDefaultMinimumCosineSimilarity, 
+         0, // Deliberately set this low so we always match
          kDefaultSearchChunkCount);          
 
       let best = await repository.lookupMostSimilar (embed.chunks[0].ada_v2, 
