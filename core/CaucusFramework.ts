@@ -23,6 +23,7 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
    private _localArray: Array<AType>;
    private _shared: SharedMap;
    private _comparator: compareFn<AType> | null;
+   private _isDirty: boolean;
 
    constructor(shared_: SharedMap, comparator_: compareFn<AType> | null = null) {
       super();
@@ -31,6 +32,7 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
       this._localMap = new Map<string, AType>();
       this._localArray = new Array<AType>;
       this._comparator = comparator_;
+      this._isDirty = true;
 
       (this._shared as any).on("valueChanged", (changed: IValueChanged, local: boolean, target: SharedMap) => {
 
@@ -84,12 +86,14 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
 
       let stream = element_.flatten ();
 
-      this._shared.set(key_, stream);
+      this._shared.set(key_, stream);   
+      this._isDirty = true;         
    }
 
    remove (key_: string): boolean {
 
       return this._shared.delete(key_);
+      this._isDirty = true;      
    }
 
    amend(key: string, element: AType) {
@@ -115,6 +119,7 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
       this._shared.clear();
       this._localMap.clear();
       this._localArray = new Array<AType>();
+      this._isDirty = true;      
 
       this.doNotification(false, false, undefined);   
    }
@@ -135,25 +140,30 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
 
    currentAsArray(): Array<AType> {
 
-      // Truncate the array, then refill from the shared map.
-      this._localArray.length = 0;
+      if (this._isDirty) {
 
-      this._shared.forEach((value: any, key: string, map: Map<string, any>) => {
+         // Truncate the array, then refill from the shared map.
+         this._localArray.length = 0;
 
-         let object = MDynamicStreamable.resurrect(value) as AType;
+         this._shared.forEach((value: any, key: string, map: Map<string, any>) => {
 
-         this._localArray.push(object);
-      }); 
+            let object = MDynamicStreamable.resurrect(value) as AType;
 
-      // Sort it if a comparison function is present
-      let comparator = this._comparator;
+            this._localArray.push(object);
+         }); 
 
-      this._localArray.sort((a, b) => {
-         if (comparator)
-            return comparator (a, b);
-         else 
-            return 0;
-      });
+         // Sort it if a comparison function is present
+         let comparator = this._comparator;
+
+         this._localArray.sort((a, b) => {
+            if (comparator)
+               return comparator (a, b);
+            else 
+               return 0;
+         });
+
+         this._isDirty = false;
+      }
 
       return this._localArray;
    }
@@ -189,5 +199,7 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
             this.amend(key, value);
          }
       });
+
+      this._isDirty = true;
    }
 }

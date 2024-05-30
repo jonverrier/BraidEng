@@ -25,6 +25,7 @@ import { UrlActivityRecord } from '../core/ActivityRecordUrl';
 import { MessageActivityRecord } from '../core/MessageActivityRecord';
 import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 import { LikeDislikeActivityRecord } from '../core/ActivityRecordLikeDislike';
+import { EEnvironment, Environment } from '../core/Environment';
 
 export interface IConversationControllerProps {
 
@@ -41,6 +42,8 @@ function useForceUpdate() {
    const [value, setValue] = useState(0); // simple integer state
    return () => setValue(value => value + 1); // update state to force render
 }
+
+let firstLoad = true;
 
 export const ConversationControllerRow = (props: IConversationControllerProps) => {
 
@@ -157,7 +160,22 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       
       setConversationKey (conversationKey_);  
 
-      makeHelpfulStart (fluidMessagesConnection_);              
+      makeHelpfulStart (fluidMessagesConnection_);    
+      
+      /* Volume testing - works fine as of May 30 204 - few seconds to load 1,000 messages, view renders at interactive speed. 
+      if (firstLoad && Environment.environment() === EEnvironment.kLocal) {
+         
+         for (let i = 0; i < 1000; i++) {
+            let volumeTestMessage = new Message ();
+            volumeTestMessage.authorId = EConfigStrings.kLLMGuid;
+            volumeTestMessage.text = i.toString();
+            volumeTestMessage.sentAt = new Date();        
+            fluidMessagesConnection_.messageCaucus().add (volumeTestMessage.id, volumeTestMessage);              
+         }
+   
+         firstLoad = false;
+      }   
+      */    
    }
 
    let validater = new JoinPageValidator();
@@ -410,7 +428,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
                                            props.sessionKey, props.conversationKey)) {
       return (<div></div>);
    }
-   else
+   else {  
       return (
          <ConversationRow 
              isConnected={props.sessionKey.looksValidSessionKey() && conversationKey.looksValidConversationKey()}
@@ -432,5 +450,6 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
              >
          </ConversationRow>
       );
+   }
 }
 

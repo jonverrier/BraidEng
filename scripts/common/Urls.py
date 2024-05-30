@@ -106,8 +106,8 @@ def countUrlHits (destinationDir, urls, fileName):
             hit.hits = hit.hits + 1
             haveHit = True
     
-      #if not haveHit:
-      #   raise AssertionError ('All chunks should have a hit:' + chunk.get('sourceId'))
+      if not haveHit:
+         raise AssertionError ('All chunks should have a hit:' + chunk.get('sourceId'))
       
       if not haveAda:
          raise AssertionError ('All chunks should have a ada')      

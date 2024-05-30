@@ -88,7 +88,7 @@ describe("Caucus", function () {
       caucus.add(workingPersona.id, workingPersona);
       expect(caucus.has(workingPersona.id)).toEqual(true);
       expect(caucus.get(workingPersona.id).equals(workingPersona)).toEqual(true);
-      expect(caucus.current().size).toEqual(2); // The Bot perdona is added manually - size is alays >= 1
+      expect(caucus.current().size).toEqual(2); // The Bot persona is added manually - size is alays >= 1
 
       workingPersona.name = "Joe";
       caucus.amend(workingPersona.id, workingPersona);
@@ -195,5 +195,32 @@ describe("Caucus", function () {
       expect(tempArray[0].sentAt.getTime() <= tempArray[1].sentAt.getTime()).toEqual(true);
       expect(tempArray[1].sentAt.getTime() <= tempArray[2].sentAt.getTime()).toEqual(true);
    });   
+
+   it("Can manage a large volume of members", async function () {
+
+      let caucus = newConnection.messageCaucus();
+      let count = 1000;
+
+      let start = new Date();
+      
+      for (let i = 0; i < count; i++) {
+         var workingMessage: Message = new Message();         
+         caucus.add (workingMessage.id, workingMessage);
+         let ordered = caucus.currentAsArray();
+      }
+      
+      let middle = new Date();
+
+      for (let i = 0; i < count; i++) {
+         let ordered = caucus.currentAsArray();
+      }
+      
+      let end = new Date();
+
+      console.log ('Loading phase:' + (middle.getTime() - start.getTime()).toString() + '\n', 
+                   'Reading phase:' + (end.getTime() - middle.getTime()).toString() + '\n');
+
+      expect(caucus.currentAsArray().length).toEqual(1000);
+   }).timeout (30000);    
 });
 
