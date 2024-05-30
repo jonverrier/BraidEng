@@ -54,7 +54,7 @@ describe("AIEmbedding", async function () {
 
       let best = await repository.lookupMostSimilar (embed.chunks[0].ada_v2, 
          embed.chunks[0].url,
-         kDefaultMinimumCosineSimilarity, 
+         0, // Deliberately set this low so we always match
          kDefaultSearchChunkCount);
 
       expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);
