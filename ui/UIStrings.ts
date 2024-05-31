@@ -36,10 +36,10 @@ export enum EUIStrings {
    kTrimConversationButtonPrompt = "Delete the conversation history",
    kExitConversationButtonPrompt = "Leave this conversation",   
    kAiHasNoSuggestedDocuments = "No suggestions at present. Interacting with @Braid will generate suggestions.", 
+   kPomptToGetStarted = "Where is a good place to start learning about building applications with LLMs? With some examples in Python?",
 
    kAiNoGoodSources = "@Braid does not have good backup for this answer. AI can make mistakes. Consider checking important information.",
    kAiContentWarning = "AI can make mistakes. Consider checking important information.",
 
-   kNewUserNeedInspiration = "It looks we have a new joiner. You might like to start by clicking here, or type your own AI related query at the bottom of the page.",   
    kLLMNameReminder = "Just checking...  if you want your request to be sent to @Braid, include the phrase '@Braid' in your message. With an '@' sign."
 };

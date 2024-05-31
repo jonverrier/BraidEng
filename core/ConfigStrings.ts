@@ -79,12 +79,13 @@ export enum EConfigNumbers {
    kHelpfulPromptDelayMsecs = 1000,
    kMaximumLinkTextlength = 40,
    kMaximumLinkTextlengthMobile = 30,   
-   kHelpfulPromptMinimumGapMins = 10,
+   kHelpfulPromptMinimumGapMins = 720, // 720 is 12 hours in minutes
    kMessagePrompt2VBorder = 24,   // How much to allow for top + bottom inset
    kMessagePrompt2HBorder = 24,   // How much to allow for left & right inset
    kMessagePromptLineSpace = 8,   // How much to allow between lines
    kMessagePromptMaxCharacters = 2048,
-   kMaxDownloadWaitSeconds = 30    
+   kMaxDownloadWaitSeconds = 30,
+   kMaxMessagesBack = 20          // Go up to 20 messages back for context to send to the LLM
 }
 
 // This is used for local running only, as in browser we cannot access environment variables

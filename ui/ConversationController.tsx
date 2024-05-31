@@ -14,7 +14,7 @@ import { SessionKey, ConversationKey } from '../core/Keys';
 import { JoinDetails } from '../core/JoinDetails';
 import { JoinPageValidator } from '../core/JoinPageValidator';
 import { ConversationRow } from './ConversationRow';
-import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
+import { BraidFluidConnection } from '../core/BraidFluidConnection';
 import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } from '../core/NotificationFramework';
 import { AIConnection, AIConnector } from '../core/AIConnection';
 import { EUIStrings } from './UIStrings';
@@ -49,13 +49,13 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    const [conversation, setConversation] = useState<Array<Message>>(new Array<Message>());
    const [audience, setAudience] = useState<Map<string, Persona>>(new Map<string, Persona>());
-   const [fluidConnection, setFluidConnection] = useState<MessageBotFluidConnection | undefined>(undefined);
+   const [fluidConnection, setFluidConnection] = useState<BraidFluidConnection | undefined>(undefined);
    const [joining, setJoining] = useState<boolean> (false);
    const [conversationKey, setConversationKey] = useState<ConversationKey> (props.conversationKey);   
    const [isBusy, setIsBusy] = useState<boolean>(false);
    const [suggested, setSuggested] = useState<Message|undefined>(undefined);
 
-   function addMessage (fluidMessagesConnection_: MessageBotFluidConnection, message_: Message) : void {
+   function addMessage (fluidMessagesConnection_: BraidFluidConnection, message_: Message) : void {
 
       fluidMessagesConnection_.messageCaucus().add (message_.id, message_);
 
@@ -65,7 +65,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       forceUpdate ();         
    }
 
-   function hasRecentHepfulStart (fluidMessagesConnection_: MessageBotFluidConnection) : boolean {
+   function hasRecentHepfulStart (fluidMessagesConnection_: BraidFluidConnection) : boolean {
 
       let messageArray = fluidMessagesConnection_.messageCaucus().currentAsArray();  
 
@@ -80,7 +80,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
                let difference = currentTime.getTime() - messageTime.getTime();
 
-               if (difference < EConfigNumbers.kHelpfulPromptMinimumGapMins * 60 * 1000) {
+               if (difference < EConfigNumbers.kHelpfulPromptMinimumGapMins * 1000) {
                   return true;
                }
          }
@@ -89,29 +89,27 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       return false;
    }
 
-   function makeHelpfulStart (fluidMessagesConnection_: MessageBotFluidConnection) : void {
+   function makeHelpfulStart (fluidMessagesConnection_: BraidFluidConnection) : void {
 
       setIsBusy (true);
 
       setTimeout(() => {
 
          if (! hasRecentHepfulStart (fluidMessagesConnection_)) {
-            if (!suggested) {
-               let embeddingRespository = getEmbeddingRepository (props.sessionKey);
-               let suggestion = embeddingRespository.lookForRelatedContent (undefined, 
-                                                                            EUIStrings.kNewUserNeedInspiration);
-               suggestion.then ((message) => {
-                  if (message)
-                     setSuggested (message);
-               });
-            }
+            let message = new Message();
+
+            message.authorId = EConfigStrings.kLLMGuid;
+            message.text = EUIStrings.kPomptToGetStarted;
+            message.sentAt = new Date();   
+            
+            setSuggested(message);
          } 
          setIsBusy (false);
 
       }, EConfigNumbers.kHelpfulPromptDelayMsecs);  
    }
 
-   function initialiseConnectionState (fluidMessagesConnection_: MessageBotFluidConnection, 
+   function initialiseConnectionState (fluidMessagesConnection_: BraidFluidConnection, 
                                        conversationKey_: ConversationKey) : void {
 
       setFluidConnection (fluidMessagesConnection_);  
@@ -187,7 +185,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       setJoining(true);
 
-      let fluidMessagesConnection = new MessageBotFluidConnection ( {}, props.localPersona);
+      let fluidMessagesConnection = new BraidFluidConnection ( {}, props.localPersona);
       
       if (! (props.conversationKey.looksValidConversationKey())) {
 
@@ -226,7 +224,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    function refreshAfterTrim () : void {
 
       throwIfUndefined (fluidConnection);
-      let fluidMessagesConnection : MessageBotFluidConnection = fluidConnection;    
+      let fluidMessagesConnection : BraidFluidConnection = fluidConnection;    
 
       // Save state and force a refresh
       let messageArray = fluidMessagesConnection.messageCaucus().currentAsArray();      
@@ -246,7 +244,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    function onTrimConversation () : void {
 
       throwIfUndefined (fluidConnection);
-      let fluidMessagesConnection : MessageBotFluidConnection = fluidConnection;      
+      let fluidMessagesConnection : BraidFluidConnection = fluidConnection;      
       fluidMessagesConnection.resetMessages ();  
       refreshAfterTrim ();        
    }
@@ -318,7 +316,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    function onAddSuggestedContent () {
 
       throwIfUndefined (fluidConnection);
-      let fluidMessagesConnection : MessageBotFluidConnection = fluidConnection;
+      let fluidMessagesConnection : BraidFluidConnection = fluidConnection;
 
       throwIfUndefined (suggested);      
       suggested.sentAt = new Date(); // Need to reset date so it goes at the end. 
@@ -343,7 +341,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    function onSend (messageText_: string) : void {
 
       throwIfUndefined (fluidConnection);
-      let fluidMessagesConnection : MessageBotFluidConnection = fluidConnection;
+      let fluidMessagesConnection : BraidFluidConnection = fluidConnection;
 
       // set up a message to append
       let message = new Message ();
