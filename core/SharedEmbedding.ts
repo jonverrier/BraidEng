@@ -11,10 +11,11 @@ var keyGenerator: IKeyGenerator = getDefaultKeyGenerator();
 
 const className = "SharedEmbedding";
 
-// SharedEmbedding - URL, net like count, emails of who has liked it, emails of who has disliked it. 
+// SharedEmbedding - URL, conversation, net like count, emails of who has liked it, emails of who has disliked it. 
 export class SharedEmbedding extends MDynamicStreamable {
    private _id: string; 
    private _url: string | undefined;
+   private _conversationId: string | undefined;
    private _netLikeCount: number;
    private _likedBy: Array<string>;
    private _dislikedBy: Array<string>;
@@ -28,11 +29,12 @@ export class SharedEmbedding extends MDynamicStreamable {
     * Create a Message object
     * @param id_ - id to use to generate uniqueness 
     * @param url_ - URL
+    * @param conversationId_ - in which conversation id the 'like' happen
     * @param netLikeCount - net of likes / dislikes, likes are +ve
     * @param likedBy_ - array of email addresses of people that have liked it. 
     * @param dislikedBy_ - array of email addresses of people that have disliked it.
     */
-   public constructor(id_: string | undefined, url_: string | undefined, netLikeCount: number | undefined, 
+   public constructor(id_: string | undefined, url_: string | undefined, conversationId_: string | undefined, netLikeCount: number | undefined, 
                       likedBy_: Array<string> | undefined, dislikedBy_: Array<string> | undefined);
 
    /**
@@ -47,6 +49,7 @@ export class SharedEmbedding extends MDynamicStreamable {
 
       var localId: string = "";
       var localUrl: string | undefined = undefined;
+      var localConversationId : string | undefined = undefined;
       var localNetLikeCount: number = 0;
       var localLikes: Array<string> = new Array<string> ();
       var localDislikes: Array<string> = new Array<string> ();         
@@ -60,18 +63,20 @@ export class SharedEmbedding extends MDynamicStreamable {
 
          localId = arr[0]._id
          localUrl = arr[0]._url;
+         localConversationId = arr[0]._conversationId;
          localNetLikeCount = arr[0]._netLikeCount;         
          localLikes = arr[0]._likedBy.slice(0);
          localDislikes = arr[0]._dislikedBy.slice(0);         
       }
-      else if (arr.length === 5) {
+      else if (arr.length === 6) {
          localId = arr[0];
-         localUrl = arr[1];      
-         localNetLikeCount = arr[2];   
-         if (arr[3])      
-            localLikes = arr[3].slice(0); 
-         if (arr[4])
-            localDislikes = arr[4].slice(0);         
+         localUrl = arr[1]; 
+         localConversationId = arr[2];     
+         localNetLikeCount = arr[3];   
+         if (arr[4])      
+            localLikes = arr[4].slice(0); 
+         if (arr[5])
+            localDislikes = arr[5].slice(0);         
       }
 
       if (!SharedEmbedding.isValidId(localId)) {
@@ -80,6 +85,7 @@ export class SharedEmbedding extends MDynamicStreamable {
 
       this._id = localId;    
       this._url = localUrl;
+      this._conversationId = localConversationId;
       this._netLikeCount = localNetLikeCount;
       this._likedBy = localLikes;   
       this._dislikedBy = localDislikes;         
@@ -101,7 +107,7 @@ export class SharedEmbedding extends MDynamicStreamable {
 
    streamOut(): string {
 
-      return JSON.stringify({ id: this._id, url: this._url, 
+      return JSON.stringify({ id: this._id, url: this._url, conversationId: this._conversationId,
                             netLikeCount: this._netLikeCount, 
                             likedBy: this._likedBy, dislikedBy: this._dislikedBy});
    }
@@ -130,7 +136,7 @@ export class SharedEmbedding extends MDynamicStreamable {
       }      
 
 
-      this.assign(new SharedEmbedding (obj.id, obj.url, obj.netLikeCount, likedBy, dislikedBy));
+      this.assign(new SharedEmbedding (obj.id, obj.url, obj.conversationId, obj.netLikeCount, likedBy, dislikedBy));
    }
 
    /**
@@ -142,6 +148,9 @@ export class SharedEmbedding extends MDynamicStreamable {
    get url(): string | undefined {
       return this._url;
    }
+   get conversationId(): string | undefined {
+      return this._conversationId;
+   }   
    get netLikeCount(): number {
       return this._netLikeCount;
    }
@@ -167,6 +176,11 @@ export class SharedEmbedding extends MDynamicStreamable {
 
       this._url = url_;
    }
+
+   set conversationId(conversationId_: string | undefined) {
+
+      this._conversationId = conversationId_;
+   }   
 
    set netLikeCount (netLikeCount_: number) {
 
@@ -265,7 +279,8 @@ export class SharedEmbedding extends MDynamicStreamable {
    equals(rhs: SharedEmbedding): boolean {
 
       return ((this._id === rhs._id) &&
-         ((this._url === undefined && rhs._url === undefined) || (this._url === rhs._url)) &&         
+         ((this._url === undefined && rhs._url === undefined) || (this._url === rhs._url)) &&    
+         ((this._conversationId === undefined && rhs._conversationId === undefined) || (this._conversationId === rhs._conversationId)) &&                
          (this._netLikeCount === rhs._netLikeCount) &&         
          areSameShallowArray (this._likedBy, rhs._likedBy) &&
          areSameShallowArray (this._dislikedBy, rhs._dislikedBy));
@@ -279,6 +294,7 @@ export class SharedEmbedding extends MDynamicStreamable {
 
       this._id = rhs._id;   
       this._url = rhs._url;
+      this._conversationId = rhs._conversationId;
       this._netLikeCount = rhs._netLikeCount;
       this._likedBy = rhs._likedBy.slice(0);
       this._dislikedBy = rhs._dislikedBy.slice(0);       

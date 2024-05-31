@@ -12,19 +12,21 @@ var keyGenerator: IKeyGenerator = getDefaultKeyGenerator();
 
 var myId: string = "1234";
 var myUrl: string = "https://www.sample.com";
+var myConversationId = "1234";
 var myEmail = "jon@mail.com";
 
 var someoneElsesId: string = "5678";
 var someoneElsesUrl: string = "https://www.anothersample.com";
+var someoneElsesConversationId = "5678";
 var someoneElsesEmail = "barry@mail.com";
 
 describe("SharedEmbedding", function () {
 
    var sharedEmbedding1: SharedEmbedding, sharedEmbedding2: SharedEmbedding, messageErr:SharedEmbedding;
 
-   sharedEmbedding1 = new SharedEmbedding(myId, myUrl, 0, undefined, undefined);
+   sharedEmbedding1 = new SharedEmbedding(myId, myUrl, myConversationId, 0, undefined, undefined);
 
-   sharedEmbedding2 = new SharedEmbedding(someoneElsesId, someoneElsesUrl, 0, undefined, undefined);
+   sharedEmbedding2 = new SharedEmbedding(someoneElsesId, someoneElsesUrl, someoneElsesConversationId, 0, undefined, undefined);
 
    it("Needs to construct an empty object", function () {
 
@@ -38,7 +40,7 @@ describe("SharedEmbedding", function () {
 
       var caught: boolean = false;
       try {
-         messageErr = new SharedEmbedding(undefined, myUrl, 0, undefined, undefined);
+         messageErr = new SharedEmbedding(undefined, myUrl, myConversationId, 0, undefined, undefined);
       } catch (e) {
          caught = true;
       }
@@ -49,7 +51,7 @@ describe("SharedEmbedding", function () {
 
       var caught: boolean = false;
       try {
-         messageErr = new SharedEmbedding(1 as unknown as string, myUrl, 0, undefined, undefined);
+         messageErr = new SharedEmbedding(1 as unknown as string, myUrl, myConversationId, 0, undefined, undefined);
       } catch (e) {
          caught = true;
       }
@@ -59,7 +61,8 @@ describe("SharedEmbedding", function () {
 
    it("Needs to compare for equality and inequality", function () {
 
-      var messageNew: SharedEmbedding = new SharedEmbedding(sharedEmbedding1.id, sharedEmbedding1.url, sharedEmbedding1.netLikeCount, 
+      var messageNew: SharedEmbedding = new SharedEmbedding(sharedEmbedding1.id, sharedEmbedding1.url, 
+                                                            sharedEmbedding1.conversationId, sharedEmbedding1.netLikeCount, 
                                                             sharedEmbedding1.likedBy, sharedEmbedding1.dislikedBy);
 
       expect(sharedEmbedding1.equals(sharedEmbedding1)).toEqual(true);
@@ -97,11 +100,13 @@ describe("SharedEmbedding", function () {
 
    it("Needs to correctly change attributes", function () {
 
-      var messageNew: SharedEmbedding = new SharedEmbedding(sharedEmbedding1.id, sharedEmbedding1.url, sharedEmbedding1.netLikeCount, 
+      var messageNew: SharedEmbedding = new SharedEmbedding(sharedEmbedding1.id, sharedEmbedding1.url, 
+                                                            sharedEmbedding1.conversationId, sharedEmbedding1.netLikeCount, 
                                                             sharedEmbedding1.likedBy, sharedEmbedding1.dislikedBy);
 
       messageNew.id = someoneElsesId;
       messageNew.url = someoneElsesUrl;
+      messageNew.conversationId = someoneElsesConversationId;
 
       expect(sharedEmbedding2.equals (messageNew)).toEqual(true);
    });
@@ -122,8 +127,9 @@ describe("SharedEmbedding", function () {
 
       var stream: string = sharedEmbedding1.streamOut();
 
-      var messageNew: SharedEmbedding = new SharedEmbedding(sharedEmbedding1.id, sharedEmbedding1.url, sharedEmbedding1.netLikeCount, 
-         sharedEmbedding1.likedBy, sharedEmbedding1.dislikedBy);
+      var messageNew: SharedEmbedding = new SharedEmbedding(sharedEmbedding1.id, sharedEmbedding1.url, 
+                                                            sharedEmbedding1.conversationId, sharedEmbedding1.netLikeCount, 
+                                                            sharedEmbedding1.likedBy, sharedEmbedding1.dislikedBy);
 
       messageNew.streamIn(stream);
 
