@@ -7,7 +7,7 @@ import { EEnvironment, Environment } from '../core/Environment';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { Interest, NotificationFor } from '../core/NotificationFramework';
-import { MessageBotFluidConnection } from '../core/MessageBotFluidConnection';
+import { BraidFluidConnection } from '../core/BraidFluidConnection';
 import { EIcon } from '../core/Icons';
 import { SessionKey, ConversationKey } from '../core/Keys';
 
@@ -46,7 +46,7 @@ describe("Caucus", function () {
 
    this.timeout(10000);
 
-   var newConnection: MessageBotFluidConnection;
+   var newConnection: BraidFluidConnection;
    var persona: Persona;
    var id: ConversationKey; 
    var oldEnv : EEnvironment; 
@@ -61,7 +61,7 @@ describe("Caucus", function () {
       this.timeout(10000);
       persona = new Persona(myId, myName, myEmail, EIcon.kPersonPersona, myThumbnail, myLastSeenAt);
 
-      newConnection = new MessageBotFluidConnection({}, persona);
+      newConnection = new BraidFluidConnection({}, persona);
 
       let checked = process.env.SessionKey;
       throwIfUndefined(checked);

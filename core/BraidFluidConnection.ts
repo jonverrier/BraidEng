@@ -1,8 +1,8 @@
 import { SharedMap } from "fluid-framework";import { Persona } from './Persona';
 import { Message } from './Message';
+import { SharedEmbedding } from "./SharedEmbedding";
 import { IConnectionProps, FluidConnection } from './FluidConnection';
 import { CaucusOf } from './CaucusFramework';
-import { MDynamicStreamable } from "./StreamingFramework";
 import { throwIfUndefined } from './Asserts'; 
 import { EConfigStrings } from "./ConfigStrings";
 import { EIcon } from "./Icons";
@@ -18,12 +18,13 @@ const containerSchema = {
 
 // MessageBotFluidConnection - concrete derived class of FluidConnection
 // connects the fluid connection to two local caucuses - one for participants, another for messages
-export class MessageBotFluidConnection extends FluidConnection {
+export class BraidFluidConnection extends FluidConnection {
 
    _initialObjects: any;
    _localUser: Persona;
    _participantCaucus: CaucusOf<Persona> | undefined;
    _messageCaucus: CaucusOf<Message> | undefined;
+   _sharedEmbeddingCaucus: CaucusOf<SharedEmbedding> | undefined;
 
    constructor(props: IConnectionProps, localUser_: Persona) {
 
@@ -32,6 +33,7 @@ export class MessageBotFluidConnection extends FluidConnection {
       this._initialObjects = undefined;
       this._participantCaucus = undefined;
       this._messageCaucus = undefined;   
+      this._sharedEmbeddingCaucus = undefined;
       this._localUser = localUser_;   
    }
 
@@ -51,6 +53,7 @@ export class MessageBotFluidConnection extends FluidConnection {
       // Create caucuses so they exist when observers are notified of connection
       this._participantCaucus = new CaucusOf<Persona>(initialObjects_.participantMap as SharedMap);
       this._messageCaucus = new CaucusOf<Message>(initialObjects_.messageMap as SharedMap, this.compareFn);  
+      // TODO this._sharedEmbeddingCaucus = new CaucusOf<SharedEmbedding> (initialObjects_._sharedEmbeddingCaucus as SharedMap)
       
       this.setInitialValues(this._participantCaucus, this._messageCaucus);
 
@@ -73,6 +76,11 @@ export class MessageBotFluidConnection extends FluidConnection {
       return this._messageCaucus;
    }    
 
+   sharedEmbeddingCaucus(): CaucusOf<SharedEmbedding> {
+      throwIfUndefined (this._sharedEmbeddingCaucus);
+      return this._sharedEmbeddingCaucus;
+   } 
+
    resetMessages () : void {
 
       throwIfUndefined (this._messageCaucus);      
@@ -81,10 +89,15 @@ export class MessageBotFluidConnection extends FluidConnection {
       throwIfUndefined (this._participantCaucus);  
       this._participantCaucus.removeAll ();
 
-      this.setInitialValues (this._participantCaucus, this._messageCaucus);
+      throwIfUndefined (this._sharedEmbeddingCaucus);  
+      this._sharedEmbeddingCaucus.removeAll ();      
+
+      this.setInitialValues (this._participantCaucus, 
+                             this._messageCaucus);
    }
 
-   private setInitialValues (participantCaucus: CaucusOf<Persona>,  messageCaucus: CaucusOf<Message>): void {
+   private setInitialValues (participantCaucus: CaucusOf<Persona>,  
+                             messageCaucus: CaucusOf<Message>): void {
     
       checkAddAddSelfToAudience (participantCaucus, messageCaucus, this._localUser);
 

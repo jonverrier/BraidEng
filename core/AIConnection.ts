@@ -7,7 +7,7 @@ import { logApiError, logApiInfo } from "./Logging";
 import { Message } from './Message';
 import { Persona } from './Persona';
 import { EIcon } from './Icons';
-import { EConfigStrings } from './ConfigStrings';
+import { EConfigNumbers, EConfigStrings } from './ConfigStrings';
 import { throwIfUndefined } from './Asserts';
 import { AssertionFailedError } from "./Errors";
 import { KeyRetriever } from "./KeyRetriever";
@@ -263,8 +263,9 @@ export class AIConnection {
 
       let tokenAccumulator = 0;
       let iLowest = 0;
+      let lowestIndex = Math.max (0, messages.length - EConfigNumbers.kMaxMessagesBack)
 
-      for (let i = messages.length - 1; i >= 0 && tokenAccumulator < kMaxTokens; i--) {
+      for (let i = messages.length - 1; i >= lowestIndex && tokenAccumulator < kMaxTokens; i--) {
 
          tokenAccumulator += messages[i].tokens;
 
