@@ -10,7 +10,8 @@ import { MDynamicStreamable, DynamicStreamableFactory } from "./StreamingFramewo
 import { areSameDate, areSameDeepArray } from './Utilities';
 import { Embedding } from './Embedding';
 
-var keyGenerator: IKeyGenerator = getDefaultKeyGenerator();
+const keyGenerator: IKeyGenerator = getDefaultKeyGenerator();
+const tokenizer = new GPT4Tokenizer({ type: 'gpt3' }); 
 
 const className = "Message";
 
@@ -139,7 +140,8 @@ export class Message extends MDynamicStreamable {
       return JSON.stringify({ id: this._id, authorId: this._authorId, 
                             responseToId: this._responseToId, 
                             text: this._text, sentAt: this._sentAt,
-                            chunks: this._chunks});
+                            chunks: this._chunks,
+                            tokens: this._tokens});
    }
 
    streamIn(stream: string): void {
@@ -156,6 +158,11 @@ export class Message extends MDynamicStreamable {
          }      
       }
       this.assign(new Message (obj.id, obj.authorId, obj.responseToId, obj.text, new Date(obj.sentAt), chunks));
+
+      if (obj.tokens && obj.tokens !== 0) {
+         this._tokens = obj.tokens;
+         this._isDirty = false;
+      }  
    }
 
    /**
@@ -184,8 +191,6 @@ export class Message extends MDynamicStreamable {
    }   
    get tokens(): number {
       if (this._isDirty) {
-         const tokenizer = new GPT4Tokenizer({ type: 'gpt3' }); 
-
          let estimatedTokens = tokenizer.estimateTokenCount(this._text);
 
          if (this._chunks) {
@@ -245,6 +250,14 @@ export class Message extends MDynamicStreamable {
     */ 
    isUnPrompted () : boolean {
       return (typeof (this._responseToId) === "undefined") ;
+   }
+
+   /**
+    * force token calculation
+    */ 
+   calculateTokens () : number {
+
+      return this.tokens;
    }
 
    /**
