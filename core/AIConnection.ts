@@ -80,6 +80,61 @@ export class AIConnection {
                           enrichedResponse, new Date());                                                                        
    } 
 
+   // Makes an Axios call to call web endpoint
+   async makeSingleStreamedCall  (input: Array<AIMessageElement>, output: Message) : Promise<string> {
+      
+      let self = this;
+      self._activeCallCount++;
+      
+      let done = new Promise<string>(async function(resolve, reject) {
+   
+         const completion = await axios.post('https://braidlms.openai.azure.com/openai/deployments/braidlms/chat/completions?api-version=2024-02-01', {
+            messages: input,
+            stream: true
+         },
+         {   
+            responseType: "stream",
+            headers: {
+               'Content-Type': 'application/json',
+               'api-key': self._aiKey
+            }
+         });
+   
+         let result = "";
+         completion.data.on("data", (data: string) => {
+   
+            const lines = data
+               ?.toString()
+               ?.split("\n")
+               .filter((line) => line.trim() !== "");
+               for (const line of lines) {
+                  const text = line.replace(/^data: /, "");
+                  if (text === "[DONE]") {
+                     resolve (result);
+                  } else {
+                     let token = undefined;
+                     try {
+                        let parsed = JSON.parse(text);
+                        let choice = parsed && parsed.choices ? parsed.choices[0] : undefined
+                        token = choice && choice.delta && choice.delta.content ? choice.delta.content : undefined;
+                     } catch {
+                        console.error (text);
+                     }
+                     if (token) {
+                        result += token;                        
+                        console.log(token);
+                    }
+                 }
+              }
+         })
+         .on ("error", (data: string) => {
+            reject();               
+         });
+      });
+   
+      return done;
+   } 
+
       // Makes an Axios call to call web endpoint
    async createEmbedding  (input: string) : Promise<Array<number>> {
       
@@ -252,7 +307,7 @@ export class AIConnection {
       });
    
       return done;
-   }    
+   }      
 
    private findEarliestMessageIndexWithinTokenLimit (messages: Array<Message>, authors: Map<string, Persona>) : number {
 

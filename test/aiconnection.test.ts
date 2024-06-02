@@ -121,6 +121,26 @@ describe("AIConnection", async function () {
       expect (result.text.length > 0).toBe(true);
    });   
 
+   it("Needs to generate valid response from Open AI web endpoint using sgtreaming API", async function () {
+
+      let messages = new Array<Message>();
+      messages.length = 2;
+      messages[0] = personMessage;
+      messages[1] = botRequest;
+
+      throwIfUndefined(process);
+      throwIfUndefined(process.env);
+      throwIfUndefined(process.env.SessionKey);        
+
+      let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey));             
+      let fullQuery = caller.buildDirectQuery (messages, authors);
+      let message = new Message();
+      
+      let result = await caller.makeSingleStreamedCall (fullQuery, message);
+
+      expect (result.length > 0).toBe(true);
+   }); 
+
    function makeLongMessage (startingMessage: Message, segmentCount: number) : Message {
 
       let segments = new Array<Embedding>();      
