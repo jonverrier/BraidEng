@@ -5,6 +5,7 @@ import axios from "axios";
 import { SessionKey } from "./Keys";
 import { logApiError, logApiInfo } from "./Logging";
 import { Message } from './Message';
+import { Embedding } from "./Embedding";
 import { Persona } from './Persona';
 import { EIcon } from './Icons';
 import { EConfigNumbers, EConfigStrings } from './ConfigStrings';
@@ -15,6 +16,7 @@ import { Environment, EEnvironment } from "./Environment";
 import { IEmbeddingRepository, kDefaultSearchChunkCount, kDefaultMinimumCosineSimilarity} from "./IEmbeddingRepository";
 import { getEmbeddingRepository } from "./IEmbeddingRepositoryFactory";
 import { getDefaultKeyGenerator } from "./IKeyGeneratorFactory";
+import { parse } from "path";
 
 // We allow for the equivalent of 10 minutes of chat. 10 mins * 60 words = 600 words = 2400 tokens. 
 const kMaxTokens : number= 4096;
@@ -43,12 +45,11 @@ export class AIConnection {
    // Makes an Axios call to call web endpoint
    // Make two queries - one to get the anser to the direct question, another to ask for a reference summary. 
    // The reference summary is then used to look up good articles to add to the response.  
-   async makeEnrichedCall  (messageId: string, allMessages: Array<AIMessageElement>) : Promise<Message> {
-      
-      let keyGenerator = getDefaultKeyGenerator();      
+   async makeEnrichedCall  (responseShell: Message, allMessages: Array<AIMessageElement>) : Promise<Message> {
+          
       let enrichedQuery = this.buildEnrichmentQuery (allMessages);      
 
-      const [directResponse, enrichedResponse] = await Promise.all ([this.makeSingleCall (allMessages), 
+      const [directResponse, enrichedResponse] = await Promise.all ([this.makeSingleStreamedCall (allMessages, responseShell), 
                                                                      this.makeSingleCall (enrichedQuery)]);
       logApiInfo ("Enriched question for lookup:", enrichedResponse);    
       
@@ -59,12 +60,15 @@ export class AIConnection {
 
          let enriched = await this._embeddings.lookupMostSimilar (embedding, undefined, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);
                               
-         return new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, messageId, 
-                          directResponse, new Date(), enriched.chunks);  
+         responseShell.text = directResponse;
+
+         await this.streamEnrichment (responseShell, enriched.chunks);
+          
+         return responseShell;          
       }  
       else {
-         return new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, messageId, 
-                             enrichedResponse, new Date());         
+         responseShell.text = directResponse;   
+         return responseShell;     
       }                                                                  
    }    
 
@@ -80,37 +84,32 @@ export class AIConnection {
                           enrichedResponse, new Date());                                                                        
    } 
 
-   // Makes an Axios call to call web endpoint
+   // Makes an Axios call to call web endpoint using the streaming API
    async makeSingleStreamedCall  (input: Array<AIMessageElement>, output: Message) : Promise<string> {
       
       let self = this;
       self._activeCallCount++;
-      
+
+      output.isStreamingText = true;
+
+      let inBrowser = (typeof Blob !== "undefined");
+      inBrowser = true; // Force use of Fetch as it works on Browser and in Node. 
+            
       let done = new Promise<string>(async function(resolve, reject) {
    
-         const completion = await axios.post('https://braidlms.openai.azure.com/openai/deployments/braidlms/chat/completions?api-version=2024-02-01', {
-            messages: input,
-            stream: true
-         },
-         {   
-            responseType: "stream",
-            headers: {
-               'Content-Type': 'application/json',
-               'api-key': self._aiKey
-            }
-         });
-   
-         let result = "";
-         completion.data.on("data", (data: string) => {
-   
+         function parseData (data: any ) : void {
+
             const lines = data
                ?.toString()
                ?.split("\n")
-               .filter((line) => line.trim() !== "");
+               .filter((line: string) => line.trim() !== "");
+   
                for (const line of lines) {
                   const text = line.replace(/^data: /, "");
                   if (text === "[DONE]") {
-                     resolve (result);
+                     output.liveAppendText ("", false);  
+                     self._activeCallCount--;                                             
+                     resolve (output.text);
                   } else {
                      let token = undefined;
                      try {
@@ -120,20 +119,125 @@ export class AIConnection {
                      } catch {
                         console.error (text);
                      }
-                     if (token) {
-                        result += token;                        
-                        console.log(token);
+                     if (token) {                       
+                        output.liveAppendText (token, true);
                     }
                  }
               }
-         })
-         .on ("error", (data: string) => {
-            reject();               
-         });
-      });
+         }           
    
+         if (true) {           
+
+            const response = await fetch('https://braidlms.openai.azure.com/openai/deployments/braidlms/chat/completions?api-version=2024-02-01', {
+               method: 'POST',
+               headers: {
+                  'Content-Type': 'application/json',
+                  'api-key': self._aiKey
+               },
+               body: JSON.stringify({
+                  messages: input,
+                  stream: true
+               }),
+             });
+
+             const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
+             throwIfUndefined(reader);
+
+             while (true) {
+               const { value, done } = await reader.read();
+               if (done) {
+                  self._activeCallCount--;                     
+                  break;
+               }
+
+               parseData (value);
+            }
+         }
+         else {
+
+            const completion = await axios.post('https://braidlms.openai.azure.com/openai/deployments/braidlms/chat/completions?api-version=2024-02-01', {
+               messages: input,
+               stream: true
+            },
+            {   
+               responseType: "stream",
+               headers: {
+                  'Content-Type': 'application/json',
+                  'api-key': self._aiKey
+               }
+            });
+   
+            completion.data.on("data", (data: string) => {
+   
+               parseData (data);
+            })
+            .on ("error", (data: string) => {
+               self._activeCallCount--;            
+               output.liveAppendText ("", false);              
+               reject();               
+            });
+         }
+      });
+
       return done;
    } 
+
+   async streamEnrichment  (responseShell: Message, embeddings: Array<Embedding>) : Promise<Message> {
+
+      let done = new Promise<Message>(async function(resolve, reject) {
+
+         let shellEmbeddings = new Array<Embedding>();
+         shellEmbeddings.length = embeddings.length;
+
+         for (let i = 0; i < embeddings.length; i++) {
+            let shellEmbed = new Embedding (embeddings[i].url, "", embeddings[i].ada_v2, embeddings[i].timeStamp, embeddings[i].relevance);
+            shellEmbeddings[i] = shellEmbed;
+         }
+
+         responseShell.chunks = shellEmbeddings;
+         let index = 0;
+         let maxIndex = 4; 
+
+         if (shellEmbeddings.length > 0) {
+            let interval = setInterval ( () => {
+
+               switch (index) {
+                  case 0:
+                     if (embeddings.length > 0)
+                        shellEmbeddings[0].summary = embeddings[0].summary.slice (0, embeddings[0].summary.length / 2);
+                     break;
+                  case 1:
+                     if (embeddings.length > 1)                  
+                        shellEmbeddings[1].summary = embeddings[1].summary.slice (0, embeddings[0].summary.length / 2);                  
+                     break;  
+                  case 2:
+                     if (embeddings.length > 0)                  
+                        shellEmbeddings[0].summary = embeddings[0].summary;                  
+                     break;   
+                  case 3:
+                     if (embeddings.length > 1)                  
+                        shellEmbeddings[1].summary = embeddings[1].summary;                       
+                     break;         
+                  default:
+                     break;                                                 
+               }
+
+               responseShell.liveAppendChunks (shellEmbeddings, index == 3? false: true);
+
+               index++;
+               if (index === maxIndex) {
+                  resolve (responseShell);
+                  clearInterval(interval);
+               }
+            }, 100);
+         } 
+         else {
+            resolve (responseShell);            
+         }
+      });
+
+      return done;
+   }
 
       // Makes an Axios call to call web endpoint
    async createEmbedding  (input: string) : Promise<Array<number>> {

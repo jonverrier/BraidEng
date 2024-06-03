@@ -3,7 +3,7 @@
 // ConversationPage is largely a passive view, although it does notify the controller if the local users adds a message.
 
 // React
-import React, { useState } from 'react';
+import React, { useState, useReducer } from 'react';
 
 // Local
 import { throwIfUndefined } from '../core/Asserts';
@@ -25,7 +25,6 @@ import { UrlActivityRecord } from '../core/ActivityRecordUrl';
 import { MessageActivityRecord } from '../core/MessageActivityRecord';
 import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 import { LikeDislikeActivityRecord } from '../core/ActivityRecordLikeDislike';
-import { EEnvironment, Environment } from '../core/Environment';
 
 export interface IConversationControllerProps {
 
@@ -34,13 +33,6 @@ export interface IConversationControllerProps {
    localPersona: Persona; 
    onFluidError (hint_: string) : void;   
    onAiError (hint_: string) : void;        
-}
-
-// create a forceUpdate hook
-// https://stackoverflow.com/questions/46240647/how-to-force-a-functional-react-component-to-render
-function useForceUpdate() {
-   const [value, setValue] = useState(0); // simple integer state
-   return () => setValue(value => value + 1); // update state to force render
 }
 
 let firstLoad = true;
@@ -53,7 +45,13 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    const [joining, setJoining] = useState<boolean> (false);
    const [conversationKey, setConversationKey] = useState<ConversationKey> (props.conversationKey);   
    const [isBusy, setIsBusy] = useState<boolean>(false);
-   const [suggested, setSuggested] = useState<Message|undefined>(undefined);
+   const [suggested, setSuggested] = useState<Message|undefined>(undefined);  
+   const [key, setKey] = useState<number> (0);
+
+   const [, updateState] = React.useState<object>();
+   const forceUpdate = React.useCallback(() => updateState({}), []);
+
+   let liveText: string | undefined = undefined;
 
    function addMessage (fluidMessagesConnection_: BraidFluidConnection, message_: Message) : void {
 
@@ -115,7 +113,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       setFluidConnection (fluidMessagesConnection_);  
 
       // Notifications function for adds, removes, changes
-      // Warning - this function must be decalred after the call to setFluidConnection(), else it binds to the original value - which is always undefined. 
+      // Warning - this function must be declared after the call to setFluidConnection(), else it binds to the original value - which is always undefined. 
       // **************************************
       let remoteChanged = function (interest: Interest, data: NotificationFor<Message>) : void {
 
@@ -216,10 +214,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       }
    }
 
-   audience.set (props.localPersona.id, props.localPersona);
-
-   // call the force update hook 
-   const forceUpdate = useForceUpdate();   
+   audience.set (props.localPersona.id, props.localPersona);  
    
    function refreshAfterTrim () : void {
 
@@ -337,11 +332,30 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    function onCancelSuggestedContent () {
       setSuggested (undefined);
    }
+ 
+   // Hook the message for updates via streaming
+   // When we get an update, push it to shared memory for other clients and then refresh the local UI
+   let onStreamedUpdate = function  (message: Message, more: boolean) {
+
+      if (fluidConnection) {
+
+         fluidConnection.messageCaucus().amend (message.id, message); 
+              
+         if (more)
+            liveText = message.text;      
+         else
+            liveText = undefined;
+
+         setKey (Math.random());
+
+         console.log ("onStreamedUpdate: " + liveText);
+      }
+   }     
 
    function onSend (messageText_: string) : void {
 
       throwIfUndefined (fluidConnection);
-      let fluidMessagesConnection : BraidFluidConnection = fluidConnection;
+      let fluidMessagesConnection : BraidFluidConnection = fluidConnection;       
 
       // set up a message to append
       let message = new Message ();
@@ -351,10 +365,11 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       // Push it to shared data
       fluidMessagesConnection.messageCaucus().add (message.id, message);
+
       // Update the timestamp of the person who posted it
       let storedPerson = fluidMessagesConnection.participantCaucus().get (props.localPersona.id);
       storedPerson.lastSeenAt = message.sentAt;
-      fluidMessagesConnection.participantCaucus().add (storedPerson.id, storedPerson);    
+      fluidMessagesConnection.participantCaucus().amend (storedPerson.id, storedPerson);    
       
       // Save it to the DB - async
       let keyGenerator = getDefaultKeyGenerator();      
@@ -379,21 +394,28 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
          let connectionPromise = AIConnector.connect (props.sessionKey);
 
-         connectionPromise.then ( (connection : AIConnection) => {
+         connectionPromise.then ( (connection : AIConnection) => {           
 
             let query = connection.buildDirectQuery (messageArray, audienceMap);
+            let responseShell = new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, message.id, 
+                                             "", new Date()); 
 
-            connection.makeEnrichedCall (message.id, query).then ((result_: Message) => {
-               
-               // Push it to shared data
-               addMessage (fluidMessagesConnection, result_);
+            // Push the shell to shared data
+            addMessage (fluidMessagesConnection, responseShell);                                             
+            
+            responseShell.hookLiveAppend (onStreamedUpdate);
 
-               setIsBusy(false);                         
+            connection.makeEnrichedCall (responseShell, query).then ((result_: Message) => {            
+
+               setIsBusy(false);    
+               responseShell.unhookLiveAppend();     
+               fluidConnection.messageCaucus().amend (result_.id, result_);                                               
 
             }).catch ( (e: any) => {
                
                props.onAiError (EUIStrings.kAiApiError);
-               setIsBusy(false);                
+               setIsBusy(false);      
+               responseShell.unhookLiveAppend();                                          
             });            
 
          }).catch ( (e: any) => {
@@ -416,7 +438,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
          // Push it to shared data
          addMessage (fluidMessagesConnection, response);                         
       }
-
+      console.log ("onSend, end : " + liveText);
       forceUpdate ();      
    } 
 
@@ -428,7 +450,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    }
    else {  
       return (
-         <ConversationRow 
+         <ConversationRow key = {key}
              isConnected={props.sessionKey.looksValidSessionKey() && conversationKey.looksValidConversationKey()}
              isBusy = {isBusy}
              sessionKey={props.sessionKey}
@@ -444,7 +466,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
              onExitConversation={onExitConversation}             
              onClickUrl={onClickUrl}
              onLikeUrl={onLikeUrl}    
-             onDislikeUrl={onDislikeUrl}                      
+             onDislikeUrl={onDislikeUrl}                    
              >
          </ConversationRow>
       );

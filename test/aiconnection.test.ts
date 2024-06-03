@@ -1,7 +1,7 @@
 'use strict';
 // Copyright Braid Technologies ltd, 2024
 import { throwIfUndefined } from '../core/Asserts';
-import { Message} from '../core/Message';
+import { Message, MessageStreamingHandler} from '../core/Message';
 import { Embedding } from '../core/Embedding';
 import { Persona} from '../core/Persona';
 import { EIcon } from '../core/Icons';
@@ -116,12 +116,13 @@ describe("AIConnection", async function () {
 
       let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey));             
       let fullQuery = caller.buildDirectQuery (messages, authors);
-      let result = await caller.makeEnrichedCall ("1", fullQuery);
+      let message = new Message();      
+      let result = await caller.makeEnrichedCall (message, fullQuery);
 
       expect (result.text.length > 0).toBe(true);
    });   
 
-   it("Needs to generate valid response from Open AI web endpoint using sgtreaming API", async function () {
+   it("Needs to generate valid response from Open AI web endpoint using streaming API", async function () {
 
       let messages = new Array<Message>();
       messages.length = 2;
@@ -135,10 +136,20 @@ describe("AIConnection", async function () {
       let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey));             
       let fullQuery = caller.buildDirectQuery (messages, authors);
       let message = new Message();
-      
+
+      let called = false;
+      function handler (text: Message, more: boolean) {
+         called = true;
+      }
+
+      message.hookLiveAppend (handler);
+
       let result = await caller.makeSingleStreamedCall (fullQuery, message);
 
       expect (result.length > 0).toBe(true);
+      expect (message.text.length > 0).toBe(true);    
+      expect (message.isStreamingText).toBe(false);    
+      expect (called).toBe(true);                
    }); 
 
    function makeLongMessage (startingMessage: Message, segmentCount: number) : Message {

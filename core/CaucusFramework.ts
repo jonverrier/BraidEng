@@ -23,7 +23,7 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
    private _localArray: Array<AType>;
    private _shared: SharedMap;
    private _comparator: compareFn<AType> | null;
-   private _isDirty: boolean;
+   private _isCachedArrayDirty: boolean;
 
    constructor(shared_: SharedMap, comparator_: compareFn<AType> | null = null) {
       super();
@@ -32,7 +32,7 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
       this._localMap = new Map<string, AType>();
       this._localArray = new Array<AType>;
       this._comparator = comparator_;
-      this._isDirty = true;
+      this._isCachedArrayDirty = true;
 
       (this._shared as any).on("valueChanged", (changed: IValueChanged, local: boolean, target: SharedMap) => {
 
@@ -62,18 +62,33 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
             this.notifyObservers(CaucusOf.caucusMemberChangedInterest, 
                new NotificationFor<string>(CaucusOf.caucusMemberChangedInterest, 
                   key_ as string));
+
+            if (key_) {
+               let element = this._shared.get(key_);      
+               throwIfUndefined (element);
+            
+               let object = MDynamicStreamable.resurrect(element) as AType;                  
+               this.updateCache (object); 
+            }
+            else {
+               this._isCachedArrayDirty = true;   
+            }
          }
          else {
 
             this.notifyObservers(CaucusOf.caucusMemberRemovedInterest, 
                new NotificationFor<string>(CaucusOf.caucusMemberRemovedInterest, 
                   key_ as string));
+
+            this._isCachedArrayDirty = true;                   
          }
       } else {
 
          this.notifyObservers(CaucusOf.caucusMemberAddedInterest, 
             new NotificationFor<string>(CaucusOf.caucusMemberAddedInterest, 
                key_ as string));
+
+         this._isCachedArrayDirty = true;                
       }
    }
 
@@ -87,13 +102,13 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
       let stream = element_.flatten ();
 
       this._shared.set(key_, stream);   
-      this._isDirty = true;         
+      this._isCachedArrayDirty = true;         
    }
 
    remove (key_: string): boolean {
 
       return this._shared.delete(key_);
-      this._isDirty = true;      
+      this._isCachedArrayDirty = true;      
    }
 
    amend(key: string, element: AType) {
@@ -101,6 +116,8 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
       let stream = element.flatten();
 
       this._shared.set(key, stream);
+
+      this.updateCache (element);    
    }
 
    get (key_: string) : AType {
@@ -119,7 +136,7 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
       this._shared.clear();
       this._localMap.clear();
       this._localArray = new Array<AType>();
-      this._isDirty = true;      
+      this._isCachedArrayDirty = true;      
 
       this.doNotification(false, false, undefined);   
    }
@@ -140,7 +157,7 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
 
    currentAsArray(): Array<AType> {
 
-      if (this._isDirty) {
+      if (this._isCachedArrayDirty) {
 
          // Truncate the array, then refill from the shared map.
          this._localArray.length = 0;
@@ -162,7 +179,7 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
                return 0;
          });
 
-         this._isDirty = false;
+         this._isCachedArrayDirty = false;
       }
 
       return this._localArray;
@@ -200,6 +217,48 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
          }
       });
 
-      this._isDirty = true;
+      this._isCachedArrayDirty = true;
    }
+
+   private updateCache (item: AType): Array<AType> {
+
+      let found = false;
+
+      if (this._comparator && this._localArray) {
+         let i = this.binarySearch (this._localArray, item, this._comparator);
+         if (i !== -1) {
+            this._localArray[i] = item;
+            found = true;
+         }
+      }
+
+      if (!found) {
+         this._isCachedArrayDirty = true;
+      }
+
+      return this.currentAsArray();
+   }
+
+   binarySearch(arr: Array<AType>, element: AType, compare_fn: compareFn<AType>) : number {
+
+      let m = 0;
+      let n = arr.length - 1;
+      
+      while (m <= n) {
+          let k = (n + m) >> 1;
+          let cmp = compare_fn(element, arr[k]);
+          if (cmp > 0) {
+             m = k + 1;
+          } 
+          else 
+          if (cmp < 0) {
+             n = k - 1;
+          } 
+          else {
+             return k;
+          }
+      }
+      return -1;
+   }   
 }
+
