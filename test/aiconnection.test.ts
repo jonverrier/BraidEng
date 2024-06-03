@@ -145,10 +145,11 @@ describe("AIConnection", async function () {
       message.hookLiveAppend (handler);
 
       let result = await caller.makeSingleStreamedCall (fullQuery, message);
+      message.unhookLiveAppend ();
 
       expect (result.length > 0).toBe(true);
       expect (message.text.length > 0).toBe(true);    
-      expect (message.isStreamingText).toBe(false);    
+      expect (message.isStreaming).toBe(false);    
       expect (called).toBe(true);                
    }); 
 

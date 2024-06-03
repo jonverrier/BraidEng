@@ -266,7 +266,7 @@ export class Message extends MDynamicStreamable {
       this._chunks = chunks_;
       this._isTokenCacheDirty = true;      
    }
-   set isStreamingText (isStreaming: boolean) {
+   set isStreaming (isStreaming: boolean) {
 
       this._isStreaming = isStreaming;
    } 

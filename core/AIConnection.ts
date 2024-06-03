@@ -90,7 +90,7 @@ export class AIConnection {
       let self = this;
       self._activeCallCount++;
 
-      output.isStreamingText = true;
+      output.isStreaming = true;
 
       let inBrowser = (typeof Blob !== "undefined");
       inBrowser = true; // Force use of Fetch as it works on Browser and in Node. 
