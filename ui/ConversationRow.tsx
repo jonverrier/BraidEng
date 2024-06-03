@@ -35,7 +35,7 @@ import {
 import { EIcon } from '../core/Icons';
 import { EConfigNumbers, EConfigStrings }  from '../core/ConfigStrings';
 import { Persona } from '../core/Persona';
-import { Message } from '../core/Message';
+import { Message, MessageStreamingHandler } from '../core/Message';
 import { Embedding } from '../core/Embedding';
 import { EUIStrings } from './UIStrings';
 import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
@@ -519,6 +519,13 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
                <Body1 className={chunkHeaderClasses.root}> {segment.summary} </Body1>
             </div>      
          );
+}
+
+// create a forceUpdate hook
+// https://stackoverflow.com/questions/46240647/how-to-force-a-functional-react-component-to-render
+function useForceUpdate() {
+   const [value, setValue] = useState(0); // simple integer state
+   return () => setValue(value => value + 1); // update state to force render
 }
 
 export const SingleMessageView = (props: ISingleMessageViewProps) => {

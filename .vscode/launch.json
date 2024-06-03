@@ -13,7 +13,7 @@
             "args": [
                 "-r",
                 "ts-node/register",
-                "${workspaceRoot}/test/caucus*.ts",
+                "${workspaceRoot}/test/aicon*.ts",
                 "--no-timeouts"
             ],
             "cwd": "${workspaceRoot}"

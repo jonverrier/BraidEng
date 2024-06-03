@@ -15,6 +15,8 @@ const tokenizer = new GPT4Tokenizer({ type: 'gpt3' });
 
 const className = "Message";
 
+export type MessageStreamingHandler = (message: Message, more: boolean) => void;
+
 // Message - text, plus IDs for the message itself, if its a reply, the person who sent it, and a date-time stamp
 export class Message extends MDynamicStreamable {
    private _id: string;
@@ -24,7 +26,9 @@ export class Message extends MDynamicStreamable {
    private _sentAt: Date;
    private _chunks: Array<Embedding>;
    private _tokens: number;
-   private _isDirty: boolean;
+   private _isTokenCacheDirty: boolean;
+   private _isStreaming: boolean;   
+   private _streamHandler: MessageStreamingHandler | undefined;
 
    /**
     * Create an empty Message object - required for particiation in serialisation framework
@@ -72,7 +76,9 @@ export class Message extends MDynamicStreamable {
          this._sentAt = new Date();
          this._chunks = new Array<Embedding> ();
          this._tokens = 0;
-         this._isDirty = true;
+         this._isTokenCacheDirty = true;
+         this._isStreaming = false;     
+         this._streamHandler = undefined;
          return;
       }
 
@@ -119,7 +125,9 @@ export class Message extends MDynamicStreamable {
       this._sentAt = localSentAt;
       this._chunks = localChunks;
       this._tokens = 0;
-      this._isDirty = true;      
+      this._isTokenCacheDirty = true;   
+      this._isStreaming = false;        
+      this._streamHandler = undefined;      
    }
 
    /**
@@ -141,7 +149,8 @@ export class Message extends MDynamicStreamable {
                             responseToId: this._responseToId, 
                             text: this._text, sentAt: this._sentAt,
                             chunks: this._chunks,
-                            tokens: this._tokens});
+                            tokens: this._tokens,
+                            isStreaming: this._isStreaming});
    }
 
    streamIn(stream: string): void {
@@ -158,11 +167,21 @@ export class Message extends MDynamicStreamable {
          }      
       }
       this.assign(new Message (obj.id, obj.authorId, obj.responseToId, obj.text, new Date(obj.sentAt), chunks));
+      
+      this._isTokenCacheDirty = true; 
 
       if (obj.tokens && obj.tokens !== 0) {
          this._tokens = obj.tokens;
-         this._isDirty = false;
-      }  
+         this._isTokenCacheDirty = false;          
+      }       
+
+      // This is for backwards compatibility - the 'streaming' concept was introduced after
+      // the set of Fluid containers were set up, so it is not stored on many messages. 
+      // So we have to check if the attribute exists
+      if (typeof  obj.isStreaming === "undefined")
+         this._isStreaming = false;
+      else
+         this._isStreaming = obj.isStreaming;               
    }
 
    /**
@@ -187,10 +206,10 @@ export class Message extends MDynamicStreamable {
       return this._chunks;
    }
    get isDirty(): boolean {
-      return this._isDirty;
+      return this._isTokenCacheDirty;
    }   
    get tokens(): number {
-      if (this._isDirty) {
+      if (this._isTokenCacheDirty) {
          let estimatedTokens = tokenizer.estimateTokenCount(this._text);
 
          if (this._chunks) {
@@ -199,7 +218,7 @@ export class Message extends MDynamicStreamable {
             }
          }
          this._tokens = estimatedTokens;
-         this._isDirty = false;
+         this._isTokenCacheDirty = false;
       }
       return this._tokens;
    }    
@@ -207,6 +226,9 @@ export class Message extends MDynamicStreamable {
       throwIfUndefined (this._responseToId);        
       return this._responseToId;
    }
+   get isStreaming (): boolean {
+      return this._isStreaming;
+   }          
 
    /**
    * set of 'setters' for private variables
@@ -227,7 +249,7 @@ export class Message extends MDynamicStreamable {
    set text (text_: string) {
 
       this._text = text_;
-      this._isDirty = true;
+      this._isTokenCacheDirty = true;
    }
 
    set responseToId(responseToId_: string) {
@@ -242,8 +264,12 @@ export class Message extends MDynamicStreamable {
 
    set chunks (chunks_: Array<Embedding>) {
       this._chunks = chunks_;
-      this._isDirty = true;      
+      this._isTokenCacheDirty = true;      
    }
+   set isStreamingText (isStreaming: boolean) {
+
+      this._isStreaming = isStreaming;
+   } 
 
    /**
     * is this message unprompted i.e. not a reply.  
@@ -259,6 +285,52 @@ export class Message extends MDynamicStreamable {
 
       return this.tokens;
    }
+
+   /**
+    * Use this when live streaming text from server into a message
+    */ 
+   hookLiveAppend (handler: MessageStreamingHandler) : void {
+         
+      this._isStreaming = true;
+      this._streamHandler = handler;
+   }
+   
+   /**
+    * Use this when live streaming text from server into a message
+    */ 
+   unhookLiveAppend () : void {
+         
+      this._isStreaming = false;
+      this._streamHandler = undefined;
+   }
+
+   /**
+    * Use this when live streaming text from server into a message
+    */ 
+   liveAppendText (append: string, more: boolean) : string {
+         
+      this.text = this.text.concat (append);
+
+      if (this._streamHandler) {
+         this._streamHandler (this, more);
+      }
+
+      return this.text;
+   }
+
+  /**
+    * Use this when live streaming chunks from server into a message
+    */ 
+      liveAppendChunks (chunks: Array<Embedding>, more: boolean) : string {
+         
+         this._chunks = chunks;
+   
+         if (this._streamHandler) {
+            this._streamHandler (this, more);
+         }
+   
+         return this.text;
+      }
 
    /**
     * test for equality - checks all fields are the same. 
@@ -287,7 +359,8 @@ export class Message extends MDynamicStreamable {
       this._sentAt = new Date (rhs._sentAt);
       this._chunks = rhs._chunks;
       this._tokens = 0;
-      this._isDirty = true;      
+      this._isTokenCacheDirty = true;    
+      this._isStreaming = false;  
 
       return this;
    }
