@@ -12,7 +12,8 @@ import { EIcon } from "./Icons";
 const containerSchema = {
    initialObjects: {
       participantMap: SharedMap,
-      messageMap: SharedMap
+      messageMap: SharedMap,
+      sharedEmbeddingMap: SharedMap
    }
 };
 
@@ -53,7 +54,7 @@ export class BraidFluidConnection extends FluidConnection {
       // Create caucuses so they exist when observers are notified of connection
       this._participantCaucus = new CaucusOf<Persona>(initialObjects_.participantMap as SharedMap);
       this._messageCaucus = new CaucusOf<Message>(initialObjects_.messageMap as SharedMap, this.compareFn);  
-      // TODO this._sharedEmbeddingCaucus = new CaucusOf<SharedEmbedding> (initialObjects_._sharedEmbeddingCaucus as SharedMap)
+      this._sharedEmbeddingCaucus = new CaucusOf<SharedEmbedding> (initialObjects_.sharedEmbeddingMap as SharedMap)
       
       this.setInitialValues(this._participantCaucus, this._messageCaucus);
 
