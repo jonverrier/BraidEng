@@ -79,6 +79,7 @@ const dropdownStyles = makeStyles({
  });
 
  function conversationKeyFromName (name: string) : ConversationKey {
+   
    switch (name) {
       case EUIStrings.kTestConversationName:
          return new ConversationKey ("");  
