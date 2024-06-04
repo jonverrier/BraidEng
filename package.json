@@ -15,7 +15,8 @@
       "test-mini": "mocha --debug-brk --require ts-node/register -g AIConn*",
       "cover": "tsc && nyc mocha --require ts-node/register test/*.test.ts",
       "local-fluid": "npx @fluidframework/azure-local-service@latest",
-      "embeddings-lite": "mocha --require ts-node/register scripts/make_lite_embedding.ts && copy data\\embeddings_lite.json ..\\braidweb\\public"
+      "embeddings-lite": "mocha --require ts-node/register scripts/make_lite_embedding.ts && copy data\\embeddings_lite.json ..\\braidweb\\public",
+      "new-conversation": "mocha --require ts-node/register scripts/make_new_container.ts"      
    },
    "devDependencies": {
       "@fluentui/react-components": "^9.44.0",
