@@ -16,7 +16,7 @@ import { JoinDetails } from '../core/JoinDetails';
 import { EUIStrings } from './UIStrings';
 import { innerColumnStyles } from './ColumnStyles';
 import { EMainPageMessageTypes, MainPageMessageRow } from './MainPageMessage';
-import { JoinRow } from './JoinRow';
+import { JoinRow } from './JoinPane';
 import { ConversationControllerRow } from './ConversationController';
 import { SessionKey, ConversationKey } from '../core/Keys';
 import { EConfigStrings } from '../core/ConfigStrings';

@@ -53,7 +53,8 @@ export abstract class FluidConnection {
                }
 
                resolve (new ConversationKey (containerId));
-            }).catch(() => {
+            }).catch((e: any) => {
+               logApiError ("Error connecting to conversation: ", e);               
                reject ();
             });
          });

@@ -16,9 +16,7 @@ export class SharedEmbedding extends MDynamicStreamable {
    private _id: string; 
    private _url: string | undefined;
    private _conversationId: string | undefined;
-   private _netLikeCount: number;
    private _likedBy: Array<string>;
-   private _dislikedBy: Array<string>;
 
    /**
     * Create an empty Message object - required for particiation in serialisation framework
@@ -30,12 +28,10 @@ export class SharedEmbedding extends MDynamicStreamable {
     * @param id_ - id to use to generate uniqueness 
     * @param url_ - URL
     * @param conversationId_ - in which conversation id the 'like' happen
-    * @param netLikeCount - net of likes / dislikes, likes are +ve
-    * @param likedBy_ - array of email addresses of people that have liked it. 
-    * @param dislikedBy_ - array of email addresses of people that have disliked it.
+    * @param likedBy_ - array of names of people that have liked it. 
     */
-   public constructor(id_: string | undefined, url_: string | undefined, conversationId_: string | undefined, netLikeCount: number | undefined, 
-                      likedBy_: Array<string> | undefined, dislikedBy_: Array<string> | undefined);
+   public constructor(id_: string | undefined, url_: string | undefined, conversationId_: string | undefined,  
+                      likedBy_: Array<string> | undefined);
 
    /**
     * Create a SharedEmbedding object
@@ -50,9 +46,7 @@ export class SharedEmbedding extends MDynamicStreamable {
       var localId: string = "";
       var localUrl: string | undefined = undefined;
       var localConversationId : string | undefined = undefined;
-      var localNetLikeCount: number = 0;
-      var localLikes: Array<string> = new Array<string> ();
-      var localDislikes: Array<string> = new Array<string> ();         
+      var localLikes: Array<string> = new Array<string> ();        
 
       if (arr.length === 0) {
 
@@ -63,20 +57,15 @@ export class SharedEmbedding extends MDynamicStreamable {
 
          localId = arr[0]._id
          localUrl = arr[0]._url;
-         localConversationId = arr[0]._conversationId;
-         localNetLikeCount = arr[0]._netLikeCount;         
-         localLikes = arr[0]._likedBy.slice(0);
-         localDislikes = arr[0]._dislikedBy.slice(0);         
+         localConversationId = arr[0]._conversationId;         
+         localLikes = arr[0]._likedBy.slice(0);         
       }
-      else if (arr.length === 6) {
+      else if (arr.length === 4) {
          localId = arr[0];
          localUrl = arr[1]; 
          localConversationId = arr[2];     
-         localNetLikeCount = arr[3];   
-         if (arr[4])      
-            localLikes = arr[4].slice(0); 
-         if (arr[5])
-            localDislikes = arr[5].slice(0);         
+         if (arr[3])      
+            localLikes = arr[3].slice(0);     
       }
 
       if (!SharedEmbedding.isValidId(localId)) {
@@ -86,9 +75,7 @@ export class SharedEmbedding extends MDynamicStreamable {
       this._id = localId;    
       this._url = localUrl;
       this._conversationId = localConversationId;
-      this._netLikeCount = localNetLikeCount;
-      this._likedBy = localLikes;   
-      this._dislikedBy = localDislikes;         
+      this._likedBy = localLikes;           
    }
 
    /**
@@ -108,8 +95,7 @@ export class SharedEmbedding extends MDynamicStreamable {
    streamOut(): string {
 
       return JSON.stringify({ id: this._id, url: this._url, conversationId: this._conversationId,
-                            netLikeCount: this._netLikeCount, 
-                            likedBy: this._likedBy, dislikedBy: this._dislikedBy});
+                            likedBy: this._likedBy});
    }
 
    streamIn(stream: string): void {
@@ -117,7 +103,6 @@ export class SharedEmbedding extends MDynamicStreamable {
       const obj = JSON.parse(stream);
 
       let likedBy = new Array<string> (); 
-      let dislikedBy = new Array<string> ();
 
       let objLikes = obj.likedBy;
 
@@ -125,18 +110,10 @@ export class SharedEmbedding extends MDynamicStreamable {
          for (let i = 0; i < objLikes.length; i++) {
             likedBy.push (objLikes[i]);
          }      
-      }
-
-      let objDislikes = obj.dislikedBy;
-
-      if (objDislikes) {
-         for (let i = 0; i < objDislikes.length; i++) {
-            dislikedBy.push (objDislikes[i]);
-         }      
-      }      
+      }     
 
 
-      this.assign(new SharedEmbedding (obj.id, obj.url, obj.conversationId, obj.netLikeCount, likedBy, dislikedBy));
+      this.assign(new SharedEmbedding (obj.id, obj.url, obj.conversationId, likedBy));
    }
 
    /**
@@ -152,14 +129,11 @@ export class SharedEmbedding extends MDynamicStreamable {
       return this._conversationId;
    }   
    get netLikeCount(): number {
-      return this._netLikeCount;
+      return this._likedBy.length;
    }
    get likedBy(): Array<string> {
       return this._likedBy;
-   }
-   get dislikedBy(): Array<string> {
-      return this._dislikedBy;
-   }       
+   }     
 
    /**
    * set of 'setters' for private variables
@@ -182,94 +156,78 @@ export class SharedEmbedding extends MDynamicStreamable {
       this._conversationId = conversationId_;
    }   
 
-   set netLikeCount (netLikeCount_: number) {
-
-      this._netLikeCount = netLikeCount_;
-   }
-
    set likedBy (likedBy_: Array<string>) {
-      this._likedBy = likedBy_;     
+      this._likedBy = likedBy_.slice(0);     
    }
 
-   set dislikedBy (dislikedBy_: Array<string>) {
-      this._dislikedBy = dislikedBy_;     
-   }   
 
    /**
     * add a like 
-    * @param email - the email of the person who has liked it.  
+    * @param name - the name of the person who has liked it.  
     */
-   like(email: string): void {
+   like(name: string): void {
 
       throwIfUndefined (this._url);
 
       let foundLike = false;
-      let foundDislike = false;
       let likeIndex = -1;
-      let dislikeIndex = -1;
 
       for (let i = 0; i < this._likedBy.length && !foundLike; i++) {
 
-         if (this._likedBy[i] === email) {
+         if (this._likedBy[i] === name) {
             foundLike = true;
             likeIndex = i;
          }
-      }
-
-      for (let i = 0; i < this._dislikedBy.length; i++) {
-         if (this._dislikedBy[i] === email) {
-            foundDislike = true;         
-            dislikeIndex = i;
-         }
-      }      
+      }   
 
       if (foundLike)
          return;
       
-      if (foundDislike)
-         this._dislikedBy = this._dislikedBy.splice(dislikeIndex, 1);
-      
-      this._likedBy.push (email);
-      this._netLikeCount++;
+      this._likedBy.push (name);  
    }
 
    /**
-    * add a like 
-    * @param email - the email of the person who has liked it.  
+    * remove a like 
+    * @param name - the name of the person who has a like.  
     */
-   dislike(email: string): void {
+   unlike(name: string): void {
 
       throwIfUndefined (this._url);
 
       let foundLike = false;
-      let foundDislike = false;
       let likeIndex = -1;
-      let dislikeIndex = -1;
 
       for (let i = 0; i < this._likedBy.length && !foundLike; i++) {
 
-         if (this._likedBy[i] === email) {
+         if (this._likedBy[i] === name) {
             foundLike = true;
             likeIndex = i;
          }
       }
-
-      for (let i = 0; i < this._dislikedBy.length; i++) {
-         if (this._dislikedBy[i] === email) {
-            foundDislike = true;         
-            dislikeIndex = i;
-         }
-      }      
-
-      if (foundDislike)
-         return;
       
       if (foundLike)
-         this._likedBy = this._likedBy.splice(likeIndex, 1);
-      
-      this._dislikedBy.push (email);      
-      this._netLikeCount--;
+         this._likedBy.splice(likeIndex, 1);      
    }   
+
+   /*
+    * test for a like 
+    * @param name - the name of the person who has liked it.  
+    */
+   isLikedBy (name: string): boolean {
+
+      throwIfUndefined (this._url);
+
+      let foundLike = false;
+
+      for (let i = 0; i < this._likedBy.length && !foundLike; i++) {
+
+         if (this._likedBy[i] === name) {
+            foundLike = true;
+         }
+      }   
+
+      return foundLike;
+   }
 
    /**
     * test for equality - checks all fields are the same. 
@@ -280,10 +238,8 @@ export class SharedEmbedding extends MDynamicStreamable {
 
       return ((this._id === rhs._id) &&
          ((this._url === undefined && rhs._url === undefined) || (this._url === rhs._url)) &&    
-         ((this._conversationId === undefined && rhs._conversationId === undefined) || (this._conversationId === rhs._conversationId)) &&                
-         (this._netLikeCount === rhs._netLikeCount) &&         
-         areSameShallowArray (this._likedBy, rhs._likedBy) &&
-         areSameShallowArray (this._dislikedBy, rhs._dislikedBy));
+         ((this._conversationId === undefined && rhs._conversationId === undefined) || (this._conversationId === rhs._conversationId)) &&                        
+         areSameShallowArray (this._likedBy, rhs._likedBy));
    }
 
    /**
@@ -295,9 +251,7 @@ export class SharedEmbedding extends MDynamicStreamable {
       this._id = rhs._id;   
       this._url = rhs._url;
       this._conversationId = rhs._conversationId;
-      this._netLikeCount = rhs._netLikeCount;
-      this._likedBy = rhs._likedBy.slice(0);
-      this._dislikedBy = rhs._dislikedBy.slice(0);       
+      this._likedBy = rhs._likedBy.slice(0);      
 
       return this;
    }
@@ -315,4 +269,13 @@ export class SharedEmbedding extends MDynamicStreamable {
 
       return (false);
    }
+}
+
+export function findInMap (url: string, map: Map<string, SharedEmbedding>) : SharedEmbedding | undefined {
+
+   for (const [key, value] of map) {
+      if (value.url === url)
+         return value;
+   }
+   return undefined;
 }

@@ -17,7 +17,7 @@ import { UrlActivityRecord } from "./ActivityRecordUrl";
 import { MessageActivityRecord } from "./MessageActivityRecord";
 import { SessionKey } from "./Keys";
 import { IActivityRepository } from "./IActivityRepository";
-import { LikeDislikeActivityRecord } from "./ActivityRecordLikeDislike";
+import { LikeUnlikeActivityRecord } from "./ActivityRecordLikeUnlike";
 
 
 // ActivityRecord - email of a person and a datestamp. Will have many derived classes according to different activity types. 
@@ -145,8 +145,8 @@ export class ActivityRepositoryMongo implements IActivityRepository {
                record.happenedAt, 
                record.url);
 
-         case LikeDislikeActivityRecord.className():
-            return new LikeDislikeActivityRecord(
+         case LikeUnlikeActivityRecord.className():
+            return new LikeUnlikeActivityRecord(
                record._id.toString(),
                record._conversationId,
                record.email, 

@@ -13,7 +13,7 @@
             "args": [
                 "-r",
                 "ts-node/register",
-                "${workspaceRoot}/test/aicon*.ts",
+                "${workspaceRoot}/test/shared*.ts",
                 "--no-timeouts"
             ],
             "cwd": "${workspaceRoot}"
