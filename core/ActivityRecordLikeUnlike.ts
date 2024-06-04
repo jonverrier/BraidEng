@@ -4,14 +4,14 @@ import { InvalidParameterError } from './Errors';
 import { MDynamicStreamable, DynamicStreamableFactory } from "./StreamingFramework";
 import { UrlActivityRecord } from './ActivityRecordUrl';
 
-const likeDislikeActivityRecordClassName = "LikeDislikeActivityRecord";
+const likeUnlikeActivityRecordClassName = "LikeUnlikeActivityRecord";
 
 // ActivityRecord - activity details plus the URL they clicked on 
-export class LikeDislikeActivityRecord extends UrlActivityRecord {
+export class LikeUnlikeActivityRecord extends UrlActivityRecord {
    private _like: boolean;
 
    /**
-    * Create an empty LikeDislikeActivityRecord object - required for particiation in serialisation framework
+    * Create an empty LikeUnlikeActivityRecord object - required for particiation in serialisation framework
     */
    public constructor();
 
@@ -30,7 +30,7 @@ export class LikeDislikeActivityRecord extends UrlActivityRecord {
     * Create a LikeDislikeActivityRecord object
     * @param activityRecord - object to copy from - should work for JSON format and for real constructed objects
     */
-   public constructor(activityRecord: LikeDislikeActivityRecord);
+   public constructor(activityRecord: LikeUnlikeActivityRecord);
 
    public constructor(...arr: any[])
    {
@@ -60,19 +60,19 @@ export class LikeDislikeActivityRecord extends UrlActivityRecord {
     */
    className(): string {
 
-      return likeDislikeActivityRecordClassName;
+      return likeUnlikeActivityRecordClassName;
    }
 
    static className(): string {
 
-      return likeDislikeActivityRecordClassName;
+      return likeUnlikeActivityRecordClassName;
    }
 
    static createDynamicInstance(): MDynamicStreamable {
-      return new LikeDislikeActivityRecord();
+      return new LikeUnlikeActivityRecord();
    }
 
-   static _dynamicStreamableFactory: DynamicStreamableFactory = new DynamicStreamableFactory(likeDislikeActivityRecordClassName, LikeDislikeActivityRecord.createDynamicInstance);
+   static _dynamicStreamableFactory: DynamicStreamableFactory = new DynamicStreamableFactory(likeUnlikeActivityRecordClassName, LikeUnlikeActivityRecord.createDynamicInstance);
    streamOut(): string {
 
       return JSON.stringify({ id: this.id, conversationId: this.conversationId, email: this.email, happenedAt: this.happenedAt, url: this.url, like: this._like});
@@ -82,7 +82,7 @@ export class LikeDislikeActivityRecord extends UrlActivityRecord {
 
       const obj = JSON.parse(stream);
 
-      this.assign(new LikeDislikeActivityRecord (obj.id, obj.conversationId, obj.email, new Date(obj.happenedAt), obj.url, obj.like));
+      this.assign(new LikeUnlikeActivityRecord (obj.id, obj.conversationId, obj.email, new Date(obj.happenedAt), obj.url, obj.like));
    }
 
    /**
@@ -106,7 +106,7 @@ export class LikeDislikeActivityRecord extends UrlActivityRecord {
     * Uses field values, not identity bcs if objects are streamed to/from JSON, field identities will be different. 
     * @param rhs - the object to compare this one to.  
     */
-   equals(rhs: LikeDislikeActivityRecord): boolean {
+   equals(rhs: LikeUnlikeActivityRecord): boolean {
       return (super.equals (rhs) && 
          (this._like === rhs._like));
    }
@@ -116,7 +116,7 @@ export class LikeDislikeActivityRecord extends UrlActivityRecord {
     * assignment operator 
     * @param rhs - the object to assign this one from.  
     */
-   assign(rhs: LikeDislikeActivityRecord): LikeDislikeActivityRecord {
+   assign(rhs: LikeUnlikeActivityRecord): LikeUnlikeActivityRecord {
       super.assign (rhs);
       this._like = rhs._like;
 

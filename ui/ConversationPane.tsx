@@ -28,8 +28,9 @@ import {
    Copy24Regular,
    Delete24Regular, 
    DoorArrowLeft24Regular,
-   ThumbLikeRegular,
-   ThumbDislikeRegular
+   ChatMultipleRegular,
+   ChatMultipleHeartRegular,
+   ChatMultipleHeartFilled
 } from '@fluentui/react-icons';
 
 import { EIcon } from '../core/Icons';
@@ -42,8 +43,9 @@ import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
 import { SessionKey, ConversationKey } from '../core/Keys';
 import { JoinDetails } from '../core/JoinDetails';
 import { AnimatedIconButton, EAnimatedIconButtonTypes } from './AnimatedIconButton';
-import { MessagePrompt } from './MessagePrompt';
+import { MessagePrompt } from './ConversationMessagePrompt';
 import { Media } from '../core/Media';
+import { SharedEmbedding, findInMap } from '../core/SharedEmbedding';
 
 export interface IConversationHeaderProps {
 
@@ -54,13 +56,15 @@ export interface IConversationHeaderProps {
    onExitConversation () : void;  
 }
 
-export interface IConversationRowProps {
+export interface IConversationViewProps {
 
    isConnected: boolean;
    sessionKey: SessionKey;
    conversationKey: ConversationKey;    
    audience: Map<string, Persona>;
    conversation: Array<Message>;
+   localPersonaName: string;
+   sharedEmbeddings: Map<string, SharedEmbedding>;
    isBusy: boolean;   
    hasSuggestedContent: boolean;
    suggestedContent: string;
@@ -212,7 +216,7 @@ const conversationContentColumnStyles = makeStyles({
 const DefaultSpinner = (props: Partial<SpinnerProps>) => <Spinner {...props} />;
 
 
-export const ConversationRow = (props: IConversationRowProps) => {
+export const ConversationView = (props: IConversationViewProps) => {
 
    const embeddedRowClasses = embeddedRowStyles();
    const embeddedColumnClasses = embeddedColumnStyles();   
@@ -272,8 +276,10 @@ export const ConversationRow = (props: IConversationRowProps) => {
                            <SingleMessageView 
                               sessionKey={props.sessionKey}
                               message={message} 
+                              localPersonaName={props.localPersonaName}                              
                               key={message.id}
                               author={Persona.safeAuthorLookup (audience, message.authorId)}
+                              sharedEmbeddings={props.sharedEmbeddings}
                               showAiWarning={message.authorId === EConfigStrings.kLLMGuid}
                               onClickUrl={props.onClickUrl}  
                               onLikeUrl={props.onLikeUrl}   
@@ -310,6 +316,8 @@ export interface ISingleMessageViewProps {
    message: Message;  
    author: Persona;
    showAiWarning: boolean;
+   localPersonaName: string;   
+   sharedEmbeddings: Map<string, SharedEmbedding>;   
    onClickUrl (url_: string) : void;    
    onLikeUrl (url_: string) : void;  
    onDislikeUrl (url_: string) : void;     
@@ -325,6 +333,8 @@ export interface IKnowledgeSegmentProps {
    sessionKey: SessionKey;
    segment: Embedding;  
    key: string;
+   localPersonaName: string;
+   sharedEmbeddings: Map<string, SharedEmbedding>;   
    onClickUrl (url_: string) : void;    
    onLikeUrl (url_: string) : void;  
    onDislikeUrl (url_: string) : void;      
@@ -470,7 +480,7 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
       props.onLikeUrl (segment.url);        
    }   
 
-   const onClickDislike = (event: React.MouseEvent<HTMLButtonElement>): void => {
+   const onClickUnlike = (event: React.MouseEvent<HTMLButtonElement>): void => {
       // NB we call 'prevent default' as we want to control the action  
       event.stopPropagation();
       event.preventDefault();
@@ -494,6 +504,15 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
       linkText = linkText.slice (0, maxLength) + '...';
    }
 
+   let likedByMe = false;
+   let likedByAnyone = false;
+   let shared = findInMap (segment.url, props.sharedEmbeddings);
+   if (shared) {
+      likedByMe = shared.isLikedBy (props.localPersonaName); 
+      likedByAnyone = shared.netLikeCount > 0;      
+   }
+
+
    return (<div className={sourcesClasses.root} key={segment.url}>
               <div className={chunkHeaderClasses.root}>
                  <Link className={linkClasses.root} 
@@ -501,19 +520,13 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
                   </Link>
                   <Body1 className={relevanceClasses.root}> {relevanceText} </Body1>
                   <Toolbar aria-label="Like/dislike control toolbar" >                        
-                  <ToolbarDivider />                  
-                  <Tooltip content={EUIStrings.kLikedThis} relationship="label" positioning={'above'}>                     
-                     <ToolbarButton
-                        className={likeDislikeCLasses.root}
-                        icon={<ThumbLikeRegular/>} 
-                        onClick={onClickLike}/>   
-                  </Tooltip>  
-                  <Tooltip content={EUIStrings.kDidNotLikeThis} relationship="label" positioning={'above'}>                                           
-                     <ToolbarButton 
-                        className={likeDislikeCLasses.root}                     
-                        icon={<ThumbDislikeRegular/>} 
-                        onClick={onClickDislike}/>  
-                  </Tooltip>     
+                     <ToolbarDivider />                  
+                     <Tooltip content={likedByMe ? EUIStrings.kDidNotLikeThis : EUIStrings.kLikedThis} relationship="label" positioning={'above'}>                     
+                        <ToolbarButton
+                           className={likeDislikeCLasses.root}
+                           icon={likedByMe? <ChatMultipleHeartFilled/> : likedByAnyone ? <ChatMultipleHeartRegular/> : <ChatMultipleRegular/>} 
+                           onClick={likedByMe ? onClickUnlike : onClickLike}/>   
+                     </Tooltip>     
                   </Toolbar>                                              
                </div>
                <Body1 className={chunkHeaderClasses.root}> {segment.summary} </Body1>
@@ -545,7 +558,10 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
       if (props.message.chunks.length > 0) { 
 
          aiSources = props.message.chunks.map ((segment : Embedding) => {
-            return <KowledgeSegmentsView sessionKey={props.sessionKey} segment={segment} key={segment.url} 
+            return <KowledgeSegmentsView sessionKey={props.sessionKey} 
+                    localPersonaName={props.localPersonaName}
+                    segment={segment} key={segment.url} 
+                    sharedEmbeddings={props.sharedEmbeddings}
                     onClickUrl={props.onClickUrl}
                     onLikeUrl={props.onLikeUrl}
                     onDislikeUrl={props.onDislikeUrl}/>

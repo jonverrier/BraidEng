@@ -4,7 +4,7 @@ import { MDynamicStreamable } from '../core/StreamingFramework';
 import { ActivityRecord} from '../core/ActivityRecord';
 import { UrlActivityRecord } from '../core/ActivityRecordUrl';
 import { MessageActivityRecord } from '../core/MessageActivityRecord';
-import { LikeDislikeActivityRecord } from '../core/ActivityRecordLikeDislike';
+import { LikeUnlikeActivityRecord } from '../core/ActivityRecordLikeUnlike';
 import { SessionKey } from '../core/Keys';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 import { ActivityRepositoryMongo } from '../core/ActivityRepositoryMongo';
@@ -290,15 +290,15 @@ describe("UrlActivityRecord", function () {
 
 describe("LikeDislikeActivityRecord", function () {
 
-   var activity1: LikeDislikeActivityRecord, activity2: LikeDislikeActivityRecord, activityErr:LikeDislikeActivityRecord;
+   var activity1: LikeUnlikeActivityRecord, activity2: LikeUnlikeActivityRecord, activityErr:LikeUnlikeActivityRecord;
 
-   activity1 = new LikeDislikeActivityRecord(myId, myConversationId, myEmail, myHappenedAt, myUrl, true);
+   activity1 = new LikeUnlikeActivityRecord(myId, myConversationId, myEmail, myHappenedAt, myUrl, true);
 
-   activity2 = new LikeDislikeActivityRecord(someoneElsesId, someoneElsesConversationId, someoneElsesEmail, someoneElsesHappenedAt, someoneElsesUrl, true);
+   activity2 = new LikeUnlikeActivityRecord(someoneElsesId, someoneElsesConversationId, someoneElsesEmail, someoneElsesHappenedAt, someoneElsesUrl, true);
 
    it("Needs to construct an empty object", function () {
 
-      var activityEmpty = new LikeDislikeActivityRecord();
+      var activityEmpty = new LikeUnlikeActivityRecord();
 
       expect(activityEmpty.url).toEqual("");  
       expect(activityEmpty.like).toEqual(true);         
@@ -309,7 +309,7 @@ describe("LikeDislikeActivityRecord", function () {
 
       var caught: boolean = false;
       try {
-         let activityErr = new LikeDislikeActivityRecord(myId, myConversationId, myEmail, myHappenedAt, undefined as unknown as string, true);
+         let activityErr = new LikeUnlikeActivityRecord(myId, myConversationId, myEmail, myHappenedAt, undefined as unknown as string, true);
       } catch (e) {
          caught = true;
       }
@@ -319,7 +319,7 @@ describe("LikeDislikeActivityRecord", function () {
 
    it("Needs to compare for equality and inequality", function () {
 
-      let activityNew = new LikeDislikeActivityRecord(activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt, activity1.url, true);
+      let activityNew = new LikeUnlikeActivityRecord(activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt, activity1.url, true);
 
       expect(activity1.equals(activity1)).toEqual(true);
       expect(activity1.equals(activityNew)).toEqual(true);
@@ -335,14 +335,14 @@ describe("LikeDislikeActivityRecord", function () {
 
    it("Needs to copy construct", function () {
 
-      let activity2 = new LikeDislikeActivityRecord(activity1);
+      let activity2 = new LikeUnlikeActivityRecord(activity1);
 
       expect(activity1.equals(activity2) === true).toEqual(true);
    });
 
    it("Needs to correctly change attributes", function () {
 
-      let activityNew = new LikeDislikeActivityRecord(activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt, activity1.url, true);
+      let activityNew = new LikeUnlikeActivityRecord(activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt, activity1.url, true);
 
       activityNew.id = someoneElsesId;
       activityNew.email = someoneElsesEmail;
@@ -369,7 +369,7 @@ describe("LikeDislikeActivityRecord", function () {
 
       var stream: string = activity1.streamOut();
 
-      let activityNew = new LikeDislikeActivityRecord (activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt, activity1.url, activity1.like);
+      let activityNew = new LikeUnlikeActivityRecord (activity1.id, activity1.conversationId, activity1.email, activity1.happenedAt, activity1.url, activity1.like);
       activityNew.streamIn(stream);
 
       expect(activity1.equals(activityNew)).toEqual(true);
@@ -379,11 +379,11 @@ describe("LikeDislikeActivityRecord", function () {
 
       let stream = activity1.flatten();
 
-      let activityNew = new LikeDislikeActivityRecord();
+      let activityNew = new LikeUnlikeActivityRecord();
 
       expect(activity1.equals(activityNew)).toEqual(false);
 
-      activityNew = MDynamicStreamable.resurrect(stream) as LikeDislikeActivityRecord;
+      activityNew = MDynamicStreamable.resurrect(stream) as LikeUnlikeActivityRecord;
 
       expect(activity1.equals(activityNew)).toEqual(true);
    });
@@ -517,7 +517,7 @@ describe("ActivityRepository", function () {
 
    it("Needs to save a LikeDislike record", async function () {
 
-      var activity = new LikeDislikeActivityRecord (keyGenerator.generateKey(), "madeupconversationKey", 
+      var activity = new LikeUnlikeActivityRecord (keyGenerator.generateKey(), "madeupconversationKey", 
                                  "jonathanverrier@hotmail.com", new Date(), 
                                  "https://test.cosmos", true);
 
@@ -572,7 +572,7 @@ describe("ActivityRepositoryMongo", function () {
 
    it("Needs to save a LikeDislike record", async function () {
 
-      var activity = new LikeDislikeActivityRecord (keyGenerator.generateKey(), "madeupconversationKey", 
+      var activity = new LikeUnlikeActivityRecord (keyGenerator.generateKey(), "madeupconversationKey", 
                                  "jonathanverrier@hotmail.com", new Date(), 
                                  "https://test.cosmos", true);
 

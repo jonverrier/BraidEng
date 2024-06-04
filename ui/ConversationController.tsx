@@ -9,11 +9,12 @@ import React, { useState, useReducer } from 'react';
 import { throwIfUndefined } from '../core/Asserts';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
+import { SharedEmbedding, findInMap } from '../core/SharedEmbedding';
 import { CaucusOf } from '../core/CaucusFramework';
 import { SessionKey, ConversationKey } from '../core/Keys';
 import { JoinDetails } from '../core/JoinDetails';
 import { JoinPageValidator } from '../core/JoinPageValidator';
-import { ConversationRow } from './ConversationRow';
+import { ConversationView } from './ConversationPane';
 import { BraidFluidConnection } from '../core/BraidFluidConnection';
 import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } from '../core/NotificationFramework';
 import { AIConnection, AIConnector } from '../core/AIConnection';
@@ -24,7 +25,7 @@ import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 import { UrlActivityRecord } from '../core/ActivityRecordUrl';
 import { MessageActivityRecord } from '../core/MessageActivityRecord';
 import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
-import { LikeDislikeActivityRecord } from '../core/ActivityRecordLikeDislike';
+import { LikeUnlikeActivityRecord } from '../core/ActivityRecordLikeUnlike';
 
 export interface IConversationControllerProps {
 
@@ -41,6 +42,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    const [conversation, setConversation] = useState<Array<Message>>(new Array<Message>());
    const [audience, setAudience] = useState<Map<string, Persona>>(new Map<string, Persona>());
+   const [sharedEmbeddings, setSharedEmbeddings] = useState<Map<string, SharedEmbedding>>(new Map<string, SharedEmbedding>());   
    const [fluidConnection, setFluidConnection] = useState<BraidFluidConnection | undefined>(undefined);
    const [joining, setJoining] = useState<boolean> (false);
    const [conversationKey, setConversationKey] = useState<ConversationKey> (props.conversationKey);   
@@ -122,10 +124,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
             if (typeof fluidMessagesConnection_ !== "undefined") {
 
                throwIfUndefined(fluidMessagesConnection_);   // This is just to keep the compiler happy with statement below. 
-               let messageArray = fluidMessagesConnection_.messageCaucus().currentAsArray();
-               setConversation (messageArray); 
-               let audienceMap = fluidMessagesConnection_.participantCaucus().current();
-               setAudience (audienceMap);               
+               refreshLocalState (fluidMessagesConnection_);                      
             }
          }
 
@@ -133,10 +132,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
          forceUpdate ();            
       }      
 
-      let messageArray = fluidMessagesConnection_.messageCaucus().currentAsArray();
-      setConversation (messageArray);
-      let audienceMap = fluidMessagesConnection_.participantCaucus().current();
-      setAudience (audienceMap);
+      refreshLocalState (fluidMessagesConnection_);       
 
       let changeObserver = new NotificationRouterFor<Message> (remoteChanged);
 
@@ -152,7 +148,12 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       // Hook up a notification function for adds, removes, changes in the participant list 
       fluidMessagesConnection_.participantCaucus().addObserver (changeObserverInterest);
       fluidMessagesConnection_.participantCaucus().addObserver (addedObserverInterest);   
-      fluidMessagesConnection_.participantCaucus().addObserver (removedObserverInterest);       
+      fluidMessagesConnection_.participantCaucus().addObserver (removedObserverInterest);     
+      
+      // Hook up a notification function for adds, removes, changes in the list of shared embeddings 
+      fluidMessagesConnection_.sharedEmbeddingCaucus().addObserver (changeObserverInterest);
+      fluidMessagesConnection_.sharedEmbeddingCaucus().addObserver (addedObserverInterest);   
+      fluidMessagesConnection_.sharedEmbeddingCaucus().addObserver (removedObserverInterest);         
       
       setConversationKey (conversationKey_);  
 
@@ -216,16 +217,23 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    audience.set (props.localPersona.id, props.localPersona);  
    
-   function refreshAfterTrim () : void {
-
-      throwIfUndefined (fluidConnection);
-      let fluidMessagesConnection : BraidFluidConnection = fluidConnection;    
+   function refreshLocalState (fluidConnection_ : BraidFluidConnection) : void {
 
       // Save state and force a refresh
-      let messageArray = fluidMessagesConnection.messageCaucus().currentAsArray();      
-      let audienceMap = fluidMessagesConnection.participantCaucus().current();
-      setAudience (audienceMap);      
-      setConversation (messageArray);                
+      let messageArray = fluidConnection_.messageCaucus().currentAsArray();   
+      setConversation (messageArray);           
+      let audienceMap = fluidConnection_.participantCaucus().current();  
+      setAudience (audienceMap);            
+      let sharedEmbeddingMap = fluidConnection_.sharedEmbeddingCaucus().current();
+      setSharedEmbeddings (sharedEmbeddingMap);       
+   }
+
+   function refreshAfterTrim () : void {
+
+      throwIfUndefined (fluidConnection);    
+      
+      refreshLocalState (fluidConnection);
+                    
       forceUpdate ();       
    }
 
@@ -244,13 +252,31 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       refreshAfterTrim ();        
    }
 
-   function onDislikeUrl (url_: string) : void {
+   function onUnlikeUrl (url_: string) : void {
       
+      let map = fluidConnection?.sharedEmbeddingCaucus().current();
+      if (map) {
+         let item = findInMap (url_, map);
+         if (item) {
+            item.unlike (props.localPersona.name);
+            fluidConnection?.sharedEmbeddingCaucus().amend (item.id, item);           
+         }
+         else {
+            item = new SharedEmbedding ();
+            item.url = url_;
+            item.unlike (props.localPersona.name);
+            fluidConnection?.sharedEmbeddingCaucus().add (item.id, item);                            
+         }
+         map.set (item.id, item) ;
+         setSharedEmbeddings (map);     
+         forceUpdate();     
+      }
+
       let keyGenerator = getDefaultKeyGenerator();
 
       let repository = getRecordRepository(props.sessionKey);
       let email = props.localPersona.email;
-      let record = new LikeDislikeActivityRecord (keyGenerator.generateKey(), 
+      let record = new LikeUnlikeActivityRecord (keyGenerator.generateKey(), 
          props.conversationKey.toString(),
          email, new Date(), url_, false);
       repository.save (record);                                                            
@@ -262,7 +288,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       let repository = getRecordRepository(props.sessionKey);
       let email = props.localPersona.email;
-      let record = new LikeDislikeActivityRecord (keyGenerator.generateKey(), 
+      let record = new LikeUnlikeActivityRecord (keyGenerator.generateKey(), 
          props.conversationKey.toString(),
          email, new Date(), url_, true);
       repository.save (record); 
@@ -286,6 +312,24 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    function onPostiveUseOfUrl (url_: string) : void {
       
+      let map = fluidConnection?.sharedEmbeddingCaucus().current();
+      if (map) {
+         let item = findInMap (url_, map);
+         if (item) {
+            item.like (props.localPersona.name);
+            fluidConnection?.sharedEmbeddingCaucus().amend (item.id, item);              
+         }
+         else {
+            item = new SharedEmbedding ();
+            item.url = url_;
+            item.like (props.localPersona.name);
+            fluidConnection?.sharedEmbeddingCaucus().add (item.id, item);            
+         }
+         map.set (item.id, item) ;
+         setSharedEmbeddings (map);  
+         forceUpdate();                   
+      }
+
       let embeddingRespository = getEmbeddingRepository (props.sessionKey);
 
       // Get the summary of the URL the user clocked on
@@ -347,8 +391,6 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
             liveText = undefined;
 
          setKey (Math.random());
-
-         console.log ("onStreamedUpdate: " + liveText);
       }
    }     
 
@@ -381,10 +423,13 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       repository.save (record);       
 
       // Save state and force a refresh
+      // NB we keep local variables this time - dont just call the 'refreshLocalState' else you risk stale state
       let messageArray = fluidMessagesConnection.messageCaucus().currentAsArray();      
       setConversation (messageArray);      
       let audienceMap = fluidMessagesConnection.participantCaucus().current();
-      setAudience (audienceMap);
+      setAudience (audienceMap);     
+      let sharedEmbeddingMap = fluidMessagesConnection.sharedEmbeddingCaucus().current();
+      setSharedEmbeddings (sharedEmbeddingMap);       
 
       // If LLM is being invoked we make a call here 
       // ======================================================
@@ -438,7 +483,6 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
          // Push it to shared data
          addMessage (fluidMessagesConnection, response);                         
       }
-      console.log ("onSend, end : " + liveText);
       forceUpdate ();      
    } 
 
@@ -450,13 +494,15 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    }
    else {  
       return (
-         <ConversationRow key = {key}
+         <ConversationView key = {key}
              isConnected={props.sessionKey.looksValidSessionKey() && conversationKey.looksValidConversationKey()}
              isBusy = {isBusy}
              sessionKey={props.sessionKey}
+             localPersonaName={props.localPersona.name}
              conversationKey={conversationKey}
              conversation={conversation}
              audience={audience} 
+             sharedEmbeddings={sharedEmbeddings}
              hasSuggestedContent={suggested ? true: false}
              suggestedContent={suggested ? suggested.text: ""}
              onSend={onSend} 
@@ -466,9 +512,9 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
              onExitConversation={onExitConversation}             
              onClickUrl={onClickUrl}
              onLikeUrl={onLikeUrl}    
-             onDislikeUrl={onDislikeUrl}                    
+             onDislikeUrl={onUnlikeUrl}                    
              >
-         </ConversationRow>
+         </ConversationView>
       );
    }
 }

@@ -12,7 +12,7 @@
       "build": "tsc --build",
       "clean": "tsc --build --clean",
       "test": "mocha --debug-brk --require ts-node/register test/*.test.ts",
-      "test-mini": "mocha --debug-brk --require ts-node/register -g AIConn*",
+      "test-mini": "mocha --debug-brk --require ts-node/register -g Shared*",
       "cover": "tsc && nyc mocha --require ts-node/register test/*.test.ts",
       "local-fluid": "npx @fluidframework/azure-local-service@latest",
       "embeddings-lite": "mocha --require ts-node/register scripts/make_lite_embedding.ts && copy data\\embeddings_lite.json ..\\braidweb\\public",
