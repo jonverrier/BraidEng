@@ -64,12 +64,12 @@ export enum EConfigStrings {
    kEmailParamName = "email",
    kNameParamName = "name",
 
-   kCohort1ConversationKey = "d94c8521-b234-4679-8b8f-93bcc0a221b7",
-   kCohort1Team1ConversationKey = "1591d257-f836-4faf-bdb7-703b02539b95",   
-   kCohort1Team2ConversationKey = "f0837123-6ed3-4c49-84f9-be6c3dc54855",
-   kCohort1Team3ConversationKey = "e586f7f7-4d4b-485c-b50f-382c544fd8e6",   
-   kCohort1Team4ConversationKey = "694cef73-939f-4c6c-ab02-76158a41ac43",     
-   kDemoConversationKey = "",
+   kCohort1ConversationKey = "70bdd682-fc2f-4320-bfb5-e18f3f97dada",
+   kCohort1Team1ConversationKey = "c2d8690e-97ec-4468-899d-5a7ff49e38ea",   
+   kCohort1Team2ConversationKey = "59ea8732-a571-4e81-b45f-31030f1d910a",
+   kCohort1Team3ConversationKey = "75316dc5-c242-43e0-a7b1-0cca6c26b80b",   
+   kCohort1Team4ConversationKey = "0ace1a29-7cb5-41e4-badb-95a47eae5bb1",     
+   kDemoConversationKey = "4087d953-6050-4025-a334-11bf4d12d0ac",
 
    kEmbeddingFileUrlLocal = 'http://localhost:1337/embeddings_lite.json',
    kEmbeddingFileUrlProduction = 'https://braidapps.io/embeddings_lite.json'   
