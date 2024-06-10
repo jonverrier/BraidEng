@@ -91,7 +91,7 @@ describe("KnowledgeSource", function () {
 
 });
 
-describe("KnowledgeSourceBuilder", function () {
+describe("EmbeddingMatchAccumulator", function () {
 
    it("Needs to construct an empty object", function () {
 
