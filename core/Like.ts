@@ -81,9 +81,9 @@ export class Like  {
    /**
    * set of 'setters' for private variables
    */
-   set name(url_: string) {
+   set name(name_: string) {
 
-      this._name = url_;
+      this._name = name_;
    }
 
    set when(when_: Date) {
