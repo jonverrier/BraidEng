@@ -109,7 +109,7 @@ export class SharedEmbedding extends MDynamicStreamable {
 
       if (objLikes) {
          for (let i = 0; i < objLikes.length; i++) {
-            likes.push (objLikes[i]);
+            likes.push (new Like (objLikes[i]));
          }      
       }     
 
