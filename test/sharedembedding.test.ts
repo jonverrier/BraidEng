@@ -63,7 +63,7 @@ describe("SharedEmbedding", function () {
 
       var messageNew: SharedEmbedding = new SharedEmbedding(sharedEmbedding1.id, sharedEmbedding1.url, 
                                                             sharedEmbedding1.conversationId,  
-                                                            sharedEmbedding1.likedBy);
+                                                            sharedEmbedding1.likes);
 
       expect(sharedEmbedding1.equals(sharedEmbedding1)).toEqual(true);
       expect(sharedEmbedding1.equals(messageNew)).toEqual(true);
@@ -102,7 +102,7 @@ describe("SharedEmbedding", function () {
 
       var messageNew: SharedEmbedding = new SharedEmbedding(sharedEmbedding1.id, sharedEmbedding1.url, 
                                                             sharedEmbedding1.conversationId, 
-                                                            sharedEmbedding1.likedBy);
+                                                            sharedEmbedding1.likes);
 
       messageNew.id = someoneElsesId;
       messageNew.url = someoneElsesUrl;
@@ -129,7 +129,7 @@ describe("SharedEmbedding", function () {
 
       var messageNew: SharedEmbedding = new SharedEmbedding(sharedEmbedding1.id, sharedEmbedding1.url, 
                                                             sharedEmbedding1.conversationId,
-                                                            sharedEmbedding1.likedBy);
+                                                            sharedEmbedding1.likes);
 
       messageNew.streamIn(stream);
 
