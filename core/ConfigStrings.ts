@@ -72,7 +72,9 @@ export enum EConfigStrings {
    kDemoConversationKey = "4087d953-6050-4025-a334-11bf4d12d0ac",
 
    kEmbeddingFileUrlLocal = 'http://localhost:1337/embeddings_lite.json',
-   kEmbeddingFileUrlProduction = 'https://braidapps.io/embeddings_lite.json'   
+   kEmbeddingFileUrlProduction = 'https://braidapps.io/embeddings_lite.json',
+
+   kAdminUserNames = "Jon Verrier" // Comma seperated list of names, at run time we just check if the user name is included in this list. 
 };
 
 export enum EConfigNumbers {

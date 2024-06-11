@@ -60,6 +60,7 @@ export interface IConversationHeaderProps {
 export interface IConversationViewProps {
 
    isConnected: boolean;
+   userIsAdmin: boolean;
    sessionKey: SessionKey;
    conversationKey: ConversationKey;    
    audience: Map<string, Persona>;
@@ -261,7 +262,7 @@ export const ConversationView = (props: IConversationViewProps) => {
             <div className={embeddedColumnClasses.root}>                     
 
                <ConversationHeaderRow 
-                  userisAdmin={props.localPersonaName === "Jon Verrier"}
+                  userisAdmin={props.userIsAdmin}
                   sessionKey={props.sessionKey} 
                   conversationKey={props.conversationKey}
                   audience={props.audience} 
