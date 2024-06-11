@@ -38,5 +38,8 @@ export enum EUIStrings {
    kAiNoGoodSources = "@Braid does not have good backup for this answer. AI can make mistakes. Consider checking important information.",
    kAiContentWarning = "AI can make mistakes. Consider checking important information.",
 
-   kLLMNameReminder = "Just checking...  if you want your request to be sent to @Braid, include the phrase '@Braid' in your message. With an '@' sign."
+   kLLMNameReminder = "Just checking...  if you want your request to be sent to @Braid, include the phrase '@Braid' in your message. With an '@' sign.",
+
+   kLikeSignular = "like.",
+   kLikePlural = "likes."
 };

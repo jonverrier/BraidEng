@@ -36,7 +36,7 @@ import {
 import { EIcon } from '../core/Icons';
 import { EConfigNumbers, EConfigStrings }  from '../core/ConfigStrings';
 import { Persona } from '../core/Persona';
-import { Message, MessageStreamingHandler } from '../core/Message';
+import { Message } from '../core/Message';
 import { Embedding } from '../core/Embedding';
 import { EUIStrings } from './UIStrings';
 import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
@@ -49,6 +49,7 @@ import { SharedEmbedding, findInMap } from '../core/SharedEmbedding';
 
 export interface IConversationHeaderProps {
 
+   userisAdmin: boolean;
    sessionKey: SessionKey;
    conversationKey: ConversationKey;   
    audience: Map<string, Persona>;
@@ -75,7 +76,7 @@ export interface IConversationViewProps {
    onCancelSuggestedContent (): void;
    onClickUrl (url_: string): void;   
    onLikeUrl (url_: string): void;   
-   onDislikeUrl (url_: string): void;          
+   onUnlikeUrl (url_: string): void;          
 }
 
 const headerRowStyles = makeStyles({
@@ -157,7 +158,7 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
                <ToolbarButton
                   icon={<Delete24Regular />}
                   aria-label={EUIStrings.kTrimConversationButtonPrompt} 
-                  disabled={!(props.sessionKey.looksValidSessionKey() && props.conversationKey.looksValidConversationKey())} 
+                  disabled={!(props.userisAdmin && props.sessionKey.looksValidSessionKey() && props.conversationKey.looksValidConversationKey())} 
                   onClick={onTrimConversation}
                />  
             </Tooltip>       
@@ -260,6 +261,7 @@ export const ConversationView = (props: IConversationViewProps) => {
             <div className={embeddedColumnClasses.root}>                     
 
                <ConversationHeaderRow 
+                  userisAdmin={props.localPersonaName === "Jon Verrier"}
                   sessionKey={props.sessionKey} 
                   conversationKey={props.conversationKey}
                   audience={props.audience} 
@@ -283,7 +285,7 @@ export const ConversationView = (props: IConversationViewProps) => {
                               showAiWarning={message.authorId === EConfigStrings.kLLMGuid}
                               onClickUrl={props.onClickUrl}  
                               onLikeUrl={props.onLikeUrl}   
-                              onDislikeUrl={props.onDislikeUrl}                                                            
+                              onDislikeUrl={props.onUnlikeUrl}                                                            
                            />
                         )                     
                      })}                          
@@ -337,7 +339,7 @@ export interface IKnowledgeSegmentProps {
    sharedEmbeddings: Map<string, SharedEmbedding>;   
    onClickUrl (url_: string) : void;    
    onLikeUrl (url_: string) : void;  
-   onDislikeUrl (url_: string) : void;      
+   onUnlikeUrl (url_: string) : void;      
 }
 
 const glow = makeStyles({
@@ -485,7 +487,7 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
       event.stopPropagation();
       event.preventDefault();
 
-      props.onDislikeUrl (segment.url);       
+      props.onUnlikeUrl (segment.url);       
    }   
 
    let relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
@@ -506,10 +508,19 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
 
    let likedByMe = false;
    let likedByAnyone = false;
+   let likeText = "";
    let shared = findInMap (segment.url, props.sharedEmbeddings);
    if (shared) {
       likedByMe = shared.isLikedBy (props.localPersonaName); 
-      likedByAnyone = shared.netLikeCount > 0;      
+      likedByAnyone = shared.netLikeCount > 0;  
+      if (likedByAnyone) {
+         let count =  shared.likes.length;
+
+         if (count > 1)
+            likeText = count.toString() + " " + EUIStrings.kLikePlural;
+         else
+            likeText = count.toString() + " " + EUIStrings.kLikeSignular;         
+      }   
    }
 
 
@@ -526,7 +537,8 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
                            className={likeDislikeCLasses.root}
                            icon={likedByMe? <ChatMultipleHeartFilled/> : likedByAnyone ? <ChatMultipleHeartRegular/> : <ChatMultipleRegular/>} 
                            onClick={likedByMe ? onClickUnlike : onClickLike}/>   
-                     </Tooltip>     
+                     </Tooltip> 
+                     <Text size={100}>{likeText}</Text>    
                   </Toolbar>                                              
                </div>
                <Body1 className={chunkHeaderClasses.root}> {segment.summary} </Body1>
@@ -564,7 +576,7 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
                     sharedEmbeddings={props.sharedEmbeddings}
                     onClickUrl={props.onClickUrl}
                     onLikeUrl={props.onLikeUrl}
-                    onDislikeUrl={props.onDislikeUrl}/>
+                    onUnlikeUrl={props.onDislikeUrl}/>
          })   
          aiFooter = <Text size={100}> {EUIStrings.kAiContentWarning} </Text>;   
       }

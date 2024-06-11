@@ -512,7 +512,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
              onExitConversation={onExitConversation}             
              onClickUrl={onClickUrl}
              onLikeUrl={onLikeUrl}    
-             onDislikeUrl={onUnlikeUrl}                    
+             onUnlikeUrl={onUnlikeUrl}                    
              >
          </ConversationView>
       );
