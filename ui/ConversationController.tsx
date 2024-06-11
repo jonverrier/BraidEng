@@ -18,7 +18,7 @@ import { ConversationView } from './ConversationPane';
 import { BraidFluidConnection } from '../core/BraidFluidConnection';
 import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } from '../core/NotificationFramework';
 import { AIConnection, AIConnector } from '../core/AIConnection';
-import { EUIStrings } from './UIStrings';
+import { EUIStrings, initialQuestions } from './UIStrings';
 import { EConfigNumbers, EConfigStrings } from '../core/ConfigStrings';
 import { getEmbeddingRepository } from '../core/IEmbeddingRepositoryFactory';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
@@ -99,7 +99,8 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
             let message = new Message();
 
             message.authorId = EConfigStrings.kLLMGuid;
-            message.text = EUIStrings.kPomptToGetStarted;
+            const randomElement = initialQuestions[Math.floor(Math.random() * initialQuestions.length)];
+            message.text = randomElement;
             message.sentAt = new Date();   
             
             setSuggested(message);
