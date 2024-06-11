@@ -49,11 +49,10 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    const [isBusy, setIsBusy] = useState<boolean>(false);
    const [suggested, setSuggested] = useState<Message|undefined>(undefined);  
    const [key, setKey] = useState<number> (0);
+   const [suppressScroll, setSuppressScroll] = useState<boolean> (false);
 
    const [, updateState] = React.useState<object>();
    const forceUpdate = React.useCallback(() => updateState({}), []);
-
-   let liveText: string | undefined = undefined;
 
    function addMessage (fluidMessagesConnection_: BraidFluidConnection, message_: Message) : void {
 
@@ -62,7 +61,8 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       // Save state and force a refresh                  
       let messageArray = fluidMessagesConnection_.messageCaucus().currentAsArray();      
       setConversation (messageArray);                
-      forceUpdate ();         
+      forceUpdate ();   
+      setSuppressScroll(false);      
    }
 
    function hasRecentHepfulStart (fluidMessagesConnection_: BraidFluidConnection) : boolean {
@@ -242,7 +242,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       let query = JoinDetails.toString ("", "", props.sessionKey, new ConversationKey(""));
       location.replace (EConfigStrings.kHomeRelativeUrl + '#' + query);   
-      location.reload();    
+      location.reload();          
    }
 
    function onTrimConversation () : void {
@@ -269,7 +269,8 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
             fluidConnection?.sharedEmbeddingCaucus().add (item.id, item);                            
          }
          map.set (item.id, item) ;
-         setSharedEmbeddings (map);     
+         setSharedEmbeddings (map);   
+         setSuppressScroll(true);             
          forceUpdate();     
       }
 
@@ -328,6 +329,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
          }
          map.set (item.id, item) ;
          setSharedEmbeddings (map);  
+         setSuppressScroll(true);          
          forceUpdate();                   
       }
 
@@ -385,11 +387,6 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       if (fluidConnection) {
 
          fluidConnection.messageCaucus().amend (message.id, message); 
-              
-         if (more)
-            liveText = message.text;      
-         else
-            liveText = undefined;
 
          setKey (Math.random());
       }
@@ -408,6 +405,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       // Push it to shared data
       fluidMessagesConnection.messageCaucus().add (message.id, message);
+      setSuppressScroll (false);
 
       // Update the timestamp of the person who posted it
       let storedPerson = fluidMessagesConnection.participantCaucus().get (props.localPersona.id);
@@ -498,6 +496,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
          <ConversationView key = {key}
              userIsAdmin = {EConfigStrings.kAdminUserNames.includes (props.localPersona.name)}
              isConnected={props.sessionKey.looksValidSessionKey() && conversationKey.looksValidConversationKey()}
+             suppressScroll = {suppressScroll}
              isBusy = {isBusy}
              sessionKey={props.sessionKey}
              localPersonaName={props.localPersona.name}

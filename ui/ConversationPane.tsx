@@ -70,6 +70,7 @@ export interface IConversationViewProps {
    isBusy: boolean;   
    hasSuggestedContent: boolean;
    suggestedContent: string;
+   suppressScroll: boolean;
    onSend (message_: string) : void;   
    onTrimConversation () : void;   
    onExitConversation () : void;
@@ -234,7 +235,8 @@ export const ConversationView = (props: IConversationViewProps) => {
    function onSend (messageText_: string) : void {
 
       props.onSend (messageText_);
-      scroll();
+      if (!props.suppressScroll)
+         scroll();
    }
 
    // https://stackoverflow.com/questions/45719909/scroll-to-bottom-of-an-overflowing-div-in-react 
@@ -250,7 +252,8 @@ export const ConversationView = (props: IConversationViewProps) => {
    }
  
    useEffect(() => {
-      scroll();
+      if (!props.suppressScroll)      
+         scroll();
     });     
 
    if (! props.isConnected) {
