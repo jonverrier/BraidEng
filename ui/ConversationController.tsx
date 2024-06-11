@@ -496,6 +496,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    else {  
       return (
          <ConversationView key = {key}
+             userIsAdmin = {EConfigStrings.kAdminUserNames.includes (props.localPersona.name)}
              isConnected={props.sessionKey.looksValidSessionKey() && conversationKey.looksValidConversationKey()}
              isBusy = {isBusy}
              sessionKey={props.sessionKey}
