@@ -12,7 +12,8 @@ youTubeUrls = [
 ]
 
 gitHubUrls = [
-["Generative AI for Beginners", "microsoft/generative-ai-for-beginners/blob/main", "../msintro"]
+["Generative AI for Beginners", "microsoft/generative-ai-for-beginners/blob/main", "../msintro"],
+["AI Engineering", "swyxio/ai-notes", "../aieng"]
 ]
 
 webUrls = [
@@ -47,7 +48,9 @@ webUrls = [
 ["A16Z Market Analysis", "https://a16z.com/financial-services-will-embrace-generative-ai-faster-than-you-think/", True],
 ["A16Z Market Analysis", "https://a16z.com/who-owns-the-generative-ai-platform/", True],
 ["Interaction Design Foundation", "https://www.interaction-design.org/literature/topics/design-thinking", True],
-["UX for AI", "https://www.uxforai.com/", True]
+["UX for AI", "https://www.uxforai.com/", True],
+["Testing Machine Learning Systems: Code, Data and Models ", "https://madewithml.com/courses/mlops/testing/", True],
+["Monitoring Machine Learning Systems: Code, Data and Models ", "https://madewithml.com/courses/mlops/monitoring/", True]
 ]
 
 class UrlHit:
