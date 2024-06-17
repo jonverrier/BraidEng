@@ -114,9 +114,9 @@ def parse_json_mdd_transcript(config, mdd, metadata, tokenizer, chunks):
                 seg_finish_tokens = seg_begin_tokens + config.chunkDurationMins * 60
 
             # Get the number of tokens in the text.
-            # Need to calc to allow for 1024 tokens for 
+            # Need to calc to allow for tokens for 
             # summary request in next pipeline step
-            total_tokens = len(tokenizer.encode(current_text)) + current_token_length
+            total_tokens = len(tokenizer.encode(current_text, disallowed_special=())) + current_token_length
 
             # Deal with case of a chunk that is already over the limit - in which case we add it
             # in chunks # then return.
