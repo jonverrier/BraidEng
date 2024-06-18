@@ -153,6 +153,27 @@ describe("AIConnection", async function () {
       expect (called).toBe(true);                
    }); 
 
+   it("Needs to generate valid response from Open AI web endpoint using basic API", async function () {
+
+      let messages = new Array<Message>();
+      messages.length = 2;
+      messages[0] = personMessage;
+      messages[1] = botRequest;
+     
+      throwIfUndefined(process);
+      throwIfUndefined(process.env);
+      throwIfUndefined(process.env.SessionKey); 
+
+      let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey));             
+      let fullQuery = caller.buildQueryForQuestionPrompt (messages, authors);
+      let message = new Message();
+
+      let result = await caller.makeSingleCall (fullQuery, message);
+
+      expect (message.text.length > 0).toBe(true);    
+      expect (message.isStreaming).toBe(false);              
+   }); 
+
    function makeLongMessage (startingMessage: Message, segmentCount: number) : Message {
 
       let segments = new Array<Embedding>();      

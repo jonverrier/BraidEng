@@ -89,7 +89,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       return false;
    }
 
-   function makeHelpfulStart (fluidMessagesConnection_: BraidFluidConnection) : void {
+   function makeBraidSuggestion (fluidMessagesConnection_: BraidFluidConnection, isInitial: boolean) : void {
 
       setIsBusy (true);
 
@@ -107,7 +107,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
          } 
          setIsBusy (false);
 
-      }, EConfigNumbers.kHelpfulPromptDelayMsecs);  
+      }, EConfigNumbers.kInitialHelpfulPromptDelayMsecs);  
    }
 
    function initialiseConnectionState (fluidMessagesConnection_: BraidFluidConnection, 
@@ -158,7 +158,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       
       setConversationKey (conversationKey_);  
 
-      makeHelpfulStart (fluidMessagesConnection_);    
+      makeBraidSuggestion (fluidMessagesConnection_, true);    
       
       /* Volume testing - works fine as of May 30 204 - few seconds to load 1,000 messages, view renders at interactive speed. 
       if (firstLoad && Environment.environment() === EEnvironment.kLocal) {
@@ -335,13 +335,13 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       let embeddingRespository = getEmbeddingRepository (props.sessionKey);
 
-      // Get the summary of the URL the user clocked on
+      // Get the summary of the URL the user clicked on
       let summary = embeddingRespository.lookupUrlSummary (url_);
       summary.then ((summaryText: string) => {
 
          let connectionPromise = AIConnector.connect (props.sessionKey);
       
-         // Connext to the LLM
+         // Connect to the LLM
          connectionPromise.then ( (connection : AIConnection) => { 
 
             // Ask the LLM for a question based on the summary            
@@ -355,6 +355,42 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       });                                                                
    }
 
+   function suggestContent () : void {   
+
+      // Use a random number generator, between 0 & the ma number of messages. If it is zero,
+      // make a suggestion 
+      const index = Math.floor(Math.random() * EConfigNumbers.kUserMessagesBeforePrompt);
+
+      if (index === 0) {
+
+         let connectionPromise = AIConnector.connect (props.sessionKey);
+      
+         // Connect to the LLM
+         connectionPromise.then ( (connection : AIConnection) => { 
+
+            throwIfUndefined (fluidConnection);
+            let fluidMessagesConnection : BraidFluidConnection = fluidConnection;   
+
+            let messageArray = fluidMessagesConnection.messageCaucus().currentAsArray();      
+            setConversation (messageArray);      
+            let audienceMap = fluidMessagesConnection.participantCaucus().current();
+            setAudience (audienceMap);
+
+            let query = connection.buildQueryForQuestionPrompt (messageArray, audienceMap);
+            let keyGenerator = getDefaultKeyGenerator();             
+            let responseShell = new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, undefined, 
+                                             "", new Date()); 
+
+            // Ask the LLM for a question based on the summary            
+            connection.makeSingleCall (query, responseShell).then ((result_: Message) => {                                                                               
+               if (result_) {
+                  setSuggested (result_);
+               }
+            });
+         });   
+      }                                                             
+   }
+
    function onAddSuggestedContent () {
 
       throwIfUndefined (fluidConnection);
@@ -364,7 +400,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       suggested.sentAt = new Date(); // Need to reset date so it goes at the end. 
 
       if (suggested.chunks && suggested.chunks.length > 0) {
-         // If we have attached chucks, its a full message that we just replay
+         // If we have attached chuncks, its a full message that we just replay
          addMessage (fluidMessagesConnection, suggested); 
       }
       else {
@@ -467,22 +503,27 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
             setIsBusy(false);             
          });
       }
-      else
-      // If the user looks they have miss-typed, we send a reminder.  
-      // ======================================================      
-      if (AIConnection.mightBeMissTypedRequestForLLM (message, audienceMap)) {
+      else {
+         // If the user looks they have miss-typed, we send a reminder.  
+         // ======================================================      
+         if (AIConnection.mightBeMissTypedRequestForLLM (message, audienceMap)) {
 
-         // set up a message to append
-         let response = new Message ();
-         response.authorId = EConfigStrings.kLLMGuid;
-         response.text = EUIStrings.kLLMNameReminder;
-         response.sentAt = new Date();
-         response.responseToId = message.id;
+            // set up a message to append
+            let response = new Message ();
+            response.authorId = EConfigStrings.kLLMGuid;
+            response.text = EUIStrings.kLLMNameReminder;
+            response.sentAt = new Date();
+            response.responseToId = message.id;
 
-         // Push it to shared data
-         addMessage (fluidMessagesConnection, response);                         
-      }
-      forceUpdate ();      
+            // Push it to shared data
+            addMessage (fluidMessagesConnection, response);                         
+         }
+         else {
+            // else we quasi-randomly see of we should add something
+            suggestContent ();
+         }
+      forceUpdate ();    
+      }  
    } 
 
    let joinValidator = new JoinPageValidator ();
