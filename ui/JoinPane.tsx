@@ -135,7 +135,8 @@ export const JoinRow = (props: IJoinPageProps) => {
          EUIStrings.kCohort1Team2ConversationName,
          EUIStrings.kCohort1Team3ConversationName,
          EUIStrings.kCohort1Team4ConversationName,
-         EUIStrings.kDemoConversationName
+         EUIStrings.kDemoConversationName,
+         EUIStrings.kBraidPlatformConversationName
       ];
       defaultConversationName = EUIStrings.kCohort1ConversationName;    
    }
