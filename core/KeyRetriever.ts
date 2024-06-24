@@ -54,7 +54,7 @@ export class KeyRetriever {
          
          this.activeCallCount--;
    
-         logApiError (EConfigStrings.kErrorConnectingToKeyAPI + ":" + apiUrl_, e.response.data);           
+         logApiError (EConfigStrings.kErrorConnectingToKeyAPI + ":" + apiUrl_, e?.response?.data);           
       }
 
       if (!response || !response.data)

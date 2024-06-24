@@ -13,7 +13,7 @@
             "args": [
                 "-r",
                 "ts-node/register",
-                "${workspaceRoot}/test/like*.ts",
+                "${workspaceRoot}/test/aiconnection*.ts",
                 "--no-timeouts"
             ],
             "cwd": "${workspaceRoot}"

@@ -50,7 +50,7 @@ export class AIConnection {
       let enrichedQuery = this.buildEnrichmentQuery (allMessages);      
 
       const [directResponse, enrichedResponse] = await Promise.all ([this.makeSingleStreamedCall (allMessages, responseShell), 
-                                                                     this.makeSingleCall (enrichedQuery)]);
+                                                                     this.makeSingleCallInternal (enrichedQuery)]);
       logApiInfo ("Enriched question for lookup:", enrichedResponse);    
       
       if (!enrichedResponse.includes (EConfigStrings.kResponseNotRelevantMarker)
@@ -77,11 +77,22 @@ export class AIConnection {
       
       let followUpQuery = this.buildFollowUpQuery (context);      
 
-      const [enrichedResponse] = await Promise.all ([this.makeSingleCall (followUpQuery)]);
+      const [enrichedResponse] = await Promise.all ([this.makeSingleCallInternal (followUpQuery)]);
                               
       let keyGenerator = getDefaultKeyGenerator();
       return new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, undefined, 
                           enrichedResponse, new Date());                                                                        
+   } 
+
+   // Asks the LLM for a question that relates to the context  
+   async makeSingleCall  (input: Array<AIMessageElement>, output: Message) : Promise<Message> {            
+   
+      const [response] = await Promise.all ([this.makeSingleCallInternal (input)]);
+                                 
+      let keyGenerator = getDefaultKeyGenerator();
+      output.text = response;  
+                          
+      return output;
    } 
 
    // Makes an Axios call to call web endpoint using the streaming API
@@ -342,6 +353,44 @@ export class AIConnection {
       return builtQuery; 
    }   
 
+   buildQueryForQuestionPrompt (messages: Array<Message>, authors: Map<string, Persona>): Array<AIMessageElement> {
+
+      let builtQuery = new Array<AIMessageElement> ();
+
+      let prompt = { role: 'system', content: EConfigStrings.kOpenAiPersonaPrompt };
+      builtQuery.push (prompt);      
+
+      var start = this.findEarliestMessageIndexWithinTokenLimit(messages, authors);
+
+      for (let i = start; i < messages.length; i++) {
+
+         let message = messages[i];
+
+         if (AIConnection.isFromLLM(message, authors)) {
+            
+            let entry = { role: 'assistant', content: message.text };
+            builtQuery.push (entry);     
+
+            for (let j = 0; j < message.chunks.length; j++) {
+               let entry = { role: 'assistant', content: message.chunks[j].summary };
+               builtQuery.push (entry);
+            }                   
+         }            
+         else {
+               let edited = message.text.replace (EConfigStrings.kLLMRequestSignature, "");
+               let entry = { role: 'user', content: edited };
+               builtQuery.push (entry);
+         }      
+      }
+
+      let engineeredQuestion = EConfigStrings.kGenerateAQuestionPrompt;      
+      let entry = { role: 'user', content: engineeredQuestion };
+      builtQuery.push (entry);
+
+      return builtQuery; 
+   }   
+
+
    buildEnrichmentQuery (messages: Array<AIMessageElement>): Array<AIMessageElement> {
 
       let builtQuery = new Array<AIMessageElement> ();
@@ -374,7 +423,7 @@ export class AIConnection {
    } 
 
    // Makes an Axios call to call web endpoint
-   private async makeSingleCall  (input: Array<AIMessageElement>) : Promise<string> {
+   private async makeSingleCallInternal  (input: Array<AIMessageElement>) : Promise<string> {
       
       let self = this;
       self._activeCallCount++;

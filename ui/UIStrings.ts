@@ -27,6 +27,7 @@ export enum EUIStrings {
    kNoThanks = "No thanks.",
    kLikedThis = "Click to like.",
    kDidNotLikeThis = "Click if you don't like it any more.",
+   kDeleteMessage = "Delete message.",
    kSendMessagePlaceholder = "Write a message... ",  
    kMessageTextPrompt = "Ctrl+Enter to send or Esc to cancel.",
    kCopyConversationUrlButtonPrompt = "Copy the URL for this conversation to the clipboard.",

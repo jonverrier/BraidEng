@@ -30,7 +30,8 @@ import {
    DoorArrowLeft24Regular,
    ChatMultipleRegular,
    ChatMultipleHeartRegular,
-   ChatMultipleHeartFilled
+   ChatMultipleHeartFilled,
+   DeleteRegular
 } from '@fluentui/react-icons';
 
 import { EIcon } from '../core/Icons';
@@ -78,7 +79,8 @@ export interface IConversationViewProps {
    onCancelSuggestedContent (): void;
    onClickUrl (url_: string): void;   
    onLikeUrl (url_: string): void;   
-   onUnlikeUrl (url_: string): void;          
+   onUnlikeUrl (url_: string): void;     
+   onDeleteMessage (id: string) : void;     
 }
 
 const headerRowStyles = makeStyles({
@@ -289,7 +291,8 @@ export const ConversationView = (props: IConversationViewProps) => {
                               showAiWarning={message.authorId === EConfigStrings.kLLMGuid}
                               onClickUrl={props.onClickUrl}  
                               onLikeUrl={props.onLikeUrl}   
-                              onDislikeUrl={props.onUnlikeUrl}                                                            
+                              onDislikeUrl={props.onUnlikeUrl}
+                              onDeleteMessage={props.onDeleteMessage}
                            />
                         )                     
                      })}                          
@@ -327,6 +330,7 @@ export interface ISingleMessageViewProps {
    onClickUrl (url_: string) : void;    
    onLikeUrl (url_: string) : void;  
    onDislikeUrl (url_: string) : void;     
+   onDeleteMessage (id: string) : void;
 }
 
  export interface IAuthorIconProps {
@@ -437,7 +441,7 @@ const amberStyles = makeStyles({
    },
 });
 
-const chunkHeaderStyles = makeStyles({
+const toolbarRowStyles = makeStyles({
    root: {    
       display: 'flex',
       flexDirection: 'row',
@@ -445,7 +449,7 @@ const chunkHeaderStyles = makeStyles({
    },
 });
 
-const likeDislikeStyles = makeStyles({
+const toolbarButtonStyles = makeStyles({
    root: {    
       alignSelf: 'centre',
       marginLeft: '5px',
@@ -496,8 +500,8 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
 
    let relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
    let linkClasses = linkStyles();
-   let chunkHeaderClasses = chunkHeaderStyles();  
-   let likeDislikeCLasses = likeDislikeStyles();   
+   let toolbarRowClasses = toolbarRowStyles();  
+   let toolbarButtonClasses = toolbarButtonStyles();   
    
    let linkText = segment.url;
    
@@ -529,7 +533,7 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
 
 
    return (<div className={sourcesClasses.root} key={segment.url}>
-              <div className={chunkHeaderClasses.root}>
+              <div className={toolbarRowClasses.root}>
                  <Link className={linkClasses.root} 
                     href={segment.url} onClick={onClickLink} inline>{linkText}                
                   </Link>
@@ -538,14 +542,14 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
                      <ToolbarDivider />                  
                      <Tooltip content={likedByMe ? EUIStrings.kDidNotLikeThis : EUIStrings.kLikedThis} relationship="label" positioning={'above'}>                     
                         <ToolbarButton
-                           className={likeDislikeCLasses.root}
+                           className={toolbarButtonClasses.root}
                            icon={likedByMe? <ChatMultipleHeartFilled/> : likedByAnyone ? <ChatMultipleHeartRegular/> : <ChatMultipleRegular/>} 
                            onClick={likedByMe ? onClickUnlike : onClickLike}/>   
                      </Tooltip> 
                      <Text size={100}>{likeText}</Text>    
                   </Toolbar>                                              
                </div>
-               <Body1 className={chunkHeaderClasses.root}> {segment.summary} </Body1>
+               <Body1 className={toolbarRowClasses.root}> {segment.summary} </Body1>
             </div>      
          );
 }
@@ -561,10 +565,23 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
 
    const singleMessageRowClasses = singleMessageRow();
    const singleMessageIconColumnClasses = singleMessageIconColumn();
-   const singleMessageTextColumnClasses = singleMessageTextColumn();
+   const singleMessageColumnClasses = singleMessageTextColumn();
+   const toolbarButtonClasses = toolbarButtonStyles(); 
+   const toolbarRowClasses = toolbarRowStyles();  
 
    const padAfterMessageClasses = padAfterMessage();  
    const amberClasses = amberStyles();
+
+   // we can omly delete our own messages
+   let canDelete = props.author.name === props.localPersonaName;
+
+   const onDeleteMessage = (event: React.MouseEvent<HTMLButtonElement>): void => {
+      // NB we call 'prevent default' as we want to control the action  
+      event.stopPropagation();
+      event.preventDefault();
+
+      props.onDeleteMessage (props.message.id);        
+   } 
 
    var aiSources;
    var aiFooter;   
@@ -599,9 +616,21 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
          <div className={singleMessageIconColumnClasses.root}>
             <AuthorIcon author={props.author} />            
          </div>   
-         <div className={singleMessageTextColumnClasses.root}>
-            <Caption1><b>{props.author.name}</b></Caption1>     
-            <Body1>{props.message.text}</Body1>   
+         <div className={singleMessageColumnClasses.root}>
+            <Caption1><b>{props.author.name}</b></Caption1> 
+            <div className={toolbarRowClasses.root}>                
+               <Body1>{props.message.text}</Body1>  
+               <Toolbar aria-label="Delete control toolbar" >                        
+                  <ToolbarDivider />                  
+                  <Tooltip content={EUIStrings.kDeleteMessage} relationship="label" positioning={'above'}>                     
+                     <ToolbarButton
+                        className={toolbarButtonClasses.root}
+                        disabled={!canDelete}
+                        icon={<DeleteRegular/>} 
+                        onClick={onDeleteMessage}/>   
+                  </Tooltip>    
+               </Toolbar>              
+            </div>
             <div className={padAfterMessageClasses.root}></div>              
             {aiSources}  
             <div className={padAfterMessageClasses.root}></div>                     

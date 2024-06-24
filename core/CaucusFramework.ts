@@ -107,8 +107,10 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
 
    remove (key_: string): boolean {
 
-      return this._shared.delete(key_);
-      this._isCachedArrayDirty = true;      
+      let result = this._shared.delete(key_);
+      if (result)
+         this._isCachedArrayDirty = true;  
+      return result;    
    }
 
    amend(key: string, element: AType) {
