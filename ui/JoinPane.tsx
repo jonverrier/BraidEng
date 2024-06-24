@@ -6,12 +6,11 @@ import React, { ChangeEvent, MouseEvent, useState } from 'react';
 // Fluent
 import {
    makeStyles, shorthands, 
-   Dropdown, Option, Tooltip,
+   Dropdown, Option, Tooltip, Button,
    Text, Input, Image, 
    InputOnChangeData,
    SelectionEvents,
-   OptionOnSelectData,
-   useIsomorphicLayoutEffect
+   OptionOnSelectData
 } from '@fluentui/react-components';
 
 import {
@@ -92,7 +91,9 @@ const dropdownStyles = makeStyles({
       case EUIStrings.kCohort1Team3ConversationName:
          return new ConversationKey (EConfigStrings.kCohort1Team3ConversationKey);    
       case EUIStrings.kCohort1Team4ConversationName:
-         return new ConversationKey (EConfigStrings.kCohort1Team4ConversationKey);      
+         return new ConversationKey (EConfigStrings.kCohort1Team4ConversationKey);   
+      case EUIStrings.kBraidPlatformConversationName:
+         return new ConversationKey (EConfigStrings.kBraidPlatformConversationKey);
       case EUIStrings.kCohort1ConversationName:
       default:
          return new ConversationKey (EConfigStrings.kCohort1ConversationKey);                   
@@ -161,7 +162,7 @@ export const JoinRow = (props: IJoinPageProps) => {
       setSessionKey(newSessionKey);
    }   
 
-   function onTryJoin(ev: MouseEvent<HTMLImageElement>): void {
+   function onTryJoin(ev: MouseEvent<HTMLButtonElement>): void {
       
       ev.preventDefault();
 
@@ -245,17 +246,18 @@ export const JoinRow = (props: IJoinPageProps) => {
                            ))}
                         </Dropdown>
                      </Tooltip>      
-                  </div>
-               </div>          
-               &nbsp;                  
-               <div className={joinFormRowClasses.root}>               
-                  <Tooltip withArrow content={EUIStrings.kJoinConversationWithLinkedInPrompt} relationship="label">
-                     <Image className={sessionKey.looksValidSessionKey()? buttonEnabledClasses.root : buttonDisabledClasses.root}
-                        alt={EUIStrings.kJoinConversationWithLinkedInPrompt}
-                        src="assets/img/SignInWithLinkedIn.png"
-                        onClick={onTryJoin}
-                     />
-                  </Tooltip>                
+                  </div>    
+                  &nbsp;          
+                  &nbsp;    
+                  &nbsp;                                                   
+                  <Button onClick={onTryJoin} >        
+                     <Tooltip withArrow content={EUIStrings.kJoinConversationWithLinkedInPrompt} relationship="label">
+                        <Image className={sessionKey.looksValidSessionKey()? buttonEnabledClasses.root : buttonDisabledClasses.root}
+                           alt={EUIStrings.kJoinConversationWithLinkedInPrompt}
+                           src="assets/img/SignInWithLinkedIn.png"
+                        />
+                     </Tooltip>  
+                  </Button>              
                </div>               
                &nbsp;                   
                <div className={joinFormRowClasses.root}> 
