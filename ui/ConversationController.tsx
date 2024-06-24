@@ -360,6 +360,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       throwIfUndefined (fluidConnection);
       let fluidMessagesConnection : BraidFluidConnection = fluidConnection;      
       fluidMessagesConnection.messageCaucus().remove (id);
+      setSuppressScroll(true);       
       refreshAndForceUpdate ();   
    }
 

@@ -17,6 +17,7 @@ export enum EUIStrings {
    kCohort1Team4ConversationName = "4x400m run",
    kDemoConversationName = "Demo",
    kTestConversationName = "Test",   
+   kBraidPlatformConversationName = "Braid Platform",
 
    kPageErrorCaption = "Error",
    
