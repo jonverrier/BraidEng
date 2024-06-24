@@ -229,7 +229,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       setSharedEmbeddings (sharedEmbeddingMap);       
    }
 
-   function refreshAfterTrim () : void {
+   function refreshAndForceUpdate () : void {
 
       throwIfUndefined (fluidConnection);    
       
@@ -250,7 +250,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       throwIfUndefined (fluidConnection);
       let fluidMessagesConnection : BraidFluidConnection = fluidConnection;      
       fluidMessagesConnection.resetMessages ();  
-      refreshAfterTrim ();        
+      refreshAndForceUpdate ();        
    }
 
    function onUnlikeUrl (url_: string) : void {
@@ -353,6 +353,14 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
             });
          });  
       });                                                                
+   }
+
+   function onDeleteMessage (id: string) : void {
+
+      throwIfUndefined (fluidConnection);
+      let fluidMessagesConnection : BraidFluidConnection = fluidConnection;      
+      fluidMessagesConnection.messageCaucus().remove (id);
+      refreshAndForceUpdate ();   
    }
 
    function suggestContent () : void {   
@@ -554,7 +562,8 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
              onExitConversation={onExitConversation}             
              onClickUrl={onClickUrl}
              onLikeUrl={onLikeUrl}    
-             onUnlikeUrl={onUnlikeUrl}                    
+             onUnlikeUrl={onUnlikeUrl}      
+             onDeleteMessage={onDeleteMessage}              
              >
          </ConversationView>
       );
