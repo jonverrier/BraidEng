@@ -341,6 +341,7 @@ export const ConversationView = (props: IConversationViewProps) => {
                               localPersonaName={props.localPersonaName}                              
                               key={message.id}
                               author={Persona.safeAuthorLookup (audience, message.authorId)}
+                              userIsAdmin={props.userIsAdmin}
                               sharedEmbeddings={props.sharedEmbeddings}
                               showAiWarning={message.authorId === EConfigStrings.kLLMGuid}
                               onClickUrl={props.onClickUrl}  
@@ -380,7 +381,8 @@ export interface ISingleMessageViewProps {
    author: Persona;
    showAiWarning: boolean;
    localPersonaName: string;   
-   sharedEmbeddings: Map<string, SharedEmbedding>;   
+   sharedEmbeddings: Map<string, SharedEmbedding>;  
+   userIsAdmin: boolean; 
    onClickUrl (url_: string) : void;    
    onLikeUrl (url_: string) : void;  
    onDislikeUrl (url_: string) : void;     
@@ -627,7 +629,7 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
    const amberClasses = amberStyles();
 
    // we can omly delete our own messages
-   let canDelete = props.author.name === props.localPersonaName;
+   let canDelete = props.userIsAdmin || (props.author.name === props.localPersonaName);
 
    const onDeleteMessage = (event: React.MouseEvent<HTMLButtonElement>): void => {
       // NB we call 'prevent default' as we want to control the action  

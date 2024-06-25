@@ -26,6 +26,7 @@ import { UrlActivityRecord } from '../core/ActivityRecordUrl';
 import { MessageActivityRecord } from '../core/MessageActivityRecord';
 import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 import { LikeUnlikeActivityRecord } from '../core/ActivityRecordLikeUnlike';
+import { getDetaultAdminRepository} from '../core/IAdminRepository';
 
 export interface IConversationControllerProps {
 
@@ -51,6 +52,15 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    const [key, setKey] = useState<number> (0);
    const [suppressScroll, setSuppressScroll] = useState<boolean> (false);
    const [chatLevel, setChatLevel] = useState<number>(2);   
+   const [userIsAdmin, setUserIsAdmin] = useState<boolean> (false);
+
+   // async call to see if the local user is an administrator
+   let repository = getDetaultAdminRepository();
+   repository.isAdmin (props.localPersona).then ((result) => {
+      if (userIsAdmin != result) {
+         setUserIsAdmin (result)
+      }
+   });
 
    const [, updateState] = React.useState<object>();
    const forceUpdate = React.useCallback(() => updateState({}), []);
@@ -551,7 +561,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    else {  
       return (
          <ConversationView key = {key}
-             userIsAdmin = {EConfigStrings.kAdminUserNames.includes (props.localPersona.name)}
+             userIsAdmin = {userIsAdmin}
              isConnected={props.sessionKey.looksValidSessionKey() && conversationKey.looksValidConversationKey()}
              suppressScroll = {suppressScroll}
              isBusy = {isBusy}

@@ -13,7 +13,8 @@ const containerSchema = {
    initialObjects: {
       participantMap: SharedMap,
       messageMap: SharedMap,
-      sharedEmbeddingMap: SharedMap
+      sharedEmbeddingMap: SharedMap,
+      configuration: SharedMap
    }
 };
 
