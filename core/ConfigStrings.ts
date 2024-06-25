@@ -81,7 +81,7 @@ export enum EConfigStrings {
 
 export enum EConfigNumbers {
    kInitialHelpfulPromptDelayMsecs = 1000,
-   kUserMessagesBeforePrompt = 20,
+   kBraidChattinessMessageCount = 20,
    kMaximumLinkTextlength = 40,
    kMaximumLinkTextlengthMobile = 30,   
    kHelpfulPromptMinimumGapMins = 10, // At least 10 minutes between AI suggestions
@@ -90,7 +90,8 @@ export enum EConfigNumbers {
    kMessagePromptLineSpace = 8,       // How much to allow between lines
    kMessagePromptMaxCharacters = 2048,
    kMaxDownloadWaitSeconds = 30,
-   kMaxMessagesBack = 20          // Go up to 20 messages back for context to send to the LLM
+   kMaxMessagesBack = 20,          // Go up to 20 messages back for context to send to the LLM
+   kMaxChatLevel = 4 // 0-4 to set how chatty the AI is
 }
 
 // This is used for local running only, as in browser we cannot access environment variables

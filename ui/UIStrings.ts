@@ -34,6 +34,8 @@ export enum EUIStrings {
    kCopyConversationUrlButtonPrompt = "Copy the URL for this conversation to the clipboard.",
    kTrimConversationButtonPrompt = "Delete the conversation history.",
    kExitConversationButtonPrompt = "Leave this conversation.",   
+   kBraidMoreChatButtonPrompt = "Make @Braid chattier. Currently %%1 out of %%2.",
+   kBraidLessChatButtonPrompt = "Make @Braid less chatty. Currently %%1 out of %%2.",   
    kAiHasNoSuggestedDocuments = "No suggestions at present. Interacting with @Braid will generate suggestions.", 
    kPomptToGetStarted = "Where is a good place to start learning about building applications with LLMs? With some examples in Python?",
 

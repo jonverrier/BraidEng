@@ -50,6 +50,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    const [suggested, setSuggested] = useState<Message|undefined>(undefined);  
    const [key, setKey] = useState<number> (0);
    const [suppressScroll, setSuppressScroll] = useState<boolean> (false);
+   const [chatLevel, setChatLevel] = useState<number>(2);   
 
    const [, updateState] = React.useState<object>();
    const forceUpdate = React.useCallback(() => updateState({}), []);
@@ -238,6 +239,11 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       forceUpdate ();       
    }
 
+   function onSetBraidChattiness (level: number, max: number) : void {
+
+      setChatLevel (level);         
+   }
+
    function onExitConversation () : void {
 
       let query = JoinDetails.toString ("", "", props.sessionKey, new ConversationKey(""));
@@ -366,11 +372,12 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    function suggestContent () : void {   
 
-      // Use a random number generator, between 0 & the ma number of messages. If it is zero,
+      // Use a random number generator, between 0 & the max number of messages. If it is zero,
       // make a suggestion 
-      const index = Math.floor(Math.random() * EConfigNumbers.kUserMessagesBeforePrompt);
+      let upper = Math.floor (EConfigNumbers.kBraidChattinessMessageCount / (chatLevel + 1));
+      const index = Math.floor(Math.random() * upper);
 
-      if (index === 0) {
+      if (chatLevel > 0 && index === 0) {
 
          let connectionPromise = AIConnector.connect (props.sessionKey);
       
@@ -556,6 +563,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
              sharedEmbeddings={sharedEmbeddings}
              hasSuggestedContent={suggested ? true: false}
              suggestedContent={suggested ? suggested.text: ""}
+             braidChattinessLevel={chatLevel}
              onSend={onSend} 
              onAddSuggestedContent={onAddSuggestedContent}
              onCancelSuggestedContent={onCancelSuggestedContent}
@@ -564,7 +572,8 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
              onClickUrl={onClickUrl}
              onLikeUrl={onLikeUrl}    
              onUnlikeUrl={onUnlikeUrl}      
-             onDeleteMessage={onDeleteMessage}              
+             onDeleteMessage={onDeleteMessage}          
+             onSetBraidChattiness={onSetBraidChattiness}    
              >
          </ConversationView>
       );
