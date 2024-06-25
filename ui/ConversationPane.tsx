@@ -31,7 +31,9 @@ import {
    ChatMultipleRegular,
    ChatMultipleHeartRegular,
    ChatMultipleHeartFilled,
-   DeleteRegular
+   DeleteRegular,
+   ChatOffRegular,
+   ChatAddRegular   
 } from '@fluentui/react-icons';
 
 import { EIcon } from '../core/Icons';
@@ -54,8 +56,10 @@ export interface IConversationHeaderProps {
    sessionKey: SessionKey;
    conversationKey: ConversationKey;   
    audience: Map<string, Persona>;
+   braidChattinessLevel: number;
    onTrimConversation () : void;  
    onExitConversation () : void;  
+   onSetBraidChattiness (level: number, max: number) : void;  
 }
 
 export interface IConversationViewProps {
@@ -72,6 +76,7 @@ export interface IConversationViewProps {
    hasSuggestedContent: boolean;
    suggestedContent: string;
    suppressScroll: boolean;
+   braidChattinessLevel: number;
    onSend (message_: string) : void;   
    onTrimConversation () : void;   
    onExitConversation () : void;
@@ -80,7 +85,8 @@ export interface IConversationViewProps {
    onClickUrl (url_: string): void;   
    onLikeUrl (url_: string): void;   
    onUnlikeUrl (url_: string): void;     
-   onDeleteMessage (id: string) : void;     
+   onDeleteMessage (id: string) : void;   
+   onSetBraidChattiness (level: number, max: number) : void;
 }
 
 const headerRowStyles = makeStyles({
@@ -93,6 +99,18 @@ const headerRowStyles = makeStyles({
 });
 
 export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
+
+   let chatLevelForPrompt = props.braidChattinessLevel + 1;
+   let maxChatLevelForPrompt = EConfigNumbers.kMaxChatLevel + 1; 
+
+   let lessChatPrompt = EUIStrings.kBraidLessChatButtonPrompt.replace ("%%1", chatLevelForPrompt.toString())
+                                                             .replace ("%%2", maxChatLevelForPrompt.toString());
+
+   let moreChatPrompt = EUIStrings.kBraidMoreChatButtonPrompt.replace ("%%1", chatLevelForPrompt.toString())
+                                                             .replace ("%%2", maxChatLevelForPrompt.toString());
+
+   let canHaveLessChat = props.braidChattinessLevel > 0;
+   let canHaveMoreChat = props.braidChattinessLevel < EConfigNumbers.kMaxChatLevel;
 
    const headerRowClasses = headerRowStyles();
 
@@ -119,6 +137,21 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
 
       navigator.clipboard.writeText (newUrl);
    }       
+
+   function onMoreChat (ev: React.MouseEvent<HTMLButtonElement>) : void {
+
+      if (props.braidChattinessLevel < EConfigNumbers.kMaxChatLevel) {
+         let newChatLevel = props.braidChattinessLevel + 1;
+         props.onSetBraidChattiness (newChatLevel, EConfigNumbers.kMaxChatLevel);
+      }
+   } 
+
+   function onLessChat (ev: React.MouseEvent<HTMLButtonElement>) : void {
+      if (props.braidChattinessLevel > 0) {     
+         let newChatLevel = props.braidChattinessLevel - 1;
+         props.onSetBraidChattiness (newChatLevel, EConfigNumbers.kMaxChatLevel);         
+      }
+   }    
 
    function onTrimConversation (ev: React.MouseEvent<HTMLButtonElement>) : void {
 
@@ -147,7 +180,7 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
             )}
          </AvatarGroup>  
          <ToolbarDivider />
-         <Toolbar aria-label="Conversation control toolbar" >      
+         <Toolbar aria-label="Conversation control toolbar" >                  
             <Tooltip content={EUIStrings.kCopyConversationUrlButtonPrompt} 
                relationship="label" positioning={'below'}>
                <ToolbarButton
@@ -157,6 +190,24 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
                   onClick={onCopy}
                />                 
             </Tooltip>           
+            <Tooltip content={lessChatPrompt} 
+               relationship="label" positioning={'below'}>
+               <ToolbarButton
+                  icon={<ChatOffRegular />}
+                  aria-label={lessChatPrompt} 
+                  disabled={!canHaveLessChat} 
+                  onClick={onLessChat}
+               />  
+            </Tooltip>        
+            <Tooltip content={moreChatPrompt} 
+               relationship="label" positioning={'below'}>
+               <ToolbarButton
+                  icon={<ChatAddRegular />}
+                  aria-label={moreChatPrompt} 
+                  disabled={!canHaveMoreChat} 
+                  onClick={onMoreChat}
+               />  
+            </Tooltip>                
             <Tooltip content={EUIStrings.kTrimConversationButtonPrompt} 
                relationship="label" positioning={'below'}>
                <ToolbarButton
@@ -174,7 +225,7 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
                   disabled={!(props.sessionKey.looksValidSessionKey() && props.conversationKey.looksValidConversationKey())} 
                   onClick={onExitConversation}
                />  
-            </Tooltip>                                   
+            </Tooltip>                                                   
          </Toolbar>           
       </div>
    );
@@ -272,7 +323,10 @@ export const ConversationView = (props: IConversationViewProps) => {
                   conversationKey={props.conversationKey}
                   audience={props.audience} 
                   onTrimConversation={props.onTrimConversation}      
-                  onExitConversation={props.onExitConversation}>                                   
+                  onExitConversation={props.onExitConversation}
+                  onSetBraidChattiness={props.onSetBraidChattiness}
+                  braidChattinessLevel={props.braidChattinessLevel}
+                  >                                                                       
                </ConversationHeaderRow>
                
                &nbsp;
