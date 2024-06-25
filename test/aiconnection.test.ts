@@ -120,7 +120,7 @@ describe("AIConnection", async function () {
       let result = await caller.makeEnrichedCall (message, fullQuery);
 
       expect (result.text.length > 0).toBe(true);
-   });   
+   }).timeout(20000);   
 
    it("Needs to generate valid response from Open AI web endpoint using streaming API", async function () {
 
@@ -151,7 +151,7 @@ describe("AIConnection", async function () {
       expect (message.text.length > 0).toBe(true);    
       expect (message.isStreaming).toBe(false);    
       expect (called).toBe(true);                
-   }); 
+   }).timeout(20000); 
 
    it("Needs to generate valid response from Open AI web endpoint using basic API", async function () {
 
@@ -172,7 +172,7 @@ describe("AIConnection", async function () {
 
       expect (message.text.length > 0).toBe(true);    
       expect (message.isStreaming).toBe(false);              
-   }); 
+   }).timeout(20000); 
 
    function makeLongMessage (startingMessage: Message, segmentCount: number) : Message {
 
