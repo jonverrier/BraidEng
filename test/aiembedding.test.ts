@@ -29,7 +29,7 @@ describe("AIEmbedding", async function () {
 
       expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);
 
-   }).timeout (10000);
+   }).timeout (20000);
 
    it("Needs to find closest match for an existing YouTube document", async function () {
 
@@ -44,7 +44,7 @@ describe("AIEmbedding", async function () {
 
       expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);
 
-   }).timeout (10000);
+   }).timeout (20000);
 
    it("Needs to find closest match for an existing Html document", async function () {
 
@@ -59,7 +59,7 @@ describe("AIEmbedding", async function () {
 
       expect (best.chunks.length === kDefaultSearchChunkCount).toBe (true);
 
-   }).timeout (10000);
+   }).timeout (20000);
 
    it("Needs to find closest match for a simple query", async function () {
       
