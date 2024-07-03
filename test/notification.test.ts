@@ -11,7 +11,8 @@ import {
    Notifier,
    IObserver,
    NotificationRouter,
-   NotificationRouterFor
+   NotificationRouterFor,
+   FunctionForNotification
 } from '../core/NotificationFramework';
 import { throwIfUndefined } from '../core/Asserts';
 
@@ -156,8 +157,8 @@ describe("NotificationFramework", function () {
       var observer = new MockObserver();
       var observer2 = new MockObserver();
 
-      var observationRouter1: NotificationRouter = new NotificationRouter(observer.notifyInt.bind(observer));
-      var observationRouter2: NotificationRouter = new NotificationRouter(observer.notifyInt.bind(observer2));
+      let observationRouter1 = new NotificationRouter(observer.notifyInt.bind(observer) as FunctionForNotification);
+      var observationRouter2: NotificationRouter = new NotificationRouter(observer.notifyInt.bind(observer2) as FunctionForNotification);
       var observationRouter3: NotificationRouter = new NotificationRouter(observationRouter1);
       var observationRouter4: NotificationRouter = new NotificationRouter();
 
