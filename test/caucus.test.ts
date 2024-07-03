@@ -22,6 +22,13 @@ class MockLocation { // Just create the fields we use in the Mock
    host: string;
    hostname: string;
    hash: string;
+
+   constructor() {
+      this.protocol = "";
+      this.host = "";
+      this.hostname = "";
+      this.hash = "";
+   }   
 }
 
 var mockLocation = new MockLocation();
@@ -96,7 +103,7 @@ describe("Caucus", function () {
 
       caucus.remove(workingPersona.id);
       expect(caucus.has(workingPersona.id)).toEqual(false);
-      expect(caucus.current().size).toEqual(1); // The Bot perdona is added manually - size is alays >= 1
+      expect(caucus.current().size).toEqual(1); // The Bot persona is added manually - size is alays >= 1
     });
 
     it("Can detect invalid operations", async function () {

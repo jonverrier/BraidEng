@@ -310,7 +310,7 @@ export class ObserverInterest {
 /// NotificationRouter -  template to act as an intermediary, type-safe router that connects a specific function signature for the method that is called in a notification
 /// </summary>
 /// 
-type FunctionForNotification = (interest: Interest, data: Notification) => void;
+export type FunctionForNotification = (interest: Interest, data: Notification) => void;
 
 export class NotificationRouter implements IObserver {
    private _function: FunctionForNotification | undefined;

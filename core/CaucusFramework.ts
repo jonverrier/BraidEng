@@ -44,12 +44,14 @@ export class CaucusOf<AType extends MDynamicStreamable> extends Notifier {
 
       });
 
-      // This functions as a kickstarter for initail load - changes made by other parties before we were connected are not classed as 'remote'
+      let self = this;
+      
+      // This functions as a kickstarter for initial load - changes made by other parties before we were connected are not classed as 'remote'
       // so we have to kick the UI
       function kickStart() {
-         this.doNotification(false, false, undefined);
+         self.doNotification(false, false, undefined);
       }
-      const kickStarted = debounce(kickStart.bind(this), 250);
+      const kickStarted = debounce(() => {kickStart.bind(this)}, 250);
       kickStarted();
    }
 

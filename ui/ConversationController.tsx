@@ -353,14 +353,15 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       // Get the summary of the URL the user clicked on
       let summary = embeddingRespository.lookupUrlSummary (url_);
-      summary.then ((summaryText: string) => {
+      summary.then ((summaryText: string | undefined) => {
 
          let connectionPromise = AIConnector.connect (props.sessionKey);
       
          // Connect to the LLM
          connectionPromise.then ( (connection : AIConnection) => { 
 
-            // Ask the LLM for a question based on the summary            
+            // Ask the LLM for a question based on the summary 
+            throwIfUndefined(summaryText);
             connection.makeFollowUpCall (summaryText).then ((result_: Message) => {                                                                               
                if (result_) {
                   result_.authorId = props.localPersona.id;

@@ -50,7 +50,7 @@ export class KeyRetriever {
          });
          this.activeCallCount--; 
 
-      } catch (e) {
+      } catch (e: any) {
          
          this.activeCallCount--;
    

@@ -24,6 +24,11 @@ const kMaxTokens : number= 4096;
 export class AIMessageElement {
    role: string;
    content: string;
+
+   constructor () {
+      this.role = "";
+      this.content = "";
+   }
 }
 
 export class AIConnection {
