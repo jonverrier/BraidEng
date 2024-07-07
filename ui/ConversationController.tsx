@@ -32,9 +32,10 @@ export interface IConversationControllerProps {
 
    sessionKey: SessionKey;
    conversationKey: ConversationKey;
+   secret: string;
    localPersona: Persona; 
    onFluidError (hint_: string) : void;   
-   onAiError (hint_: string) : void;        
+   onAiError (hint_: string) : void;     
 }
 
 let firstLoad = true;
@@ -189,7 +190,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    let validater = new JoinPageValidator();
 
-   if (validater.isJoinAttemptReady (props.localPersona.email, props.localPersona.name, 
+   if (validater.canAttemptJoin (props.localPersona.email, props.localPersona.name, 
                                      props.sessionKey, props.conversationKey) && 
       fluidConnection === undefined 
       && !joining) {
@@ -256,7 +257,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    function onExitConversation () : void {
 
-      let query = JoinDetails.toString ("", "", props.sessionKey, new ConversationKey(""));
+      let query = JoinDetails.toString ("", "", props.sessionKey, new ConversationKey(""), "");
       location.replace (EConfigStrings.kHomeRelativeUrl + '#' + query);   
       location.reload();          
    }
@@ -555,8 +556,9 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    let joinValidator = new JoinPageValidator ();
 
-   if (! joinValidator.isJoinAttemptReady (props.localPersona.email, props.localPersona.name, 
-                                           props.sessionKey, props.conversationKey)) {
+   // Only display conversation when we have all required details and we also have a secret that matches the last one
+   if (!joinValidator.canAttemptJoin(props.localPersona.email, props.localPersona.name, props.sessionKey, props.conversationKey) 
+    || !joinValidator.matchesSavedSecret (props.secret)) {
       return (<div></div>);
    }
    else {  

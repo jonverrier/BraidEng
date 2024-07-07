@@ -64,6 +64,7 @@ export enum EConfigStrings {
    kConversationParamName = "conversation",   
    kEmailParamName = "email",
    kNameParamName = "name",
+   kSecretParamName = "secret",
 
    kCohort1ConversationKey = "0665752f-45f1-4c00-820d-63abfdfe47c3",
    kCohort1Team1ConversationKey = "2da0520e-0d7d-42e3-98ec-119379078565",   

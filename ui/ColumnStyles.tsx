@@ -3,13 +3,15 @@ import {
    FluentProvider, teamsDarkTheme, makeStyles, Text
 } from '@fluentui/react-components';
 
+import { EUIStrings } from './UIStrings';
+
 export const innerColumnStyles = makeStyles({
    root: {
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'flex-start',    // start layout at the top       
       alignItems: 'center',
-      maxWidth: '896px'
+      maxWidth: EUIStrings.kMaxColumnWidth
    },
 });
 

@@ -26,13 +26,16 @@ import { EConfigStrings } from '../core/ConfigStrings';
 import { Environment, EEnvironment } from '../core/Environment';
 import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
 import { throwIfUndefined } from '../core/Asserts';
+import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 
 export interface IJoinPageProps {
    sessionKey: SessionKey;  
-   conversationKey: ConversationKey
+   conversationKey: ConversationKey;
+   secret: string;
    joinPersona: Persona;
    onConnect (sessionKey_: SessionKey, 
-              conversationKey_: ConversationKey) : void;
+              conversationKey_: ConversationKey,
+              secret_: string) : void;
    onConnectError (hint_: string) : void;    
 }
 
@@ -101,7 +104,7 @@ const dropdownStyles = makeStyles({
  }
 
 
-export const JoinRow = (props: IJoinPageProps) => {
+export const JoinPane = (props: IJoinPageProps) => {
 
    const joinPageInnerClasses = joinPageInnerStyles();   
    const joinFormRowClasses = joinFormRowStyles();
@@ -192,7 +195,11 @@ export const JoinRow = (props: IJoinPageProps) => {
             else {
                conversationKey = conversationKeyFromName (conversationName);
             }
-            props.onConnect(sessionKey, conversationKey);
+
+            let keyGenerator = getDefaultKeyGenerator();
+            let secret = keyGenerator.generateSecret();
+            keyGenerator.saveSecret (secret);
+            props.onConnect(sessionKey, conversationKey, secret);
           },
           (e: any) => {
             props.onConnectError(e.toString());
@@ -202,8 +209,7 @@ export const JoinRow = (props: IJoinPageProps) => {
 
    let joinValidator = new JoinPageValidator ();
 
-   if (joinValidator.isJoinAttemptReady (props.joinPersona.email, props.joinPersona.name, 
-                                         props.sessionKey, props.conversationKey)) {
+   if (joinValidator.matchesSavedSecret (props.secret)) {
       return (<div></div>);
    }
    else {

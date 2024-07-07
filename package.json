@@ -16,7 +16,7 @@
       "cover": "tsc && nyc mocha --exit --require ts-node/register test/*.test.ts",
       "local-fluid": "npx @fluidframework/azure-local-service@latest",
       "embeddings-lite": "mocha --require ts-node/register scripts/make_lite_embedding.ts && copy data\\embeddings_lite.json ..\\braidweb\\public",
-      "new-conversation": "mocha --require ts-node/register scripts/make_new_container.ts"      
+      "new-conversation": "mocha --require ts-node/register scripts/make_new_container.ts"
    },
    "devDependencies": {
       "@fluentui/react-components": "^9.44.0",
@@ -55,7 +55,8 @@
       "uglify-js": "^3.17.4",
       "webpack": "^5.89.0",
       "webpack-cli": "^5.1.4",
-      "webpack-node-externals": "^3.0.0"
+      "webpack-node-externals": "^3.0.0",
+      "webpack-obfuscator": "^3.5.1"
    },
    "nyc": {
       "include": [],

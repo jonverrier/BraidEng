@@ -2,6 +2,7 @@
 
 export enum EUIStrings {
 
+   kMaxColumnWidth = "896px",
    kJoinPagePreamble = "To join a conversation with @Braid, you need to enter the key from your contact at Braid, pick a conversation to join, then login with LinkedIn to identify yourself.",
    kJoinConversationKeyPrompt = "Key",
    kJoinConversationKeyPlaceholder = "Key... ",  
@@ -22,7 +23,8 @@ export enum EUIStrings {
    kPageErrorCaption = "Error",
    
    kJoinApiError = "Sorry, we were not able to connect to the conversation.",
-   kAiApiError = "Sorry, we were not able to connect to the AI.",   
+   kAiApiError = "Sorry, we were not able to connect to the AI.", 
+   kSecretError = "Sorry, we were not able to validate end-end security in your login. Please try again. If this recurs, please ask your Braid contect for support.",  
 
    kSendMessagePreamble = "Type a message below. If you want @Braid to reply, put '@Braid' in the message. Treat your messages as public and do not enter confidential information.",
    kNoThanks = "No thanks.",

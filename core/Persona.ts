@@ -16,7 +16,7 @@ const className = "Persona";
 function callAtob(data_: string, forceShim: boolean): string {
 
    if (!atob || forceShim) {
-      const atob = (data: string) => Buffer.from(data, 'base64').toString('binary');
+      const atob = (data: string) => { return Buffer.from(data, 'base64').toString('binary'); }
       return atob(data_);
    }
    return atob(data_);
