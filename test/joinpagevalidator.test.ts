@@ -20,7 +20,7 @@ describe("JoinPageValidator", function () {
       let session = new SessionKey (keyGenerator.generateKey());
       let conversation = new ConversationKey (keyGenerator.generateKey());
 
-      expect(validator.isJoinAttemptReady ("", undefined as unknown as string, session, conversation)).toEqual(false);
+      expect(validator.canAttemptJoin ("", undefined as unknown as string, session, conversation)).toEqual(false);
    });
 
    it("Needs to detect invalid session key", function () {
@@ -29,7 +29,7 @@ describe("JoinPageValidator", function () {
       let session = new SessionKey (badUuid);
       let conversation = new ConversationKey (keyGenerator.generateKey());
 
-      expect(validator.isJoinAttemptReady ("joe@mail.com", "Joe", session, conversation)).toEqual(false);
+      expect(validator.canAttemptJoin ("joe@mail.com", "Joe", session, conversation)).toEqual(false);
    }); 
 
    it("Needs to detect invalid conversation key", function () {
@@ -38,7 +38,7 @@ describe("JoinPageValidator", function () {
       let session = new SessionKey (keyGenerator.generateKey());
       let conversation = new ConversationKey (badUuid);
 
-      expect(validator.isJoinAttemptReady ("joe@mail.com", "Joe", session, conversation)).toEqual(false);
+      expect(validator.canAttemptJoin ("joe@mail.com", "Joe", session, conversation)).toEqual(false);
    }); 
     
 
@@ -47,7 +47,7 @@ describe("JoinPageValidator", function () {
       let session = new SessionKey (keyGenerator.generateKey());
       let conversation = new ConversationKey (keyGenerator.generateKey());
 
-      expect(validator.isJoinAttemptReady ("joe@mail.com", "Joe", session, conversation)).toEqual(true);
+      expect(validator.canAttemptJoin ("joe@mail.com", "Joe", session, conversation)).toEqual(true);
    });
    
 });
@@ -59,7 +59,7 @@ describe("JoinDetails", function () {
 
       let details = new JoinDetails("");
 
-      expect(details.isValid()).toEqual(false);
+      expect(details.canAttemptJoin()).toEqual(false);
    });
 
    it("Needs to detect invalid name", function () {
@@ -67,10 +67,11 @@ describe("JoinDetails", function () {
       let name = "";
       let session = new SessionKey (keyGenerator.generateKey());
       let conversation = new ConversationKey (keyGenerator.generateKey());
+      let secret = keyGenerator.generateSecret();
 
-      let details = new JoinDetails ("&email=" + name + "&session=" + session.toString() + "&conversation=" + conversation.toString());
+      let details = new JoinDetails ("&email=" + name + "&session=" + session.toString() + "&conversation=" + conversation.toString() + '&secret=' + secret);
 
-      expect(details.isValid()).toEqual(false);
+      expect(details.canAttemptJoin()).toEqual(false);
    });
 
    it("Needs to detect invalid session key", function () {
@@ -78,10 +79,11 @@ describe("JoinDetails", function () {
       let name = "joe@mail.com";
       let session = new SessionKey (badUuid);
       let conversation = new ConversationKey (keyGenerator.generateKey());
+      let secret = keyGenerator.generateSecret();      
 
-      let details = new JoinDetails ("&email=" + name + "&session=" + session.toString() + "&conversation=" + conversation.toString());
+      let details = new JoinDetails ("&email=" + name + "&session=" + session.toString() + "&conversation=" + conversation.toString() + '&secret=' + secret);
 
-      expect(details.isValid()).toEqual(false);
+      expect(details.canAttemptJoin()).toEqual(false);
    }); 
 
    it("Needs to detect invalid conversation key", function () {
@@ -89,10 +91,11 @@ describe("JoinDetails", function () {
       let name = "joe@mail.com";
       let session = new SessionKey (keyGenerator.generateKey());
       let conversation = new ConversationKey (badUuid);
+      let secret = keyGenerator.generateSecret();  
 
-      let details = new JoinDetails ("&email=" + name + "&session=" + session.toString() + "&conversation=" + conversation.toString());
+      let details = new JoinDetails ("&email=" + name + "&session=" + session.toString() + "&conversation=" + conversation.toString()+ '&secret=' + secret);
 
-      expect(details.isValid()).toEqual(false);
+      expect(details.canAttemptJoin()).toEqual(false);
    });  
    
    it("Needs to detect all valid parts", function () {
@@ -100,9 +103,10 @@ describe("JoinDetails", function () {
       let name = "joe@mail.com";
       let session = new SessionKey (keyGenerator.generateKey());
       let conversation = new ConversationKey (keyGenerator.generateKey());
+      let secret = keyGenerator.generateSecret();  
 
-      let details = new JoinDetails ("&email=" + name + "&session=" + session.toString() + "&conversation=" + conversation.toString());
+      let details = new JoinDetails ("&email=" + name + "&session=" + session.toString() + "&conversation=" + conversation.toString() + '&secret=' + secret);
 
-      expect(details.isValid()).toEqual(true);
+      expect(details.canAttemptJoin()).toEqual(true);
    });     
 });

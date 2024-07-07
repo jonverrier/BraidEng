@@ -25,6 +25,13 @@ describe("Uuid", function () {
       expect(keyGenerator.couldBeAKey("")).toEqual(false);
       expect(keyGenerator.couldBeAKey(badUuid)).toEqual(false);
    });   
+
+   it("Needs to generate a secret value", function () {
+
+      var newSecret: string = keyGenerator.generateSecret();
+
+      expect(newSecret.length > 0).toEqual(true);
+   });    
 });
 
 describe("Uuid - without Blob", function () {

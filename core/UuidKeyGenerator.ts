@@ -2,14 +2,89 @@
 import { EnvironmentError } from './Errors';
 import { IKeyGenerator } from './IKeyGenerator';
 
+let mockStoredSecret = "";
+
+function NumberToUint32Array(f: number) :  Uint32Array {
+   
+   const buf = new ArrayBuffer(8);
+   const floatView = new Float64Array(buf);
+   const uintView = new Uint32Array(buf);
+
+   floatView[0] = f;
+   const randomValues = new Uint32Array(2);
+   randomValues[0] = uintView[0];
+   randomValues[1] = uintView[1];
+
+   return randomValues;
+}
+
 export class UuidKeyGenerator implements IKeyGenerator {
 
    generateKey (): string {
       return uuid();
    }
 
+   // Function to generate a random state value
+   generateSecret(): string {
+      
+      // Upper and lower bounds
+      const min = 1;
+      const max = 100;
+
+      // Generate random number within bounds
+      let randomValues = new Uint32Array(2);
+      if (typeof window === "undefined") {
+         randomValues = NumberToUint32Array (Math.random ());         
+      }
+      else {
+         window.crypto.getRandomValues(randomValues);         
+      }
+
+      const secureRandom = min + (randomValues[0] % (max - min + 1));   
+      const secureRandomArray = new Array<number>();
+      secureRandomArray.push (secureRandom);
+
+      // Encode as UTF-8
+      const utf8Encoder = new TextEncoder();
+      const utf8Array = utf8Encoder.encode(
+        String.fromCharCode.apply(null, secureRandomArray)
+      );
+
+      let utf8NumberArray = Array.from(utf8Array);
+
+      // Base64 encode the UTF-8 data     
+      return btoa(String.fromCharCode.apply(null, utf8NumberArray)
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, ''));
+   }      
+
    couldBeAKey(key: string): boolean {
       return looksLikeUuid (key);
+   }
+
+   saveSecret(secret: string): void {
+
+      if (typeof localStorage === 'undefined') {
+         mockStoredSecret = secret;
+      }
+      else {
+         localStorage.setItem('secret', secret);
+      }
+   }
+
+   matchesSavedSecret (secret: string): boolean {
+
+      var stored;
+
+      if (typeof localStorage === 'undefined') {
+         stored = mockStoredSecret;
+      }
+      else {      
+         stored = localStorage.getItem('secret');
+      }
+
+      return (stored === secret);
    }
 
 }

@@ -18,7 +18,8 @@ export class JoinDetails {
    private _email: string;
    private _name: string;
    private _session: SessionKey;
-   private _conversation: ConversationKey;   
+   private _conversation: ConversationKey;  
+   private _secret: string; 
 
    /**
     * Create a JoinDetails object. A join details is in the format 'email=xxx@yyy.com&session=guid&conversation=guid' . The email is used to uniquely identify the joiner, the session 
@@ -31,6 +32,7 @@ export class JoinDetails {
       this._conversation = new ConversationKey("");      
       this._email = "";
       this._name = "";
+      this._secret = "";
 
       let parsed = qs.parse (trialInput_); 
 
@@ -38,6 +40,7 @@ export class JoinDetails {
       this._name = parsed.name ? parsed.name: "";
       this._session = parsed.session ? new SessionKey (parsed.session) : new SessionKey ("");
       this._conversation = parsed.conversation ? new ConversationKey (parsed.conversation) : new ConversationKey ("");  
+      this._secret = parsed.secret ? parsed.secret : "";        
    }   
    
    /**
@@ -55,30 +58,36 @@ export class JoinDetails {
    get conversation(): ConversationKey  {
       return this._conversation;
    }   
+   get secret(): string  {
+      return this._secret;
+   }     
    toString(): string  {
-      return JoinDetails.toString (this._email, this._name, this._session, this._conversation);
+      return JoinDetails.toString (this._email, this._name, this._session, this._conversation, this._secret);
    }
 
-   isValid(): boolean {
+   canAttemptJoin(): boolean {
       let environment = Environment.environment();
 
       // If we are running locally, allow empty conversation key -> this creates a new conversation
       if ((environment === EEnvironment.kLocal) && this._conversation.toString().length === 0)
          return this._session.looksValidSessionKey() && validateEmail (this._email);
 
-      return (this._session.looksValidSessionKey() && this._conversation.looksValidConversationKey() && validateEmail (this._email));          
+      return (this._session.looksValidSessionKey() 
+         && this._conversation.looksValidConversationKey() 
+         && validateEmail (this._email));          
    } 
 
-   static toString (email_: string, name_: string, session_: SessionKey, conversation_: ConversationKey) : string {
+   static toString (email_: string, name_: string, session_: SessionKey, conversation_: ConversationKey, secret_: string) : string {
       return '&' + EConfigStrings.kEmailParamName + '=' +  email_ 
          + '&' + EConfigStrings.kNameParamName + '=' +  name_ 
          + '&' + EConfigStrings.kSessionParamName + '=' + session_.toString() 
-         + '&' + EConfigStrings.kConversationParamName + '=' + conversation_.toString();
+         + '&' + EConfigStrings.kConversationParamName + '=' + conversation_.toString()
+         + '&' + EConfigStrings.kSecretParamName + '=' + secret_.toString();
    }
 
-   static makeFromParts (email_: string, name_: string, session_: SessionKey, conversation_: ConversationKey) {
+   static makeFromParts (email_: string, name_: string, session_: SessionKey, conversation_: ConversationKey, secret_: string) {
 
-      return new JoinDetails (JoinDetails.toString (email_, name_, session_, conversation_));
+      return new JoinDetails (JoinDetails.toString (email_, name_, session_, conversation_, secret_));
    }
   
 }
