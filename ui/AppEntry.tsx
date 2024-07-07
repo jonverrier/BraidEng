@@ -69,6 +69,7 @@ export const App = (props: IAppProps) => {
    let joinAttempt = new JoinDetails (hashValue);
    localUserPersona.email = joinAttempt.email; 
    localUserPersona.name = joinAttempt.name;
+   const secret = joinAttempt.secret;
 
    const [lastMessage, setLastMessage] = useState<string>("");
    const [lastMessageType, setLastMessageType] = useState<EMainPageMessageTypes> (EMainPageMessageTypes.kNothing);
@@ -76,7 +77,6 @@ export const App = (props: IAppProps) => {
    
    const [sessionKey, setSessionKey] = useState<SessionKey>(joinAttempt.session);
    const [conversationKey, setConversationKey] = useState<ConversationKey>(joinAttempt.conversation);
-   const [secret, setSecret] = useState<string>(joinAttempt.secret);
 
    const fluidFillPageClasses = fluidFillPageStyles();
    const pageOuterClasses = pageOuterStyles();
@@ -102,7 +102,6 @@ export const App = (props: IAppProps) => {
       setSessionKey (sessionKey_);
       setConversationKey (conversationKey_);
 
-      setSecret (secret_);
       keyGenerator.saveSecret (secret_);
 
       // Start the login process by redirecting to the login API

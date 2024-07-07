@@ -11,6 +11,7 @@ import {
   MessageBarBody,
   MessageBarGroup,
   MessageBarIntent,
+  Text,
   Button,
   makeStyles,
 } from "@fluentui/react-components";
@@ -84,7 +85,7 @@ export const MainPageMessageRow = (props: IMainPageMessageProps) => {
            <MessageBar key={0} intent={displayMessage.intent}>
               <MessageBarBody>
                  <MessageBarTitle>{EUIStrings.kPageErrorCaption}</MessageBarTitle>
-                 <p>{displayMessage.text}</p> 
+                 <Text>{displayMessage.text}</Text> 
                </MessageBarBody>
            </MessageBar>
         </MessageBarGroup>);
