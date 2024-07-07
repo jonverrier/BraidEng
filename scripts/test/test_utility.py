@@ -1,4 +1,5 @@
 """ This script will take a list of questions and run them through the test pipeline."""
+# Copyright (c) 2024 Braid Technologies Ltd
 
 import logging
 import os

@@ -1,4 +1,4 @@
-/*! Copyright Braid Technologies 2022 */
+/*! Copyright Braid Technologies 2024 */
 // The ConversationController manages the interaction with the shared data structures, and drives a ConversationView
 // ConversationPage is largely a passive view, although it does notify the controller if the local users adds a message.
 

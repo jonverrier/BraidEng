@@ -1,4 +1,5 @@
 """ Summarize a youtube transcript using chatgpt"""
+# Copyright (c) 2024 Braid Technologies Ltd
 
 import json
 import os

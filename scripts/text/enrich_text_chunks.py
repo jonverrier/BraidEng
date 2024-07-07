@@ -1,4 +1,5 @@
 """ This script generates a master csv file from the transcript files."""
+# Copyright (c) 2024 Braid Technologies Ltd
 
 # from the markdown files, generate a master json file
 # from the makdown folder read all the .json files then load the associated .mdd file

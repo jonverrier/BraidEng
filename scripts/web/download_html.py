@@ -1,4 +1,5 @@
 """ This script downloads the text content for all sub pages of a URL. """
+# Copyright (c) 2024 Braid Technologies Ltd
 
 import os
 import json

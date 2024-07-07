@@ -1,4 +1,5 @@
 """ This script removes the text from the enriched transcript and saves it as a new json file."""
+# Copyright (c) 2024 Braid Technologies Ltd
 
 import json
 import os
