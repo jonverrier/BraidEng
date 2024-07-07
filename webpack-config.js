@@ -25,10 +25,10 @@ module.exports = {
    plugins: [
       // new FluentUIReactIconsFontSubsettingPlugin(), new NodePolyfillPlugin()      
       new NodePolyfillPlugin(),
-      /* // Include block below only for production build 
+      // Include block below only for production build 
          new WebpackObfuscator ({
          rotateStringArray: true
-     }, ['excluded_bundle_name.js'])     */
+     }, ['excluded_bundle_name.js'])     
    ],   
    module: {
       rules: [
@@ -60,7 +60,7 @@ module.exports = {
          {
             test: /\.(ttf|woff2?)$/,
             type: 'asset',
-         } /*,    // Include block below only for production build    
+         },    // Include block below only for production build    
          {
             test: /\.js$/,
             exclude: /(node_modules|bower_components)/,
@@ -71,7 +71,7 @@ module.exports = {
                     rotateStringArray: true
                 }
             }
-        }   */       
+        }         
       ]
    }  
 }

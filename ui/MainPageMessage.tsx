@@ -62,6 +62,7 @@ export const MainPageMessageRow = (props: IMainPageMessageProps) => {
            <MessageBar key={0} intent={displayMessage.intent}>
               <MessageBarBody>
                  <MessageBarTitle>{EUIStrings.kPageErrorCaption}</MessageBarTitle>
+                 &nbsp;
                  {displayMessage.text} 
                </MessageBarBody>
                <MessageBarActions
