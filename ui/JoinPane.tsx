@@ -1,4 +1,4 @@
-/*! Copyright Braid Technologies 2022 */
+/*! Copyright Braid Technologies 2024 */
 
 // React
 import React, { ChangeEvent, MouseEvent, useState } from 'react';

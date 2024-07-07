@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Braid Technologies Ltd
 
 from common.ApiConfiguration import ApiConfiguration
 from common.Urls import youTubeUrls, countUrlHits

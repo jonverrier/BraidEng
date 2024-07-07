@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Braid Technologies Ltd
 
 import os
 import json

@@ -1,3 +1,4 @@
+# Copyright (c) 2024 Braid Technologies Ltd
 
 from common.ApiConfiguration import ApiConfiguration
 from test.test_utility import run_tests

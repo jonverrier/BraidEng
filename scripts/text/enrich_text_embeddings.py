@@ -1,4 +1,5 @@
 """ This script will take a text and create embeddings for each text using the OpenAI API."""
+# Copyright (c) 2024 Braid Technologies Ltd
 
 import logging
 import re

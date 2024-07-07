@@ -1,3 +1,5 @@
+// Copyright (c) 2024 Braid Technologies Ltd
+
 import { SharedMap } from "fluid-framework";import { Persona } from './Persona';
 import { Message } from './Message';
 import { SharedEmbedding } from "./SharedEmbedding";
@@ -6,8 +8,6 @@ import { CaucusOf } from './CaucusFramework';
 import { throwIfUndefined } from './Asserts'; 
 import { EConfigStrings } from "./ConfigStrings";
 import { EIcon } from "./Icons";
-
-
 
 const containerSchema = {
    initialObjects: {
