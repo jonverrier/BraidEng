@@ -5,6 +5,7 @@ from text.enrich_text_chunks import enrich_text_chunks
 from text.enrich_text_summaries import enrich_text_summaries
 from text.enrich_text_embeddings import enrich_text_embeddings
 from text.enrich_lite import enrich_lite
+#test comment 
 
 HTML_DESTINATION_DIR = "data/web"
 
