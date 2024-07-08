@@ -2,6 +2,7 @@
 
 from common.ApiConfiguration import ApiConfiguration
 from common.Urls import youTubeUrls, countUrlHits
+from common.common_functions import ensure_directory_exists
 from youtube.download_transcripts import download_transcripts
 from youtube.enrich_transcript_chunks import enrich_transcript_chunks
 from youtube.enrich_transcript_summaries import enrich_transcript_summaries
@@ -9,6 +10,7 @@ from youtube.enrich_transcript_embeddings import enrich_transcript_embeddings
 from text.enrich_lite import enrich_lite
 
 TRANSCRIPT_DESTINATION_DIR = "data/youtube"
+ensure_directory_exists(TRANSCRIPT_DESTINATION_DIR)
 
 config = ApiConfiguration()
 

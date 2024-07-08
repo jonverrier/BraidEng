@@ -3,13 +3,15 @@
 from common.ApiConfiguration import ApiConfiguration
 from common.Urls import webUrls, countUrlHits
 from web.download_html import download_html
+from common.common_functions import ensure_directory_exists
 from text.enrich_text_chunks import enrich_text_chunks
 from text.enrich_text_summaries import enrich_text_summaries
 from text.enrich_text_embeddings import enrich_text_embeddings
 from text.enrich_lite import enrich_lite
-#test comment - 3
+
 
 HTML_DESTINATION_DIR = "data/web"
+ensure_directory_exists(HTML_DESTINATION_DIR)
 
 config = ApiConfiguration()
 
