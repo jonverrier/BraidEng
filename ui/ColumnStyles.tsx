@@ -1,7 +1,11 @@
+// Copyright (c) 2024 Braid Technologies Ltd
+
 // Fluent
 import {
    FluentProvider, teamsDarkTheme, makeStyles, Text
 } from '@fluentui/react-components';
+
+import { EUIStrings } from './UIStrings';
 
 export const innerColumnStyles = makeStyles({
    root: {
@@ -9,7 +13,7 @@ export const innerColumnStyles = makeStyles({
       flexDirection: 'column',
       justifyContent: 'flex-start',    // start layout at the top       
       alignItems: 'center',
-      maxWidth: '896px'
+      maxWidth: EUIStrings.kMaxColumnWidth
    },
 });
 

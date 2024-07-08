@@ -1,3 +1,5 @@
+// Copyright (c) 2024 Braid Technologies Ltd
+
 import { SharedMap } from "fluid-framework";import { Persona } from './Persona';
 import { Message } from './Message';
 import { SharedEmbedding } from "./SharedEmbedding";
@@ -6,8 +8,6 @@ import { CaucusOf } from './CaucusFramework';
 import { throwIfUndefined } from './Asserts'; 
 import { EConfigStrings } from "./ConfigStrings";
 import { EIcon } from "./Icons";
-
-
 
 const containerSchema = {
    initialObjects: {
@@ -27,6 +27,7 @@ export class BraidFluidConnection extends FluidConnection {
    _participantCaucus: CaucusOf<Persona> | undefined;
    _messageCaucus: CaucusOf<Message> | undefined;
    _sharedEmbeddingCaucus: CaucusOf<SharedEmbedding> | undefined;
+   _interval: NodeJS.Timeout | undefined;
 
    constructor(props: IConnectionProps, localUser_: Persona) {
 
@@ -36,7 +37,8 @@ export class BraidFluidConnection extends FluidConnection {
       this._participantCaucus = undefined;
       this._messageCaucus = undefined;   
       this._sharedEmbeddingCaucus = undefined;
-      this._localUser = localUser_;   
+      this._localUser = localUser_; 
+      this._interval = undefined;
    }
 
    schema() : any {
@@ -61,11 +63,15 @@ export class BraidFluidConnection extends FluidConnection {
 
       let self = this;
 
-      setInterval(() => {
+      this._interval = setInterval(() => {
          throwIfUndefined(self._participantCaucus);
          throwIfUndefined(self._messageCaucus);         
          checkAddAddSelfToAudience(self._participantCaucus, self._messageCaucus, self._localUser);
        }, 10000);
+   }
+
+   disconnectLocalCaucuses () : void {
+      clearInterval (this._interval);
    }
 
    participantCaucus(): CaucusOf<Persona> {

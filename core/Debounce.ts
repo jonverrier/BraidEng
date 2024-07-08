@@ -1,18 +1,20 @@
 // Copyright (c) 2024 Braid Technologies Ltd
 
-export function debounce(fn_ : Function, ms_: number) {
+import { throwIfNull } from "./Asserts";
 
-   var timer: NodeJS.Timeout | null = null;
+export function debounce(fn_ : Function, ms_: number) : Function {
 
    return () => {
-      if (timer) {
-         clearTimeout(timer);
-         timer = null;
-      }
 
-      timer = setTimeout(() => {
+      var timer: NodeJS.Timeout | null = null;
+      
+      const nested = () => {
+         throwIfNull(timer);
+         clearTimeout(timer);         
          timer = null;
-         fn_.apply(this, arguments)
-      }, ms_);
+         fn_();
+      };
+
+      timer = setTimeout(nested, ms_);
    };
 }

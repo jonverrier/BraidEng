@@ -104,6 +104,7 @@ export abstract class FluidConnection {
       if (this.canDisconnect()) {
          if (this._container) {
             await this._container.disconnect();
+            this.disconnectLocalCaucuses();
          }
 
          return true;
@@ -130,6 +131,7 @@ export abstract class FluidConnection {
 
    abstract schema() : any;
    abstract setupLocalCaucuses(initialObjects: any) : void;
+   abstract disconnectLocalCaucuses () : void;
 }
 
 

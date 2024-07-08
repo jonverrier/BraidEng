@@ -1,4 +1,4 @@
-/*! Copyright Braid Technologies 2022 */
+/*! Copyright Braid Technologies 2024 */
 
 // React
 import React from 'react';
@@ -11,6 +11,7 @@ import {
   MessageBarBody,
   MessageBarGroup,
   MessageBarIntent,
+  Text,
   Button,
   makeStyles,
 } from "@fluentui/react-components";
@@ -20,7 +21,9 @@ import { EUIStrings } from './UIStrings';
 const messageBarStyles = makeStyles({
   messageBarGroup: {
     display: "flex",
-    flexDirection: "row"
+    flexDirection: "row",
+    alignItems: 'center',    
+    maxWidth: EUIStrings.kMaxColumnWidth 
   }
 });
 
@@ -35,6 +38,7 @@ export enum EMainPageMessageTypes { // Must mirror MessageBarIntent, with additi
 interface IMainPageMessageProps {
    intent: EMainPageMessageTypes;
    text: string;
+   dismissable: boolean;
    onDismiss () : void;   
 }
 
@@ -52,24 +56,39 @@ export const MainPageMessageRow = (props: IMainPageMessageProps) => {
   if (displayMessage.intent === EMainPageMessageTypes.kNothing)
      return (<div />);
 
-  return (
-      <MessageBarGroup className={messageClasses.messageBarGroup}>
-          <MessageBar key={0} intent={displayMessage.intent}>
-            <MessageBarBody>
-              <MessageBarTitle>{EUIStrings.kPageErrorCaption}</MessageBarTitle>
-              {displayMessage.text} 
-            </MessageBarBody>
-            <MessageBarActions
-              containerAction={
-                <Button
-                  onClick={() => dismissMessage()}
-                  aria-label="dismiss"
-                  appearance="transparent"
-                  icon={<DismissRegular />}
-                />
-              }
-            />
-          </MessageBar>
-      </MessageBarGroup>
-  );
+  if (props.dismissable) {
+     return (
+        <MessageBarGroup className={messageClasses.messageBarGroup}>
+           <MessageBar key={0} intent={displayMessage.intent}>
+              <MessageBarBody>
+                 <MessageBarTitle>{EUIStrings.kPageErrorCaption}</MessageBarTitle>
+                 &nbsp;
+                 {displayMessage.text} 
+               </MessageBarBody>
+               <MessageBarActions
+                  containerAction={
+                     <Button
+                      onClick={() => dismissMessage()}
+                      aria-label="dismiss"
+                      appearance="transparent"
+                      icon={<DismissRegular />}
+                     />
+                  }
+               />
+           </MessageBar>
+        </MessageBarGroup>
+     );
+  }
+  else
+  {
+     return (
+        <MessageBarGroup className={messageClasses.messageBarGroup}>
+           <MessageBar key={0} intent={displayMessage.intent}>
+              <MessageBarBody>
+                 <MessageBarTitle>{EUIStrings.kPageErrorCaption}</MessageBarTitle>
+                 <Text>{displayMessage.text}</Text> 
+               </MessageBarBody>
+           </MessageBar>
+        </MessageBarGroup>);
+  }
 };

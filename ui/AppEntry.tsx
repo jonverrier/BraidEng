@@ -1,4 +1,4 @@
-/*! Copyright Braid Technologies 2022 */
+/*! Copyright Braid Technologies 2024 */
 
 // React
 import React, { useState } from 'react';
@@ -16,10 +16,11 @@ import { JoinDetails } from '../core/JoinDetails';
 import { EUIStrings } from './UIStrings';
 import { innerColumnStyles } from './ColumnStyles';
 import { EMainPageMessageTypes, MainPageMessageRow } from './MainPageMessage';
-import { JoinRow } from './JoinPane';
+import { JoinPane } from './JoinPane';
 import { ConversationControllerRow } from './ConversationController';
 import { SessionKey, ConversationKey } from '../core/Keys';
 import { EConfigStrings } from '../core/ConfigStrings';
+import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 
 export interface IAppProps {
 
@@ -68,27 +69,44 @@ export const App = (props: IAppProps) => {
    let joinAttempt = new JoinDetails (hashValue);
    localUserPersona.email = joinAttempt.email; 
    localUserPersona.name = joinAttempt.name;
+   const secret = joinAttempt.secret;
 
    const [lastMessage, setLastMessage] = useState<string>("");
    const [lastMessageType, setLastMessageType] = useState<EMainPageMessageTypes> (EMainPageMessageTypes.kNothing);
+   const [lastMessageIsDismissable, setLastMessageIsDismissable] = useState<boolean>(true);   
+   
    const [sessionKey, setSessionKey] = useState<SessionKey>(joinAttempt.session);
    const [conversationKey, setConversationKey] = useState<ConversationKey>(joinAttempt.conversation);
 
    const fluidFillPageClasses = fluidFillPageStyles();
    const pageOuterClasses = pageOuterStyles();
    const innerColumnClasses = innerColumnStyles();
+   
+   let keyGenerator = getDefaultKeyGenerator();
 
-   function onConnect (sessionKey_: SessionKey, conversationKey_: ConversationKey) : void  {
+   if (secret.length > 0 
+      && (!keyGenerator.matchesSavedSecret (secret)) 
+      && lastMessage !== EUIStrings.kSecretError) {
+
+      setLastMessage (EUIStrings.kSecretError);
+      setLastMessageType (EMainPageMessageTypes.kWarning);    
+      setLastMessageIsDismissable(false);            
+   }
+
+   function onConnect (sessionKey_: SessionKey, conversationKey_: ConversationKey, secret_: string) : void  {
       
       setLastMessage ("");
-      setLastMessageType (EMainPageMessageTypes.kNothing);      
+      setLastMessageType (EMainPageMessageTypes.kNothing);   
+      setLastMessageIsDismissable(true);  
 
       setSessionKey (sessionKey_);
       setConversationKey (conversationKey_);
 
+      keyGenerator.saveSecret (secret_);
+
       // Start the login process by redirecting to the login API
       // with no email address and no name bcs thats what we get from login
-      let query = JoinDetails.toString ("", "", sessionKey_, conversationKey_);
+      let query = JoinDetails.toString ("", "", sessionKey_, conversationKey_, secret_);
       location.replace (EConfigStrings.kLoginRelativeUrl + '?' + query);
    }
 
@@ -102,9 +120,9 @@ export const App = (props: IAppProps) => {
 
       setLastMessage (EUIStrings.kJoinApiError);
       setLastMessageType (EMainPageMessageTypes.kError);
+      setLastMessageIsDismissable(true);        
 
-      // Clear the join keys - takes us back to the join page.
-      setSessionKey (new SessionKey (""));
+      // Clear the coversation key - takes us back to the join page.
       setConversationKey (new ConversationKey (""));      
    }
    
@@ -112,12 +130,14 @@ export const App = (props: IAppProps) => {
 
       setLastMessage (EUIStrings.kAiApiError);
       setLastMessageType (EMainPageMessageTypes.kError);
+      setLastMessageIsDismissable(true);        
    }
 
    function onDismissMessage () : void {
 
       setLastMessage ("");
       setLastMessageType (EMainPageMessageTypes.kNothing);
+      setLastMessageIsDismissable(true);        
    }
 
    return (
@@ -128,23 +148,26 @@ export const App = (props: IAppProps) => {
                   <MainPageMessageRow 
                      intent={lastMessageType} 
                      text={lastMessage} 
+                     dismissable={lastMessageIsDismissable}
                      onDismiss={onDismissMessage}/>
       
                   <ConversationControllerRow 
                      sessionKey={sessionKey}
                      conversationKey={conversationKey}
+                     secret={secret}
                      localPersona={localUserPersona}
                      onFluidError={onFluidError}
-                     onAiError={onAiError}>                           
+                     onAiError={onAiError}>                          
                   </ConversationControllerRow>      
 
-                  <JoinRow 
+                  <JoinPane 
                      sessionKey={sessionKey} 
                      conversationKey={conversationKey}
+                     secret={secret}                     
                      joinPersona={localUserPersona}                     
                      onConnect={onConnect} 
                      onConnectError={onConnectError}>                     
-                  </JoinRow>   
+                  </JoinPane>   
 
                </div>
             </div>

@@ -1,4 +1,4 @@
-/*! Copyright Braid Technologies 2022 */
+/*! Copyright Braid Technologies 2024 */
 // The ConversationController manages the interaction with the shared data structures, and drives a ConversationView
 // ConversationPage is largely a passive view, although it does notify the controller if the local users adds a message.
 
@@ -32,9 +32,10 @@ export interface IConversationControllerProps {
 
    sessionKey: SessionKey;
    conversationKey: ConversationKey;
+   secret: string;
    localPersona: Persona; 
    onFluidError (hint_: string) : void;   
-   onAiError (hint_: string) : void;        
+   onAiError (hint_: string) : void;     
 }
 
 let firstLoad = true;
@@ -189,7 +190,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    let validater = new JoinPageValidator();
 
-   if (validater.isJoinAttemptReady (props.localPersona.email, props.localPersona.name, 
+   if (validater.canAttemptJoin (props.localPersona.email, props.localPersona.name, 
                                      props.sessionKey, props.conversationKey) && 
       fluidConnection === undefined 
       && !joining) {
@@ -256,7 +257,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    function onExitConversation () : void {
 
-      let query = JoinDetails.toString ("", "", props.sessionKey, new ConversationKey(""));
+      let query = JoinDetails.toString ("", "", props.sessionKey, new ConversationKey(""), "");
       location.replace (EConfigStrings.kHomeRelativeUrl + '#' + query);   
       location.reload();          
    }
@@ -353,14 +354,15 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       // Get the summary of the URL the user clicked on
       let summary = embeddingRespository.lookupUrlSummary (url_);
-      summary.then ((summaryText: string) => {
+      summary.then ((summaryText: string | undefined) => {
 
          let connectionPromise = AIConnector.connect (props.sessionKey);
       
          // Connect to the LLM
          connectionPromise.then ( (connection : AIConnection) => { 
 
-            // Ask the LLM for a question based on the summary            
+            // Ask the LLM for a question based on the summary 
+            throwIfUndefined(summaryText);
             connection.makeFollowUpCall (summaryText).then ((result_: Message) => {                                                                               
                if (result_) {
                   result_.authorId = props.localPersona.id;
@@ -554,8 +556,9 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
    let joinValidator = new JoinPageValidator ();
 
-   if (! joinValidator.isJoinAttemptReady (props.localPersona.email, props.localPersona.name, 
-                                           props.sessionKey, props.conversationKey)) {
+   // Only display conversation when we have all required details and we also have a secret that matches the last one
+   if (!joinValidator.canAttemptJoin(props.localPersona.email, props.localPersona.name, props.sessionKey, props.conversationKey) 
+    || !joinValidator.matchesSavedSecret (props.secret)) {
       return (<div></div>);
    }
    else {  

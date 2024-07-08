@@ -10,7 +10,8 @@ import { KeyRetriever } from "./KeyRetriever";
 import { EConfigStrings } from "./ConfigStrings";
 import { SessionKey } from "./Keys";
 
-var documentUuid: string = "b03724b3-4be0-4491-b0fa-43b01ab80d50";
+let documentUuid = "b03724b3-4be0-4491-b0fa-43b01ab80d50";
+let user = { id: documentUuid, name: "@Braid Chat" };
 
 export class ConnectionConfig implements AzureRemoteConnectionConfig {
 
@@ -21,13 +22,16 @@ export class ConnectionConfig implements AzureRemoteConnectionConfig {
    documentId: string;
 
    constructor() {
+      var user: any = { id: documentUuid, name: "" };
+
       this.documentId = documentUuid;
+      this.endpoint = "";
+      this.tenantId = "";
+      this.tokenProvider = new InsecureTokenProvider("", user);
 
    }
 
    async makeTokenProvider(sessionKey: SessionKey): Promise<ITokenProvider> {
-
-      var user: any = { id: documentUuid, name: "@Braid Chat" };
 
       if (Environment.environment() == EEnvironment.kLocal) {
 

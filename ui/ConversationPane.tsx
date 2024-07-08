@@ -1,4 +1,4 @@
-/*! Copyright Braid Technologies 2022 */
+/*! Copyright Braid Technologies 2024 */
 
 // React
 import React, { useState, useEffect } from 'react';
@@ -125,7 +125,7 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
    function onCopy (ev: React.MouseEvent<HTMLButtonElement>) : void {
 
       // Make join details with no email address and no name
-      let joinDetails = JoinDetails.makeFromParts ("", "", props.sessionKey, props.conversationKey);
+      let joinDetails = JoinDetails.makeFromParts ("", "", props.sessionKey, props.conversationKey, "");
       
       // https://stackoverflow.com/questions/10783322/window-location-url-javascript
 
