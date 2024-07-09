@@ -18,6 +18,7 @@ from tenacity import (
     retry_if_not_exception_type,
 )
 from rich.progress import Progress
+from common.common_functions import ensure_directory_exists
 
 def normalize_text(s, sep_token=" \n "):
     """normalize text by removing extra spaces and newlines"""
@@ -139,7 +140,24 @@ def enrich_text_embeddings(config, markdownDestinationDir):
 
    logger.debug("Total chunks processed: %s", len(output_chunks))
 
-   # save the embeddings to a json file
-   output_file = os.path.join(markdownDestinationDir, "output", "master_enriched.json")
+   # # save the embeddings to a json file
+   # output_file = os.path.join(markdownDestinationDir, "output", "master_enriched.json")
+   # with open(output_file, "w", encoding="utf-8") as f:
+   #    json.dump(output_chunks, f)
+   
+
+   #modified section:
+   # save chunks to a json file
+   print(f"markdownDestinationDir = {markdownDestinationDir}")
+   output_subdir = "output"
+   output_file = os.path.join(markdownDestinationDir, output_subdir, "master_text.json")
+
+   # Ensure the output subdirectory exists
+   ensure_directory_exists(os.path.dirname(output_file))
+
    with open(output_file, "w", encoding="utf-8") as f:
-      json.dump(output_chunks, f)
+      json.dump(chunks, f, ensure_ascii=False, indent=4)
+
+
+
+

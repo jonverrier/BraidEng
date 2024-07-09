@@ -10,6 +10,7 @@ import tiktoken
 import logging
 from rich.progress import Progress
 from pathlib import Path
+from common.common_functions import ensure_directory_exists
 
 PERCENTAGE_OVERLAP = 0.05
 AVERAGE_CHARACTERS_PER_TOKEN = 4
@@ -196,52 +197,108 @@ def get_transcript(config, metadata, markdownDestinationDir, logger, tokenizer, 
 
     parse_json_mdd_transcript(config, mdd, metadata, tokenizer, chunks)
 
+
+
 def enrich_text_chunks(config, markdownDestinationDir): 
+    logging.basicConfig(level=logging.WARNING)
+    logger = logging.getLogger(__name__)
+    chunks = []
 
-   logging.basicConfig(level=logging.WARNING)
-   logger = logging.getLogger(__name__)
-   chunks = []
+    if not markdownDestinationDir:
+        logger.error("Markdown folder not provided")
+        exit(1)
+
+    # https://stackoverflow.com/questions/75804599/openai-api-how-do-i-count-tokens-before-i-send-an-api-request
+    ENCODING_MODEL = "gpt-3.5-turbo"
+    tokenizer = tiktoken.encoding_for_model(ENCODING_MODEL)
+
+    cwd = os.getcwd()
+    logger.debug("Current directory : %s", cwd)
+    logger.debug("Markdown folder: %s", markdownDestinationDir)
+    logger.debug("Segment length %d minutes", config.chunkDurationMins)
+
+    folder = os.path.join(markdownDestinationDir, "*.json")
+    logger.debug("Search spec: %s", str(folder))
+
+    directory_path = Path(markdownDestinationDir)
+
+    # Use rglob() to recursively search for all files
+    searchPath = directory_path.glob("*.json")
+    jsonFiles = list(searchPath)
+
+    global total_files
+    total_files = len(jsonFiles)  # Initialize total_files with the count of jsonFiles
+
+    with Progress() as progress:
+        task1 = progress.add_task("[green]Enriching Buckets...", total=total_files)
+
+        for file in jsonFiles:
+            # load the json file
+            meta = json.load(open(file, encoding="utf-8"))
+
+            get_transcript(config, meta, markdownDestinationDir, logger, tokenizer, chunks)
+            progress.update(task1, advance=1)
+
+    logger.debug("Total files: %s", total_files)
+    logger.debug("Total chunks: %s", len(chunks))
+
+    # save chunks to a json file
+    print(f"TmarkdownDestinationDir = {markdownDestinationDir}")
+    output_subdir = "output"
+    output_file = os.path.join(markdownDestinationDir, output_subdir, "master_text.json")
+
+    # Ensure the output subdirectory exists
+    ensure_directory_exists(os.path.dirname(output_file))
+
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump(chunks, f, ensure_ascii=False, indent=4)
+
+# def enrich_text_chunks(config, markdownDestinationDir): 
+
+#    logging.basicConfig(level=logging.WARNING)
+#    logger = logging.getLogger(__name__)
+#    chunks = []
    
-   if not markdownDestinationDir:
-      logger.error("Markdown folder not provided")
-      exit(1)
+#    if not markdownDestinationDir:
+#       logger.error("Markdown folder not provided")
+#       exit(1)
 
-   # https://stackoverflow.com/questions/75804599/openai-api-how-do-i-count-tokens-before-i-send-an-api-request
-   ENCODING_MODEL = "gpt-3.5-turbo"
-   tokenizer = tiktoken.encoding_for_model(ENCODING_MODEL)
+#    # https://stackoverflow.com/questions/75804599/openai-api-how-do-i-count-tokens-before-i-send-an-api-request
+#    ENCODING_MODEL = "gpt-3.5-turbo"
+#    tokenizer = tiktoken.encoding_for_model(ENCODING_MODEL)
 
-   cwd = os.getcwd()
-   logger.debug("Current directory : %s", cwd)
-   logger.debug("Markdown folder: %s", markdownDestinationDir)
-   logger.debug("Segment length %d minutes", config.chunkDurationMins)
+#    cwd = os.getcwd()
+#    logger.debug("Current directory : %s", cwd)
+#    logger.debug("Markdown folder: %s", markdownDestinationDir)
+#    logger.debug("Segment length %d minutes", config.chunkDurationMins)
 
-   folder = os.path.join(markdownDestinationDir, "*.json")
-   logger.debug("Search spec: %s", str(folder))
+#    folder = os.path.join(markdownDestinationDir, "*.json")
+#    logger.debug("Search spec: %s", str(folder))
 
-   directory_path = Path(markdownDestinationDir)
+#    directory_path = Path(markdownDestinationDir)
 
-   # Use rglob() to recursively search for all files
-   searchPath = directory_path.glob("*.json")
-   jsonFiles = list(searchPath)
+#    # Use rglob() to recursively search for all files
+#    searchPath = directory_path.glob("*.json")
+#    jsonFiles = list(searchPath)
 
-   global total_files
-   total_files = 0
+#    global total_files
+#    total_files = 0
 
-   with Progress() as progress:
-      task1 = progress.add_task("[green]Enriching Buckets...", total=total_files)
+#    with Progress() as progress:
+#       task1 = progress.add_task("[green]Enriching Buckets...", total=total_files)
 
-      for file in jsonFiles:
-         # load the json file
-         meta = json.load(open(file, encoding="utf-8"))
+#       for file in jsonFiles:
+#          # load the json file
+#          meta = json.load(open(file, encoding="utf-8"))
 
-         get_transcript(config, meta, markdownDestinationDir, logger, tokenizer, chunks)
-         progress.update(task1, advance=1)
+#          get_transcript(config, meta, markdownDestinationDir, logger, tokenizer, chunks)
+#          progress.update(task1, advance=1)
 
 
-   logger.debug("Total files: %s", total_files)
-   logger.debug("Total chunks: %s", len(chunks))
+#    logger.debug("Total files: %s", total_files)
+#    logger.debug("Total chunks: %s", len(chunks))
 
-   # save chunks to a json file
-   output_file = os.path.join(markdownDestinationDir, "output", "master_text.json")
-   with open(output_file, "w", encoding="utf-8") as f:
-      json.dump(chunks, f, ensure_ascii=False, indent=4)
+#    # save chunks to a json file
+#    output_file = os.path.join(markdownDestinationDir, "output", "master_text.json")
+#    with open(output_file, "w", encoding="utf-8") as f:
+#       json.dump(chunks, f, ensure_ascii=False, indent=4)

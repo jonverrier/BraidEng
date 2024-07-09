@@ -23,9 +23,9 @@ download_html ("https://huyenchip.com/2023/04/11/llm-engineering.html",
                True, HTML_DESTINATION_DIR, config.discardIfBelow)
 # download_html ("https://www.interaction-design.org/literature/topics/design-thinking", 
 #                True, HTML_DESTINATION_DIR, 150)
-#enrich_text_chunks(config, HTML_DESTINATION_DIR) 
-#enrich_text_summaries(config, HTML_DESTINATION_DIR)
-#enrich_text_embeddings(config, HTML_DESTINATION_DIR)
-#enrich_lite(HTML_DESTINATION_DIR)
+enrich_text_chunks(config, HTML_DESTINATION_DIR) 
+enrich_text_summaries(config, HTML_DESTINATION_DIR)
+enrich_text_embeddings(config, HTML_DESTINATION_DIR)
+enrich_lite(HTML_DESTINATION_DIR)
 
 countUrlHits (HTML_DESTINATION_DIR, webUrls, "master_text.json")

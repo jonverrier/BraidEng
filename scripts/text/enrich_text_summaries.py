@@ -14,6 +14,7 @@ from tenacity import (
     retry_if_not_exception_type,
 )
 from rich.progress import Progress
+from common.common_functions import ensure_directory_exists
 
 AZURE_OPENAI_MODEL_DEPLOYMENT_NAME = os.getenv(
     "AZURE_OPENAI_MODEL_DEPLOYMENT_NAME", "gpt-35-turbo"
@@ -181,7 +182,20 @@ def enrich_text_summaries(config, markdownDestinationDir):
 
    logger.debug("Total chunks processed: %s", len(output_chunks))
 
-   # save the output chunks to a json file
-   output_file = os.path.join(markdownDestinationDir, "output", "master_enriched.json")
+#    # save the output chunks to a json file
+#    output_file = os.path.join(markdownDestinationDir, "output", "master_enriched.json")
+#    with open(output_file, "w", encoding="utf-8") as f:
+#       json.dump(output_chunks, f, ensure_ascii=False, indent=4)
+
+
+   #modified section:
+   # save chunks to a json file
+   print(f"markdownDestinationDir = {markdownDestinationDir}")
+   output_subdir = "output"
+   output_file = os.path.join(markdownDestinationDir, output_subdir, "master_text.json")
+
+   # Ensure the output subdirectory exists
+   ensure_directory_exists(os.path.dirname(output_file))
+
    with open(output_file, "w", encoding="utf-8") as f:
-      json.dump(output_chunks, f, ensure_ascii=False, indent=4)
+        json.dump(chunks, f, ensure_ascii=False, indent=4)

@@ -1,4 +1,3 @@
-# Copyright (c) 2024 Braid Technologies Ltd
 
 import os
 import json
@@ -54,6 +53,7 @@ webUrls = [
 ["Monitoring Machine Learning Systems: Code, Data and Models ", "https://madewithml.com/courses/mlops/monitoring/", True]
 ]
 
+#class to store information about each URL
 class UrlHit:
     def __init__(self) -> None:
         self.path = ""
@@ -64,9 +64,12 @@ class UrlHit:
     desc: str
     hits: int
 
+
+
 def countUrlHits (destinationDir, urls, fileName): 
+   #we make use of logging for error and debug messages 
    logging.basicConfig(level=logging.WARNING)
-   logger = logging.getLogger(__name__)
+   logger = logging.getLogger(__name__)     
 
    if not destinationDir:
       logger.error("Output folder not provided")
@@ -79,6 +82,9 @@ def countUrlHits (destinationDir, urls, fileName):
 
    # load the chunks from a json file
    input_file = os.path.join(destinationDir, "output", fileName)
+   print(input_file)
+   print()
+   print('above!')
    with open(input_file, "r", encoding="utf-8") as f:
       chunks = json.load(f)
 
