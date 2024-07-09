@@ -158,10 +158,17 @@ def enrich_text_summaries(config, markdownDestinationDir):
       q.put(chunk)
 
    # load the existing chunks from a json file
-   cache_file = os.path.join(markdownDestinationDir, "output", "master_enriched.json")
+   output_subdir = "output"
+   cache_file = os.path.join(markdownDestinationDir, output_subdir, "master_enriched.json")
+   # Ensure the output subdirectory exists
+   ensure_directory_exists(os.path.dirname(cache_file))
+
    if os.path.isfile(cache_file):
       with open(cache_file, "r", encoding="utf-8") as f:
-         current = json.load(f)      
+         current = json.load(f)   
+   
+   with open(cache_file, "w", encoding="utf-8") as f:
+      json.dump(chunks, f, ensure_ascii=False, indent=4)
 
    with Progress() as progress:
       task1 = progress.add_task("[purple]Enriching Summaries...", total=total_chunks)

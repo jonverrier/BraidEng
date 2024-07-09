@@ -10,9 +10,10 @@ def ensure_directory_exists(directory):
     """
     if not os.path.exists(directory):
         os.makedirs(directory)
-        print(f"Directory '{directory}' created.")
+        print(f"Directory '{directory}' created.")                             #take out the print statement at a later stage 
     else:
-        print(f"Directory '{directory}' already exists.")
+        # print(f"Directory '{directory}' already exists.")
+        pass
 
 HTML_DESTINATION_DIR = "data/web"
 ensure_directory_exists(HTML_DESTINATION_DIR)
