@@ -148,7 +148,7 @@ def enrich_text_embeddings(config, markdownDestinationDir):
 
    #modified section:
    # save chunks to a json file
-   print(f"markdownDestinationDir = {markdownDestinationDir}")
+   # print(f"markdownDestinationDir = {markdownDestinationDir}")
    output_subdir = "output"
    output_file = os.path.join(markdownDestinationDir, output_subdir, "master_text.json")
 

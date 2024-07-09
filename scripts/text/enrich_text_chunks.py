@@ -243,7 +243,7 @@ def enrich_text_chunks(config, markdownDestinationDir):
     logger.debug("Total chunks: %s", len(chunks))
 
     # save chunks to a json file
-    print(f"TmarkdownDestinationDir = {markdownDestinationDir}")
+    # print(f"TmarkdownDestinationDir = {markdownDestinationDir}")
     output_subdir = "output"
     output_file = os.path.join(markdownDestinationDir, output_subdir, "master_text.json")
 

@@ -148,7 +148,17 @@ def enrich_transcript_embeddings (config, transcriptDestinationDir):
 
    logger.debug("Total chunks processed: %s", len(output_chunks))
 
-   # save the embeddings to a json file
-   output_file = os.path.join(transcriptDestinationDir, "output", "master_enriched.json")
+   # # save the embeddings to a json file
+   # output_file = os.path.join(transcriptDestinationDir, "output", "master_enriched.json")
+   # with open(output_file, "w", encoding="utf-8") as f:
+   #    json.dump(output_chunks, f)
+
+
+   output_subdir = "output"
+   output_file = os.path.join(transcriptDestinationDir, output_subdir, "master_enriched.json")
+
+   # Ensure the output subdirectory exists
+   ensure_directory_exists(os.path.dirname(output_file))
+
    with open(output_file, "w", encoding="utf-8") as f:
-      json.dump(output_chunks, f)
+      json.dump(chunks, f, ensure_ascii=False, indent=4)
