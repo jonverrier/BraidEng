@@ -24,14 +24,10 @@ AVERAGE_WORDS_PER_MINUTE = 100
 total_files = 0
 
 class MddSegment:
-    def __init__(self, chunk: dict[str, str | float]) -> None:
+    def __init__(self, chunk: dict) -> None:
         self.text = chunk.get("text")
         self.start = chunk.get("start")
         self.duration = chunk.get("duration")
-
-    text: str
-    start: float
-    duration: float
 
 def gen_metadata_master(metadata):
     """generate the metadata master csv file"""
@@ -40,11 +36,11 @@ def gen_metadata_master(metadata):
 
     text = text.strip()
 
-    if text == "" or text is None:
+    if not text:
         metadata["text"] = "No description available."
     else:
         # clean the text
-        text = text.replace("\n", "")
+        text = clean_text(text)
         metadata["text"] = text.strip()
 
 
@@ -63,25 +59,25 @@ def append_text_to_previous_chunk(text, chunks):
     """
     append PERCENTAGE_OVERLAP text to the previous chunk to smooth context transition
     """
-    if len(chunks) > 0:
+    if chunks:
         words = text.split(" ")
         word_count = len(words)
         if word_count > 0:
-            append_text = " ".join(words[0 : int(word_count * PERCENTAGE_OVERLAP)])
+            append_text = " ".join(words[0:int(word_count * PERCENTAGE_OVERLAP)])
             chunks[-1]["text"] += append_text
 
 
 def add_new_chunk(metadata, text, chunk_begin_tokens, chunks, minimumSegmentTokenCount):
     """add a new chunk to the chunks list"""
 
-    # dont add very short chunks
+    # don't add very short chunks
     if len(text) < minimumSegmentTokenCount * AVERAGE_CHARACTERS_PER_TOKEN:
-       return
+        return
     
     charactersPerSecond = AVERAGE_WORDS_PER_MINUTE * AVERAGE_CHARACTERS_PER_TOKEN / 60
 
-    metadata["start"] = str (chunk_begin_tokens)
-    metadata["seconds"] = int (len (text) / charactersPerSecond)
+    metadata["start"] = str(chunk_begin_tokens)
+    metadata["seconds"] = int(len(text) / charactersPerSecond)
     metadata["text"] = text
     chunks.append(metadata.copy())
 
@@ -97,7 +93,7 @@ def parse_json_mdd_transcript(config, mdd, metadata, tokenizer, chunks):
     last_chunk = False
 
     # add the title to the transcript
-    if "title" in metadata and metadata["title"] != "":
+    if "title" in metadata and metadata["title"]:
         metadata["title"] = clean_text(metadata.get("title"))
         text += metadata.get("title") + ". "
 
@@ -107,8 +103,8 @@ def parse_json_mdd_transcript(config, mdd, metadata, tokenizer, chunks):
     with open(mdd, "r", encoding="utf-8") as json_file:
         json_mdd = json.load(json_file)
 
-        if len (json_mdd) == 1:
-           last_chunk = True
+        if len(json_mdd) == 1:
+            last_chunk = True
 
         for chunk in json_mdd:
             seg = MddSegment(chunk)
@@ -154,7 +150,7 @@ def parse_json_mdd_transcript(config, mdd, metadata, tokenizer, chunks):
                 if not first_chunk:
                     # append PERCENTAGE_OVERLAP text to the previous chunk
                     # to smooth context transition
-                    append_text_to_previous_chunk(text)
+                    append_text_to_previous_chunk(text, chunks)
                 first_chunk = False
                 add_new_chunk(metadata, text, seg_begin_tokens, chunks, config.discardIfBelow)
 
@@ -181,7 +177,7 @@ def parse_json_mdd_transcript(config, mdd, metadata, tokenizer, chunks):
                   if not first_chunk:
                      # append PERCENTAGE_OVERLAP text to the previous chunk
                      # to smooth context transition
-                     append_text_to_previous_chunk(text)
+                     append_text_to_previous_chunk(text, chunks)
                      first_chunk = False
                      add_new_chunk(metadata, text, seg_begin_tokens, chunks, config.discardIfBelow)
 
@@ -203,8 +199,7 @@ def get_transcript(config, metadata, markdownDestinationDir, logger, tokenizer, 
     parse_json_mdd_transcript(config, mdd, metadata, tokenizer, chunks)
 
 
-
-def enrich_text_chunks(config, markdownDestinationDir): 
+def enrich_text_chunks(config, markdownDestinationDir):
     logging.basicConfig(level=logging.WARNING)
     logger = logging.getLogger(__name__)
     chunks = []
@@ -248,7 +243,6 @@ def enrich_text_chunks(config, markdownDestinationDir):
     logger.debug("Total chunks: %s", len(chunks))
 
     # save chunks to a json file
-    # print(f"TmarkdownDestinationDir = {markdownDestinationDir}")
     output_subdir = "output"
     output_file = os.path.join(markdownDestinationDir, output_subdir, "master_text.json")
 
@@ -257,5 +251,3 @@ def enrich_text_chunks(config, markdownDestinationDir):
 
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(chunks, f, ensure_ascii=False, indent=4)
-
-

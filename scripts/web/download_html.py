@@ -62,8 +62,8 @@ def get_html(url, counter_id, siteUrl, htmlDesitinationDir, logger, minimumPageT
 
     sourceId = makePathOnly (url)
     fakeName = sourceId.replace("//", "_").replace("/", "_")
-    contentOutputFileName = os.path.join(htmlDesitinationDir, fakeName + ".json.mdd")
-    metaOutputFilename = os.path.join(htmlDesitinationDir, fakeName + ".json")
+    contentOutputFileName = os.path.join(htmlDesitinationDir, f"{fakeName}.json.mdd")
+    metaOutputFilename = os.path.join(htmlDesitinationDir, f"{fakeName}.json")
 
     # if markdown file already exists, skip it
     if os.path.exists(contentOutputFileName):
@@ -130,6 +130,7 @@ def deduplicate(currentLinks, newLinks): # remove duplicates
 
 def remove_exits(sourceUrl, links): # remove links that point outside the main site being searched
                                     # we also remove links starting with #as they are just the same page
+    """ Remove links that point outside the main site being searched """
     trimmed = []
 
     for item in links:
@@ -140,59 +141,62 @@ def remove_exits(sourceUrl, links): # remove links that point outside the main s
 
     return trimmed
 
-def add_prefix(sourceUrl, links): # add prefixes if we have relative URLs
+def add_prefix(sourceUrl, links):
+    """ Add prefixes to relative URLs """
+
     full = []
 
     for item in links:
-        newUrl = makeFullyQualified (sourceUrl, item)
+        newUrl = makeFullyQualified(sourceUrl, item)
         full.append(newUrl)
 
     return full
 
-def recurse_page_list (startUrl, processedLinks, depth, logger, recurse):
-   
-   # Bail we we hit maximum depth
-   # TODO ADD LOGGING
-   if (depth > MAX_PAGE_DEPTH):
-      logger.debug("Depth exceeded : %s", startUrl)      
-      return
-   
-    # In case the web site expect cookies and/or javascript
-   session = requests.Session()     
-   page = session.get(startUrl, headers=headers)   
-   soup = BeautifulSoup(page.text, "html.parser")  
-  
-   logger.debug("Processing : %s", startUrl)     
-   processedLinks.append (startUrl)
 
-   if not recurse:
-       return
+def recurse_page_list(startUrl, processedLinks, depth, logger, recurse):
+    """ Recursively crawl through pages starting from startUrl """
 
-   subLinks = soup.find_all('a')
-   subUrls = []
+    # Bail if we hit maximum depth
+    if depth > MAX_PAGE_DEPTH:
+        logger.debug("Depth exceeded: %s", startUrl)
+        return
 
-   for link in subLinks:
-      url = str(link.get('href'))
-      subUrls.append(url)
+    # In case the website expects cookies and/or JavaScript
+    session = requests.Session()
+    page = session.get(startUrl, headers=headers)
+    soup = BeautifulSoup(page.text, "html.parser")
 
-   full = add_prefix (startUrl, subUrls)
-   deduped = deduplicate(processedLinks, full)
-   trimmed = remove_exits (startUrl, deduped)
+    logger.debug("Processing: %s", startUrl)
+    processedLinks.append(startUrl)
 
-   for link in trimmed:
-      if not link in processedLinks:       
-         recurse_page_list (link, processedLinks, depth + 1, logger, recurse)
+    if not recurse:
+        return
 
-   return
+    subLinks = soup.find_all('a')
+    subUrls = []
+
+    for link in subLinks:
+        url = str(link.get('href'))
+        subUrls.append(url)
+
+    full = add_prefix(startUrl, subUrls)
+    deduped = deduplicate(processedLinks, full)
+    trimmed = remove_exits(startUrl, deduped)
+
+    for link in trimmed:
+        if link not in processedLinks:
+            recurse_page_list(link, processedLinks, depth + 1, logger, recurse)
 
          
-def build_page_list (sourceUrl, q, minimumPageTokenCount, logger, recurse):
-   links = []
+def build_page_list(sourceUrl, q, minimumPageTokenCount, logger, recurse):
+    """ Build a list of pages starting from sourceUrl """
 
-   recurse_page_list (sourceUrl, links, 0, logger, recurse)
+    links = []
 
-   for url in links:
-      q.put(url)
+    recurse_page_list(sourceUrl, links, 0, logger, recurse)
+
+    for url in links:
+        q.put(url)
     
 def download_html (sourceUrl, recurse, htmlDesitinationDir, minimumPageTokenCount): 
    

@@ -1,5 +1,3 @@
-""" This script take text chunks and create embeddings for each text using the OpenAI API."""
-
 # Standard Library Imports
 import logging
 import re
@@ -20,21 +18,18 @@ from tenacity import (
 )
 from rich.progress import Progress
 
-
 tokenizer = tiktoken.get_encoding("cl100k_base")
 
 def normalize_text(s, sep_token=" \n "):
     """normalize text by removing extra spaces and newlines"""
     s = re.sub(r"\s+", " ", s).strip()
     s = re.sub(r". ,", "", s)
-    # remove all instances of multiple spaces
     s = s.replace("..", ".")
     s = s.replace(". .", ".")
     s = s.replace("\n", "")
     s = s.strip()
 
     return s
-
 
 @retry(
     wait=wait_random_exponential(min=10, max=45),
@@ -43,7 +38,6 @@ def normalize_text(s, sep_token=" \n "):
 )
 def get_text_embedding(config, text: str):
     """get the embedding for a text"""
-
     embedding = get_embedding(text, 
                               engine=config.azureEmbedDeploymentName, 
                               deployment_id=config.azureEmbedDeploymentName,
@@ -51,10 +45,8 @@ def get_text_embedding(config, text: str):
                               timeout=config.openAiRequestTimeout)
     return embedding
 
-
 def process_queue(config, progress, task, q, logger, output_chunks, current_chunks):
     """process the queue"""
-
     while not q.empty():
         chunk = q.get()
         found = False
@@ -71,7 +63,6 @@ def process_queue(config, progress, task, q, logger, output_chunks, current_chun
            if "ada_v2" in chunk:
               output_chunks.append(chunk.copy())        
            else:
-              # get am embedding using chatgpt
               try:
                  embedding = get_text_embedding(config, chunk["text"])
                  chunk["ada_v2"] = embedding.copy()                 
@@ -85,7 +76,6 @@ def process_queue(config, progress, task, q, logger, output_chunks, current_chun
         progress.update(task, advance=1)
         q.task_done()
 
-# convert time '00:01:20' to seconds
 def convert_time_to_seconds(value):
     """convert time to seconds"""
     time_value = value.split(":")
@@ -95,9 +85,7 @@ def convert_time_to_seconds(value):
     else:
         return 0
 
-
-def enrich_transcript_embeddings (config, transcriptDestinationDir): 
-
+def enrich_transcript_embeddings(config, transcriptDestinationDir): 
    openai.api_type = config.apiType 
    openai.api_key = config.apiKey
    openai.api_base = config.resourceEndpoint
@@ -113,7 +101,6 @@ def enrich_transcript_embeddings (config, transcriptDestinationDir):
    total_chunks = 0
    output_chunks = []
 
-   # load sessions_list from json file
    input_file = os.path.join(transcriptDestinationDir, "output", "master_enriched.json")
    with open(input_file, "r", encoding="utf-8") as f:
       chunks = json.load(f)
@@ -123,12 +110,10 @@ def enrich_transcript_embeddings (config, transcriptDestinationDir):
    logger.debug("Starting OpenAI Embeddings")
    logger.debug("Total chunks to be processed: %s", len(chunks))
 
-   # add chunk list to a queue
    q = queue.Queue()
    for chunk in chunks:
       q.put(chunk)
 
-   # load the existing chunks from a json file
    cache_file = os.path.join(transcriptDestinationDir, "output", "master_enriched.json")
    if os.path.isfile(cache_file):
       with open(cache_file, "r", encoding="utf-8") as f:
@@ -136,18 +121,15 @@ def enrich_transcript_embeddings (config, transcriptDestinationDir):
 
    with Progress() as progress:
       task1 = progress.add_task("[green]Enriching Embeddings...", total=total_chunks)
-      # create multiple threads to process the queue
       threads = []
       for i in range(config.processingThreads):
          t = threading.Thread(target=process_queue, args=(config, progress, task1, q, logger, output_chunks, current))
          t.start()
          threads.append(t)
 
-      # wait for all threads to finish
       for t in threads:
          t.join()
 
-   # sort the output chunks by sourceId and start
    output_chunks.sort(key=lambda x: (x["sourceId"], convert_time_to_seconds(x["start"])))
 
    logger.debug("Total chunks processed: %s", len(output_chunks))
@@ -155,8 +137,12 @@ def enrich_transcript_embeddings (config, transcriptDestinationDir):
    output_subdir = "output"
    output_file = os.path.join(transcriptDestinationDir, output_subdir, "master_enriched.json")
 
-   # Ensure the output subdirectory exists
    ensure_directory_exists(os.path.dirname(output_file))
 
    with open(output_file, "w", encoding="utf-8") as f:
       json.dump(chunks, f, ensure_ascii=False, indent=4)
+
+def ensure_directory_exists(directory):
+    """Ensure directory exists; if not, create it."""
+    if not os.path.exists(directory):
+        os.makedirs(directory)

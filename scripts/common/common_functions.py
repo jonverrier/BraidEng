@@ -10,12 +10,14 @@ def ensure_directory_exists(directory):
     Parameters:
     directory (str): The path to the directory.
     """
+    # Use os.path.join() to handle path construction across different platforms
     if not os.path.exists(directory):
         os.makedirs(directory)
-        #print(f"Directory '{directory}' created.")                             #take out the print statement at a later stage 
+        #print(f"Directory '{directory}' created.")  #  can remove or comment out this print statement for production
     else:
         # print(f"Directory '{directory}' already exists.")
         pass
 
-HTML_DESTINATION_DIR = "data/web"
+# Construct the path using os.path.join() for cross-platform compatibility
+HTML_DESTINATION_DIR = os.path.join("data", "web")
 ensure_directory_exists(HTML_DESTINATION_DIR)

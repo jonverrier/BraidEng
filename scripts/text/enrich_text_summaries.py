@@ -165,7 +165,7 @@ def enrich_text_summaries(config, markdownDestinationDir):
 
    # load the existing chunks from a json file
    output_subdir = "output"
-   cache_file = os.path.join(markdownDestinationDir, output_subdir, "master_enriched.json")
+   cache_file = os.path.join(markdownDestinationDir, "output", "master_enriched.json")
    # Ensure the output subdirectory exists
    ensure_directory_exists(os.path.dirname(cache_file))
 
@@ -197,7 +197,7 @@ def enrich_text_summaries(config, markdownDestinationDir):
 
    #print(f"markdownDestinationDir = {markdownDestinationDir}")         #added for debugging 
    output_subdir = "output"
-   output_file = os.path.join(markdownDestinationDir, output_subdir, "master_text.json")
+   output_file = os.path.join(markdownDestinationDir, "output", "master_text.json")
 
    # Ensure the output subdirectory exists
    ensure_directory_exists(os.path.dirname(output_file))

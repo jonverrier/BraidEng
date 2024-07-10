@@ -10,10 +10,12 @@ from youtube.enrich_transcript_summaries import enrich_transcript_summaries
 from youtube.enrich_transcript_embeddings import enrich_transcript_embeddings
 from text.enrich_lite import enrich_lite
 
-TRANSCRIPT_DESTINATION_DIR = "data/youtube"
+# Set transcript destination directory
+TRANSCRIPT_DESTINATION_DIR = os.path.join("data", "youtube")
 ensure_directory_exists(TRANSCRIPT_DESTINATION_DIR)
 
 config = ApiConfiguration()
+
 
 for item in youTubeUrls:
    download_transcripts (item[1], TRANSCRIPT_DESTINATION_DIR)

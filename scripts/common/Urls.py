@@ -65,8 +65,6 @@ class UrlHit:
     desc: str
     hits: int
 
-
-
 def countUrlHits (destinationDir, urls, fileName): 
    #we make use of logging for error and debug messages 
    logging.basicConfig(level=logging.WARNING)
@@ -81,16 +79,39 @@ def countUrlHits (destinationDir, urls, fileName):
 
    logger.debug("Starting hit counting")
 
-   # load the chunks from a json file
+
+
+   
+
+   # # load the chunks from a json file
+   # input_file = os.path.join(destinationDir, "output", fileName)
+
+   # with open(input_file, "r", encoding="utf-8") as f:
+   #    chunks = json.load(f)
+
+   # total_chunks = len(chunks)
+   # logger.debug("Total chunks to be processed: %s", len(chunks))
+
+
+
+
+
+   # Load the chunks from a JSON file
    input_file = os.path.join(destinationDir, "output", fileName)
-   print(input_file)
-   print()
-   print('above!')
-   with open(input_file, "r", encoding="utf-8") as f:
-      chunks = json.load(f)
+   logger.debug("Input file path: %s", input_file)
+
+   try:
+      with open(input_file, "r", encoding="utf-8") as f:
+         chunks = json.load(f)
+   except FileNotFoundError:
+      logger.error("Input file '%s' not found", input_file)
+      exit(1)
+   except Exception as e:
+      logger.error("Error loading JSON file: %s", str(e))
+      exit(1)
 
    total_chunks = len(chunks)
-   logger.debug("Total chunks to be processed: %s", len(chunks))
+   logger.debug("Total chunks to be processed: %s", total_chunks)
 
    # Build an empty array to accumlulate hits
    hits = [None] * len(urls)
