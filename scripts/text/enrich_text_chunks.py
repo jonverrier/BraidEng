@@ -4,12 +4,17 @@
 # from the markdown files, generate a master json file
 # from the makdown folder read all the .json files then load the associated .mdd file
 
+# Standard Library Imports
 import os
 import json
-import tiktoken
 import logging
-from rich.progress import Progress
 from pathlib import Path
+
+# Third-Party Packages
+import tiktoken
+from rich.progress import Progress
+
+# Local Modules
 from common.common_functions import ensure_directory_exists
 
 PERCENTAGE_OVERLAP = 0.05

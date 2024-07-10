@@ -3,13 +3,16 @@
 # from the transcript files, generate a master csv file
 # from the transcript folder read all the .json files then load the associated .vtt file
 
+# Standard Library Imports
 from datetime import datetime, timedelta
-import glob
 import os
 import json
 import argparse
-import tiktoken
+import glob
 import logging
+
+# Third-Party Packages
+import tiktoken
 from rich.progress import Progress
 
 logging.basicConfig(level=logging.WARNING)

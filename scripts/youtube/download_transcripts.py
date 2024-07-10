@@ -1,15 +1,19 @@
 """ This script downloads the transcripts for all the videos in a YouTube playlist. """
 
+# Standard Library Imports
 import os
 import json
 import logging
 import time
 import threading
 import queue
+
+# Third-Party Packages
 import googleapiclient.discovery
 import googleapiclient.errors
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import WebVTTFormatter
+
 
 GOOGLE_DEVELOPER_API_KEY = os.environ["GOOGLE_DEVELOPER_API_KEY"]
 

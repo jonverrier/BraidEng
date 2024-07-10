@@ -1,4 +1,6 @@
+# Standard library imports
 import os
+
 
 def ensure_directory_exists(directory):
     """

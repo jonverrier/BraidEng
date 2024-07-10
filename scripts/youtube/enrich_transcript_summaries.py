@@ -1,10 +1,13 @@
 """ Summarize a youtube transcript using chatgpt"""
 
+# Standard Library Imports
 import json
 import os
-import queue
 import threading
+import queue
 import logging
+
+# Third-Party Packages
 import openai
 from tenacity import (
     retry,
@@ -13,6 +16,7 @@ from tenacity import (
     retry_if_not_exception_type,
 )
 from rich.progress import Progress
+
 
 class Counter:
     """thread safe counter"""

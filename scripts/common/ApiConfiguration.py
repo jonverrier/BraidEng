@@ -1,8 +1,9 @@
 # Copyright (c) 2024 Braid Technologies Ltd
 
+# Standard library imports
 import os
 
-azure = True
+azure = True                  
 
 if azure:
    API_TYPE = "Azure" #AZURE VERSION WAS "Azure"

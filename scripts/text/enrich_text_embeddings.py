@@ -1,6 +1,7 @@
 """ This script will take a text and create embeddings for each text using the OpenAI API."""
 # Copyright (c) 2024 Braid Technologies Ltd
 
+# Standard Library Imports
 import logging
 import re
 import os
@@ -8,6 +9,8 @@ import json
 import threading
 import queue
 import time
+
+# Third-Party Packages
 import openai
 from openai.embeddings_utils import get_embedding
 import tiktoken
@@ -18,6 +21,8 @@ from tenacity import (
     retry_if_not_exception_type,
 )
 from rich.progress import Progress
+
+# Local Modules
 from common.common_functions import ensure_directory_exists
 
 def normalize_text(s, sep_token=" \n "):

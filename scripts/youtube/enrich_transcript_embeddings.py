@@ -1,11 +1,14 @@
 """ This script take text chunks and create embeddings for each text using the OpenAI API."""
 
+# Standard Library Imports
 import logging
 import re
 import os
 import json
 import threading
 import queue
+
+# Third-Party Packages
 import openai
 from openai.embeddings_utils import get_embedding
 import tiktoken
@@ -16,6 +19,7 @@ from tenacity import (
     retry_if_not_exception_type,
 )
 from rich.progress import Progress
+
 
 tokenizer = tiktoken.get_encoding("cl100k_base")
 

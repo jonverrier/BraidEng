@@ -1,6 +1,7 @@
 """ This script downloads the text content for all sub pages of a URL. """
 # Copyright (c) 2024 Braid Technologies Ltd
 
+# Standard Library Imports
 import os
 import json
 import logging
@@ -8,10 +9,12 @@ import time
 import threading
 import queue
 from pathlib import Path
+from urllib.parse import urlsplit, urljoin
+
+# Third-Party Packages
 from bs4 import BeautifulSoup
 import requests
-import time
-from urllib.parse import urlsplit, urljoin
+
 
 MAX_LINKS_PERPAGE=256 #Max number of links we keep from a single page
 MAX_PAGE_DEPTH=1     #Max depth we search in a website

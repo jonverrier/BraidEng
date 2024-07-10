@@ -1,11 +1,14 @@
 """ Summarize a youtube transcript using chatgpt"""
 # Copyright (c) 2024 Braid Technologies Ltd
 
+# Standard Library Imports
 import json
 import os
-import queue
 import threading
+import queue
 import logging
+
+# Third-Party Packages
 import openai
 from tenacity import (
     retry,
@@ -14,7 +17,10 @@ from tenacity import (
     retry_if_not_exception_type,
 )
 from rich.progress import Progress
+
+# Local Modules
 from common.common_functions import ensure_directory_exists
+
 
 AZURE_OPENAI_MODEL_DEPLOYMENT_NAME = os.getenv(
     "AZURE_OPENAI_MODEL_DEPLOYMENT_NAME", "gpt-35-turbo"

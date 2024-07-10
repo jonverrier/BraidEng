@@ -1,9 +1,12 @@
 """ This script will take a list of questions and run them through the test pipeline."""
 # Copyright (c) 2024 Braid Technologies Ltd
 
+# Standard Library Imports
 import logging
 import os
 import json
+
+# Third-Party Packages
 import openai
 from openai.embeddings_utils import get_embedding
 from tenacity import (
@@ -15,7 +18,10 @@ from tenacity import (
 from rich.progress import Progress
 import numpy as np
 from numpy.linalg import norm
+
+# Local Modules
 from common.ApiConfiguration import ApiConfiguration
+
 
 kOpenAiPersonaPrompt = "You are an AI assistant helping an application developer understand generative AI. You explain complex concepts in simple language, using Python examples if it helps. You limit replies to 50 words or less. If you don't know the answer, say 'I don't know'. If the question is not related to building AI applications, Python, or Large Language Models (LLMs), say 'That doesn't seem to be about AI'."
 kInitialQuestionPrompt = "You are an AI assistant helping an application developer understand generative AI. You will be presented with a question. Answer the question in a few sentences, using language a suitable for a technical graduate student will understand. Limit your reply to 50 words or less. If you don't know the answer, say 'I don't know'. If the question is not related to building AI applications, Python, or Large Language Models (LLMs), say 'That doesn't seem to be about AI'.\n"

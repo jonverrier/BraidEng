@@ -1,6 +1,7 @@
 """ This script downloads the transcripts for all the markdown files in a GitHub repo. """
 # Copyright (c) 2024 Braid Technologies Ltd
 
+# Standard Library Imports
 import os
 import json
 import logging
@@ -9,9 +10,10 @@ import threading
 import queue
 import pathlib
 from pathlib import Path
+
+# Third-Party Packages
 from markdown import markdown
 from bs4 import BeautifulSoup
-
 
 class Counter:
     """thread safe counter"""
