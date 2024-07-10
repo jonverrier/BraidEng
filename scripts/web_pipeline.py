@@ -16,13 +16,16 @@ ensure_directory_exists(HTML_DESTINATION_DIR)
 config = ApiConfiguration()
 
 #for item in webUrls:
-   #download_html (item[1], item[2], HTML_DESTINATION_DIR, config.discardIfBelow)
+   #download_html (item[1], item[2], HTML_DESTINATION_DIR, config.discardIfBelow)           #commented out for debugging purposes
 
 # Keep this comment as example of how to just process one file for debugging
-download_html ("https://huyenchip.com/2023/04/11/llm-engineering.html", 
-               True, HTML_DESTINATION_DIR, config.discardIfBelow)
-# download_html ("https://www.interaction-design.org/literature/topics/design-thinking", 
-#                True, HTML_DESTINATION_DIR, 150)
+# download_html ("https://huyenchip.com/2023/04/11/llm-engineering.html", 
+#                True, HTML_DESTINATION_DIR, config.discardIfBelow)        #the following command raises AssertionError: All chunks should have a hit:huyenchip.com/2023/04/11/llm-engineering.html
+
+
+download_html ("https://www.interaction-design.org/literature/topics/design-thinking", 
+               True, HTML_DESTINATION_DIR, 150)
+
 enrich_text_chunks(config, HTML_DESTINATION_DIR) 
 enrich_text_summaries(config, HTML_DESTINATION_DIR)
 enrich_text_embeddings(config, HTML_DESTINATION_DIR)

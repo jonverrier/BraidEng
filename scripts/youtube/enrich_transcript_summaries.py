@@ -181,10 +181,6 @@ def enrich_transcript_summaries (config, transcriptDestinationDir):
    logger.debug("Total chunks processed: %s", len(output_chunks))
 
 
-#    output_file = os.path.join(transcriptDestinationDir, "output", "master_enriched.json")
-#    with open(output_file, "w", encoding="utf-8") as f:
-#       json.dump(output_chunks, f, ensure_ascii=False, indent=4)
-
    # save the output chunks to a json file
    output_subdir = "output"
    output_file = os.path.join(transcriptDestinationDir, output_subdir, "master_enriched.json")

@@ -10,7 +10,7 @@ def ensure_directory_exists(directory):
     """
     if not os.path.exists(directory):
         os.makedirs(directory)
-        print(f"Directory '{directory}' created.")                             #take out the print statement at a later stage 
+        #print(f"Directory '{directory}' created.")                             #take out the print statement at a later stage 
     else:
         # print(f"Directory '{directory}' already exists.")
         pass

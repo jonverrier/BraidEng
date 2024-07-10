@@ -189,20 +189,12 @@ def enrich_text_summaries(config, markdownDestinationDir):
 
    logger.debug("Total chunks processed: %s", len(output_chunks))
 
-#    # save the output chunks to a json file
-#    output_file = os.path.join(markdownDestinationDir, "output", "master_enriched.json")
-#    with open(output_file, "w", encoding="utf-8") as f:
-#       json.dump(output_chunks, f, ensure_ascii=False, indent=4)
-
-
-   #modified section:
-   # save chunks to a json file
-   #print(f"markdownDestinationDir = {markdownDestinationDir}")
+   #print(f"markdownDestinationDir = {markdownDestinationDir}")         #added for debugging 
    output_subdir = "output"
    output_file = os.path.join(markdownDestinationDir, output_subdir, "master_text.json")
 
    # Ensure the output subdirectory exists
    ensure_directory_exists(os.path.dirname(output_file))
-
+   # save chunks to a json file
    with open(output_file, "w", encoding="utf-8") as f:
         json.dump(chunks, f, ensure_ascii=False, indent=4)

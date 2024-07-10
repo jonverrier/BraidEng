@@ -209,19 +209,13 @@ def enrich_transcript_chunks (config, transcriptDestinationDir):
 
    logger.debug("Total files: %s", total_files)
    logger.debug("Total chunks: %s", len(chunks))
-
-#    # save chunks to a json file
-#    output_file = os.path.join(transcriptDestinationDir, "output", "master_transcriptions.json")
-#    with open(output_file, "w", encoding="utf-8") as f:
-#       json.dump(chunks, f, ensure_ascii=False, indent=4)
-
-    # save chunks to a json file
+    
     # print(f"TmarkdownDestinationDir = {markdownDestinationDir}")
     output_subdir = "output"
     output_file = os.path.join(transcriptDestinationDir, output_subdir, "master_transcriptions.json")
 
     # Ensure the output subdirectory exists
     ensure_directory_exists(os.path.dirname(output_file))
-
+    # save chunks to a json file
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(chunks, f, ensure_ascii=False, indent=4)
