@@ -29,7 +29,7 @@ webUrls = [
 ["The Illustrated Transformer by Jay Alammar (jalammar.github.io)", "https://jalammar.github.io/illustrated-transformer/", False],
 ["The Annotated Transformer (harvard.edu)", "https://nlp.seas.harvard.edu/annotated-transformer/", False],
 ["The Illustrated Stable Diffusion by Jay Alammar Visualizing machine learning one concept at a time. (jalammar.github.io)", "https://jalammar.github.io/illustrated-stable-diffusion/", False],
-["Huyen Chip's Blog", "https://huyenchip.com/blog/", False],
+["Huyen Chip's Blog", "https://huyenchip.com/blog/", True],
 ["Stamford CS234 - Large Language Models", "https://stanford-cs324.github.io/winter2022/lectures/", True],
 ["The Scaling Hypothesis · Gwern.net", "https://gwern.net/scaling-hypothesis", False],
 ["chinchilla's wild implications — LessWrong", "https://www.lesswrong.com/posts/6Fpvch8RR29qLEWNH/chinchilla-s-wild-implications", False],
@@ -81,7 +81,7 @@ def countUrlHits (destinationDir, urls, fileName):
 
 
 
-   
+
 
    # # load the chunks from a json file
    # input_file = os.path.join(destinationDir, "output", fileName)

@@ -76,17 +76,24 @@ By design, the app builds to a single .JS file using webpack. The JS file is the
 
    - Type git clone, and then paste the URL you copied earlier.
 
-     -git clone git clone https://github.com/jonverrier/BraidEng.git
+   ```bash
+   git clone https://github.com/jonverrier/BraidEng.git
+   ```
 
    -Press Enter to create your local clone.
 
 1. **Set up virtual enviornment:**
+
+   ```bash
    python -m venv venv
    `venv\Scripts\activate` # On Windows use
    source venv/bin/activate #On MacOS/Linuix
+   ```
 
 1. **Install dependecies:**
+   ```bash
    pip install -r scripts/requirements.txt
+   ```
 
 ## Licence
 
