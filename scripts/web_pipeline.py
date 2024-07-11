@@ -24,12 +24,12 @@ config = ApiConfiguration()
 #     download_html(item[1], item[2], HTML_DESTINATION_DIR, config.discardIfBelow)
 
 # Keep this comment as example of how to just process one file for debugging
-download_html("https://huyenchip.com/2023/04/11/llm-engineering.html", 
-              True, HTML_DESTINATION_DIR, config.discardIfBelow)
+# download_html("https://huyenchip.com/2023/04/11/llm-engineering.html", 
+#               True, HTML_DESTINATION_DIR, config.discardIfBelow)
 
 # Example of downloading a specific URL for testing
-# download_html("https://www.interaction-design.org/literature/topics/design-thinking", 
-#               True, HTML_DESTINATION_DIR, 150)
+download_html("https://www.interaction-design.org/literature/topics/design-thinking", 
+              True, HTML_DESTINATION_DIR, 150)
 
 # Enrich the text chunks, summaries, embeddings, and run lite enrichment
 enrich_text_chunks(config, HTML_DESTINATION_DIR) 

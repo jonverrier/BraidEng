@@ -79,23 +79,6 @@ def countUrlHits (destinationDir, urls, fileName):
 
    logger.debug("Starting hit counting")
 
-
-
-
-
-   # # load the chunks from a json file
-   # input_file = os.path.join(destinationDir, "output", fileName)
-
-   # with open(input_file, "r", encoding="utf-8") as f:
-   #    chunks = json.load(f)
-
-   # total_chunks = len(chunks)
-   # logger.debug("Total chunks to be processed: %s", len(chunks))
-
-
-
-
-
    # Load the chunks from a JSON file
    input_file = os.path.join(destinationDir, "output", fileName)
    logger.debug("Input file path: %s", input_file)
