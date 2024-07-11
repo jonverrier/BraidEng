@@ -23,7 +23,7 @@ import { EConfigNumbers, EConfigStrings } from '../core/ConfigStrings';
 import { getEmbeddingRepository } from '../core/IEmbeddingRepositoryFactory';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 import { UrlActivityRecord } from '../core/ActivityRecordUrl';
-import { MessageActivityRecord } from '../core/MessageActivityRecord';
+import { MessageActivityRecord } from '../core/ActivityRecordMessage';
 import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 import { LikeUnlikeActivityRecord } from '../core/ActivityRecordLikeUnlike';
 import { getDetaultAdminRepository} from '../core/IAdminRepository';
@@ -377,8 +377,13 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       throwIfUndefined (fluidConnection);
       let fluidMessagesConnection : BraidFluidConnection = fluidConnection;      
-      fluidMessagesConnection.messageCaucus().remove (id);
-      setSuppressScroll(true);       
+      fluidMessagesConnection.messageCaucus().remove (id);  
+      
+      let repository = getRecordRepository(props.sessionKey);
+      repository.removeMessageRecord (id); 
+
+      setSuppressScroll(true);        
+
       refreshAndForceUpdate ();   
    }
 

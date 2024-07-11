@@ -7,7 +7,8 @@ export interface IActivityRepository {
 
    save (record : ActivityRecord) : Promise<boolean>;
    loadRecentUrlActivity (count : number) : Promise<Array<ActivityRecord>>;
-   loadRecentMessages (count : number) : Promise<Array<ActivityRecord>>;   
+   loadRecentMessages (count : number) : Promise<Array<ActivityRecord>>;  
+   removeMessageRecord (messageId: string) : Promise<boolean>;
 }
 
 
