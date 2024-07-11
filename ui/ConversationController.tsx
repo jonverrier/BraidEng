@@ -466,6 +466,8 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       throwIfUndefined (fluidConnection);
       let fluidMessagesConnection : BraidFluidConnection = fluidConnection;       
 
+      let keyGenerator = getDefaultKeyGenerator();     
+
       // set up a message to append
       let message = new Message ();
       message.authorId = props.localPersona.id;
@@ -481,11 +483,11 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       storedPerson.lastSeenAt = message.sentAt;
       fluidMessagesConnection.participantCaucus().amend (storedPerson.id, storedPerson);    
       
-      // Save it to the DB - async
-      let keyGenerator = getDefaultKeyGenerator();      
+      // Save it to the DB - async 
+
       let repository = getRecordRepository(props.sessionKey);
       let email = props.localPersona.email;
-      let record = new MessageActivityRecord (keyGenerator.generateKey(), 
+      let record = new MessageActivityRecord (message.id, // Put the ID of the message on the activity, so we can delete it later
          props.conversationKey.toString(),
          email, new Date(), messageText_);
       repository.save (record);       
