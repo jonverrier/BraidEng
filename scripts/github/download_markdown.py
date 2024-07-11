@@ -1,6 +1,7 @@
 """ This script downloads the transcripts for all the markdown files in a GitHub repo. """
 # Copyright (c) 2024 Braid Technologies Ltd
 
+# Standard Library Imports
 import os
 import json
 import logging
@@ -9,20 +10,21 @@ import threading
 import queue
 import pathlib
 from pathlib import Path
+
+# Third-Party Packages
 from markdown import markdown
 from bs4 import BeautifulSoup
 
-
 class Counter:
-    """thread safe counter"""
+    """Thread-safe counter"""
 
     def __init__(self):
-        """initialize the counter"""
+        """Initialize the counter"""
         self.value = 0
         self.lock = threading.Lock()
 
     def increment(self):
-        """increment the counter"""
+        """Increment the counter"""
         with self.lock:
             self.value += 1
 
@@ -30,13 +32,14 @@ class Counter:
 counter = Counter()
 
 def makeSourceId(repoSourceDir, repoName, filePath):
-   relPath = os.path.relpath(filePath, repoSourceDir)
-   composite = repoName + '/' + relPath
-   unix = composite.replace("\\", "/")
-   return unix
+    """Constructs sourceId from repoSourceDir, repoName, and filePath"""
+    relPath = os.path.relpath(filePath, repoSourceDir)
+    composite = repoName + '/' + relPath
+    unix = Path(composite).as_posix()
+    return unix
 
 def md_to_plain_text(md):
-    #    """Convert MD contents into plain text"""
+    """Converts Markdown content into plain text"""
     html = markdown(md)
     soup = BeautifulSoup(html, features='html.parser')
     fullText = soup.get_text()
@@ -44,10 +47,10 @@ def md_to_plain_text(md):
     return nolineFeeds
     
 def get_markdown(fileName, counter_id, repoSourceDir, repoName, markdownDestinationDir, logger):
-    """Read in Markdown content from a file and write out as plain text """
+    """Reads Markdown content from a file and writes out as plain text"""
 
-    sourceId = makeSourceId (repoSourceDir, repoName, fileName)
-    fakeName = fileName.replace("\\", "_")
+    sourceId = makeSourceId(repoSourceDir, repoName, fileName)
+    fakeName = Path(fileName).name.replace("\\", "_")
     contentOutputFileName = os.path.join(markdownDestinationDir, fakeName + ".json.mdd")
     metaOutputFilename = os.path.join(markdownDestinationDir, fakeName + ".json")
 
@@ -56,97 +59,90 @@ def get_markdown(fileName, counter_id, repoSourceDir, repoName, markdownDestinat
         logger.debug("Skipping file %d, %s", counter_id, fileName)
         return False    
     
-    markdown = Path(fileName).read_text(encoding="utf-8")
+    markdown_content = Path(fileName).read_text(encoding="utf-8")
+    plainText = md_to_plain_text(markdown_content) 
 
-    plainText = md_to_plain_text (markdown) 
-
-    jsonSeg = dict()
-    jsonSeg["text"] = plainText
-    jsonSeg["start"] = "0"
-    jsonArr = [""]
-    jsonArr[0] = jsonSeg
+    jsonSeg = {"text": plainText, "start": "0"}
+    jsonArr = [jsonSeg]
          
     # save the plain text content as a .json.mdd file
     with open(contentOutputFileName, "w", encoding="utf-8") as file:
         json.dump(jsonArr, file, indent=4, ensure_ascii=False)
 
-    metadata = {}
-    metadata["speaker"] = ""
-    metadata["title"] = Path(fileName).name
-    metadata["sourceId"] = sourceId
-    metadata["filename"] = os.path.basename(contentOutputFileName)   
-    metadata["description"] = Path(fileName).name
-    metadata["hitTrackingId"] = repoName
+    metadata = {
+        "speaker": "",
+        "title": Path(fileName).name,
+        "sourceId": sourceId,
+        "filename": os.path.basename(contentOutputFileName),
+        "description": Path(fileName).name,
+        "hitTrackingId": repoName
+    }
 
     # save the metadata as a .json file
-    json.dump(metadata, open(metaOutputFilename, "w", encoding="utf-8"))
+    with open(metaOutputFilename, "w", encoding="utf-8") as file:
+        json.dump(metadata, file, indent=4, ensure_ascii=False)
     
     logger.debug("Markdown download completed: %d, %s", counter_id, fileName)
-
     return True
 
-
 def process_queue(q, repoSourceDir, repoName, markdownDestinationDir, logger):
-    """process the queue"""
+    """Processes the queue"""
     while not q.empty():
         file = q.get()
 
         counter.increment()
-
         get_markdown(file, counter.value, repoSourceDir, repoName, markdownDestinationDir, logger)
         q.task_done()
 
-def download_markdown (repoSourceDir, repoName, markdownDestinationDir): 
-   
-   logging.basicConfig(level=logging.WARNING)
-   logger = logging.getLogger(__name__)
+def download_markdown(repoSourceDir, repoName, markdownDestinationDir): 
+    """Main function to download Markdown files"""
 
-   MAX_RESULTS = 100
-   PROCESSING_THREADS = 1
+    logging.basicConfig(level=logging.WARNING)
+    logger = logging.getLogger(__name__)
 
-   q = queue.Queue()
+    MAX_RESULTS = 100
+    PROCESSING_THREADS = 1
 
-   if not markdownDestinationDir:
-      logger.error("Markdown folder not provided")
-      exit(1)
+    q = queue.Queue()
 
-   if not repoSourceDir:
-      logger.error("Repo name not provided")
-      exit(1)
+    if not markdownDestinationDir:
+        logger.error("Markdown folder not provided")
+        exit(1)
 
-   cwd = os.getcwd()
-   logger.debug("Current directory : %s", cwd)
-   logger.debug("Repo folder: %s", repoSourceDir)
-   logger.debug("Markdown folder: %s", markdownDestinationDir)
+    if not repoSourceDir:
+        logger.error("Repo name not provided")
+        exit(1)
 
-   directory_path = pathlib.Path(repoSourceDir)
+    cwd = os.getcwd()
+    logger.debug("Current directory: %s", cwd)
+    logger.debug("Repo folder: %s", repoSourceDir)
+    logger.debug("Markdown folder: %s", markdownDestinationDir)
 
-   # Use rglob() to recursively search for all files
-   searchPath = directory_path.rglob("*.md")
-   markdown_files = list(searchPath)
+    directory_path = Path(repoSourceDir)
 
-   # Build a queue of Markdown filenames
-   for file in markdown_files:
-       q.put (str(file))
+    # Use rglob() to recursively search for all files
+    searchPath = directory_path.rglob("*.md")
+    markdown_files = list(searchPath)
 
-   logger.info("Total markdown files to be download: %s", q.qsize())
+    # Build a queue of Markdown filenames
+    for file in markdown_files:
+        q.put(str(file))
 
-   start_time = time.time()
+    logger.info("Total markdown files to be downloaded: %s", q.qsize())
 
-   # create multiple threads to process the queue
-   threads = []
-   for i in range(PROCESSING_THREADS):
-      t = threading.Thread(
-         target=process_queue,
-                args=(q, repoSourceDir, repoName, markdownDestinationDir, logger),
-         )
-      t.start()
-   threads.append(t)
+    start_time = time.time()
 
-   # wait for all threads to finish
-   for t in threads:
-      t.join()
+    # Create multiple threads to process the queue
+    threads = []
+    for i in range(PROCESSING_THREADS):
+        t = threading.Thread(target=process_queue, args=(q, repoSourceDir, repoName, markdownDestinationDir, logger))
+        t.start()
+        threads.append(t)
 
+    # Wait for all threads to finish
+    for t in threads:
+        t.join()
 
-   finish_time = time.time()
-   logger.debug("Total time taken: %s", finish_time - start_time)
+    finish_time = time.time()
+    logger.debug("Total time taken: %s", finish_time - start_time)
+

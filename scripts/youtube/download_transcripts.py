@@ -1,15 +1,19 @@
 """ This script downloads the transcripts for all the videos in a YouTube playlist. """
 
+# Standard Library Imports
 import os
 import json
 import logging
 import time
 import threading
 import queue
+
+# Third-Party Packages
 import googleapiclient.discovery
 import googleapiclient.errors
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import WebVTTFormatter
+
 
 GOOGLE_DEVELOPER_API_KEY = os.environ["GOOGLE_DEVELOPER_API_KEY"]
 
@@ -33,6 +37,7 @@ class Counter:
         with self.lock:
             self.value += 1
 
+
 def gen_metadata(playlist_item, transcriptDestinationDir):
     """Generate metadata for a video"""
 
@@ -46,8 +51,14 @@ def gen_metadata(playlist_item, transcriptDestinationDir):
     metadata["description"] = playlist_item["snippet"]["description"]
     metadata["hitTrackingId"] = playlist_item["snippet"]["playlistId"]
 
-    # save the metadata as a .json file
-    json.dump(metadata, open(filename, "w", encoding="utf-8"))
+    # Ensure the directory exists before saving
+    os.makedirs(transcriptDestinationDir, exist_ok=True)
+
+    # Save the metadata as a .json file
+    with open(filename, "w", encoding="utf-8") as file:
+        json.dump(metadata, file, indent=4, ensure_ascii=False)
+
+
 
 
 def get_transcript(playlist_item, counter_id, transcriptDestinationDir, logger):
@@ -56,22 +67,25 @@ def get_transcript(playlist_item, counter_id, transcriptDestinationDir, logger):
     video_id = playlist_item["snippet"]["resourceId"]["videoId"]
     filename = os.path.join(transcriptDestinationDir, video_id + ".json.vtt")
 
-    # if video transcript already exists, skip it
+    # If video transcript already exists, skip it
     if os.path.exists(filename):
         logger.debug("Skipping video %d, %s", counter_id, video_id)
         return False
 
     try:
         transcript = YouTubeTranscriptApi.get_transcript(video_id)
-        # remove \n from the text
+        # Remove \n from the text
         for item in transcript:
             item["text"] = item["text"].replace("\n", " ")
 
         logger.debug("Transcription download completed: %d, %s", counter_id, video_id)
-        # save the transcript as a .vtt file
+
+        # Ensure the directory exists before saving
+        os.makedirs(transcriptDestinationDir, exist_ok=True)
+
+        # Save the transcript as a .vtt file
         with open(filename, "w", encoding="utf-8") as file:
             json.dump(transcript, file, indent=4, ensure_ascii=False)
-            # file.write(transcript)
 
     except Exception as exception:
         logger.debug(exception)
@@ -82,7 +96,7 @@ def get_transcript(playlist_item, counter_id, transcriptDestinationDir, logger):
 
 
 def process_queue(q, counter, transcriptDestinationDir, logger):
-    """process the queue"""
+    """Process the queue"""
     while not q.empty():
         video = q.get()
 

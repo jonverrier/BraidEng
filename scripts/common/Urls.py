@@ -1,5 +1,5 @@
-# Copyright (c) 2024 Braid Technologies Ltd
 
+# Standard library imports
 import os
 import json
 import logging
@@ -29,7 +29,7 @@ webUrls = [
 ["The Illustrated Transformer by Jay Alammar (jalammar.github.io)", "https://jalammar.github.io/illustrated-transformer/", False],
 ["The Annotated Transformer (harvard.edu)", "https://nlp.seas.harvard.edu/annotated-transformer/", False],
 ["The Illustrated Stable Diffusion by Jay Alammar Visualizing machine learning one concept at a time. (jalammar.github.io)", "https://jalammar.github.io/illustrated-stable-diffusion/", False],
-["Huyen Chip's Blog", "https://huyenchip.com/blog/", False],
+["Huyen Chip's Blog", "https://huyenchip.com/blog/", True],
 ["Stamford CS234 - Large Language Models", "https://stanford-cs324.github.io/winter2022/lectures/", True],
 ["The Scaling Hypothesis · Gwern.net", "https://gwern.net/scaling-hypothesis", False],
 ["chinchilla's wild implications — LessWrong", "https://www.lesswrong.com/posts/6Fpvch8RR29qLEWNH/chinchilla-s-wild-implications", False],
@@ -54,6 +54,7 @@ webUrls = [
 ["Monitoring Machine Learning Systems: Code, Data and Models ", "https://madewithml.com/courses/mlops/monitoring/", True]
 ]
 
+#class to store information about each URL
 class UrlHit:
     def __init__(self) -> None:
         self.path = ""
@@ -65,8 +66,9 @@ class UrlHit:
     hits: int
 
 def countUrlHits (destinationDir, urls, fileName): 
+   #we make use of logging for error and debug messages 
    logging.basicConfig(level=logging.WARNING)
-   logger = logging.getLogger(__name__)
+   logger = logging.getLogger(__name__)     
 
    if not destinationDir:
       logger.error("Output folder not provided")
@@ -77,13 +79,22 @@ def countUrlHits (destinationDir, urls, fileName):
 
    logger.debug("Starting hit counting")
 
-   # load the chunks from a json file
+   # Load the chunks from a JSON file
    input_file = os.path.join(destinationDir, "output", fileName)
-   with open(input_file, "r", encoding="utf-8") as f:
-      chunks = json.load(f)
+   logger.debug("Input file path: %s", input_file)
+
+   try:
+      with open(input_file, "r", encoding="utf-8") as f:
+         chunks = json.load(f)
+   except FileNotFoundError:
+      logger.error("Input file '%s' not found", input_file)
+      exit(1)
+   except Exception as e:
+      logger.error("Error loading JSON file: %s", str(e))
+      exit(1)
 
    total_chunks = len(chunks)
-   logger.debug("Total chunks to be processed: %s", len(chunks))
+   logger.debug("Total chunks to be processed: %s", total_chunks)
 
    # Build an empty array to accumlulate hits
    hits = [None] * len(urls)

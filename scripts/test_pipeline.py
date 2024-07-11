@@ -1,10 +1,12 @@
 # Copyright (c) 2024 Braid Technologies Ltd
 
+# Importing Local Modules
 from common.ApiConfiguration import ApiConfiguration
 from test.test_utility import run_tests
 
+import os
 
-TEST_DESTINATION_DIR = "data/test"
+TEST_DESTINATION_DIR = os.path.join("data", "test")
 CHUNK_SOURCE_DIR = "data"
 
 config = ApiConfiguration()
@@ -205,5 +207,7 @@ tech_questions = [
 "How can transfer learning benefit the deployment of LLMs in different domains?"
 ]
 
+if not os.path.exists(TEST_DESTINATION_DIR):
+    os.makedirs(TEST_DESTINATION_DIR)
 
 run_tests (config, TEST_DESTINATION_DIR, CHUNK_SOURCE_DIR, off_topic_questions) 
