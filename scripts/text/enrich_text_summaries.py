@@ -1,11 +1,14 @@
 """ Summarize a youtube transcript using chatgpt"""
 # Copyright (c) 2024 Braid Technologies Ltd
 
+# Standard Library Imports
 import json
 import os
-import queue
 import threading
+import queue
 import logging
+
+# Third-Party Packages
 import openai
 from tenacity import (
     retry,
@@ -14,6 +17,10 @@ from tenacity import (
     retry_if_not_exception_type,
 )
 from rich.progress import Progress
+
+# Local Modules
+from common.common_functions import ensure_directory_exists
+
 
 AZURE_OPENAI_MODEL_DEPLOYMENT_NAME = os.getenv(
     "AZURE_OPENAI_MODEL_DEPLOYMENT_NAME", "gpt-35-turbo"
@@ -157,10 +164,17 @@ def enrich_text_summaries(config, markdownDestinationDir):
       q.put(chunk)
 
    # load the existing chunks from a json file
+   output_subdir = "output"
    cache_file = os.path.join(markdownDestinationDir, "output", "master_enriched.json")
+   # Ensure the output subdirectory exists
+   ensure_directory_exists(os.path.dirname(cache_file))
+
    if os.path.isfile(cache_file):
       with open(cache_file, "r", encoding="utf-8") as f:
-         current = json.load(f)      
+         current = json.load(f)   
+   
+   with open(cache_file, "w", encoding="utf-8") as f:
+      json.dump(chunks, f, ensure_ascii=False, indent=4)
 
    with Progress() as progress:
       task1 = progress.add_task("[purple]Enriching Summaries...", total=total_chunks)
@@ -181,7 +195,12 @@ def enrich_text_summaries(config, markdownDestinationDir):
 
    logger.debug("Total chunks processed: %s", len(output_chunks))
 
-   # save the output chunks to a json file
-   output_file = os.path.join(markdownDestinationDir, "output", "master_enriched.json")
+   #print(f"markdownDestinationDir = {markdownDestinationDir}")         #added for debugging 
+   output_subdir = "output"
+   output_file = os.path.join(markdownDestinationDir, "output", "master_text.json")
+
+   # Ensure the output subdirectory exists
+   ensure_directory_exists(os.path.dirname(output_file))
+   # save chunks to a json file
    with open(output_file, "w", encoding="utf-8") as f:
-      json.dump(output_chunks, f, ensure_ascii=False, indent=4)
+        json.dump(chunks, f, ensure_ascii=False, indent=4)

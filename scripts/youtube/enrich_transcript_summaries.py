@@ -1,10 +1,11 @@
-""" Summarize a youtube transcript using chatgpt"""
-
+# Standard Library Imports
 import json
 import os
-import queue
 import threading
+import queue
 import logging
+
+# Third-Party Packages
 import openai
 from tenacity import (
     retry,
@@ -13,6 +14,7 @@ from tenacity import (
     retry_if_not_exception_type,
 )
 from rich.progress import Progress
+
 
 class Counter:
     """thread safe counter"""
@@ -70,7 +72,6 @@ def chatgpt_summary(config, text, logger):
 
     return text
 
-
 def process_queue(config, progress, task, q, counter, logger, output_chunks, current_chunks):
     """process the queue"""
     while not q.empty():
@@ -117,8 +118,7 @@ def convert_time_to_seconds(value):
     else:
         return 0
 
-
-def enrich_transcript_summaries (config, transcriptDestinationDir): 
+def enrich_transcript_summaries(config, transcriptDestinationDir): 
    
    openai.api_type = config.apiType 
    openai.api_key = config.apiKey
@@ -181,6 +181,15 @@ def enrich_transcript_summaries (config, transcriptDestinationDir):
    logger.debug("Total chunks processed: %s", len(output_chunks))
 
    # save the output chunks to a json file
-   output_file = os.path.join(transcriptDestinationDir, "output", "master_enriched.json")
+   output_subdir = "output"
+   output_file = os.path.join(transcriptDestinationDir, output_subdir, "master_enriched.json")
+
+   ensure_directory_exists(os.path.dirname(output_file))
+
    with open(output_file, "w", encoding="utf-8") as f:
-      json.dump(output_chunks, f, ensure_ascii=False, indent=4)
+        json.dump(chunks, f, ensure_ascii=False, indent=4)
+
+def ensure_directory_exists(directory):
+    """Ensure directory exists; if not, create it."""
+    if not os.path.exists(directory):
+        os.makedirs(directory)
