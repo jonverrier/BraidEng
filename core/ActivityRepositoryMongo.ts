@@ -5,16 +5,14 @@ import axios from "axios";
 
 
 // Internal imports
-import { throwIfUndefined } from "./Asserts";
 import { InvalidParameterError } from "./Errors";
 import { Environment, EEnvironment } from "./Environment";
 import { EConfigStrings } from "./ConfigStrings";
 import { KeyRetriever } from "./KeyRetriever";
 import { logDbError, logApiError } from "./Logging";
-import { DynamicStreamableFactory } from "./StreamingFramework";
 import { ActivityRecord } from './ActivityRecord';
 import { UrlActivityRecord } from "./ActivityRecordUrl";
-import { MessageActivityRecord } from "./MessageActivityRecord";
+import { MessageActivityRecord } from "./ActivityRecordMessage";
 import { SessionKey } from "./Keys";
 import { IActivityRepository } from "./IActivityRepository";
 import { LikeUnlikeActivityRecord } from "./ActivityRecordLikeUnlike";
@@ -213,6 +211,15 @@ export class ActivityRepositoryMongo implements IActivityRepository {
          });  
       });
    
+      return done;
+   }
+
+   removeMessageRecord (messageId: string) : Promise<boolean> {
+
+      // TODO - not implemented yet, this just makes the code compile. 
+      let done = new Promise<boolean >(function(resolve, reject) {
+         resolve (false);
+      });
       return done;
    }
 

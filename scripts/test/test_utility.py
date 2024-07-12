@@ -1,9 +1,12 @@
 """ This script will take a list of questions and run them through the test pipeline."""
 # Copyright (c) 2024 Braid Technologies Ltd
 
+# Standard Library Imports
 import logging
 import os
 import json
+
+# Third-Party Packages
 import openai
 from openai.embeddings_utils import get_embedding
 from tenacity import (
@@ -15,7 +18,10 @@ from tenacity import (
 from rich.progress import Progress
 import numpy as np
 from numpy.linalg import norm
+
+# Local Modules
 from common.ApiConfiguration import ApiConfiguration
+
 
 kOpenAiPersonaPrompt = "You are an AI assistant helping an application developer understand generative AI. You explain complex concepts in simple language, using Python examples if it helps. You limit replies to 50 words or less. If you don't know the answer, say 'I don't know'. If the question is not related to building AI applications, Python, or Large Language Models (LLMs), say 'That doesn't seem to be about AI'."
 kInitialQuestionPrompt = "You are an AI assistant helping an application developer understand generative AI. You will be presented with a question. Answer the question in a few sentences, using language a suitable for a technical graduate student will understand. Limit your reply to 50 words or less. If you don't know the answer, say 'I don't know'. If the question is not related to building AI applications, Python, or Large Language Models (LLMs), say 'That doesn't seem to be about AI'.\n"
@@ -40,15 +46,15 @@ class test_result:
     hitRelevance: float
     hitSummary: str
     followUp: str
-    followUpOnTopic : str
+    followUpOnTopic: str  # Corrected typo here
 
 @retry(
     wait=wait_random_exponential(min=5, max=15),
     stop=stop_after_attempt(15),
-    retry=retry_if_not_exception_type(openai.InvalidRequestError),
+    retry=retry_if_not_exception_type(openai.BadRequestError),
 )
-def get_enriched_question(config: ApiConfiguration, text : str, logger):
-    """generate a summary using chatgpt"""
+def get_enriched_question(config: ApiConfiguration, text: str, logger):
+    """Generate a summary using chatgpt"""
 
     messages = [
         {
@@ -77,7 +83,6 @@ def get_enriched_question(config: ApiConfiguration, text : str, logger):
     text = response.get("choices", [])[0].get("message", {}).get("content", text)
     finish_reason = response.get("choices", [])[0].get("finish_reason", "")
 
-    # print(finish_reason)
     if finish_reason != "stop" and finish_reason != 'length' and finish_reason != "":
         logger.warning("Stop reason: %s", finish_reason)
         logger.warning("Text: %s", text)
@@ -90,10 +95,10 @@ def get_enriched_question(config: ApiConfiguration, text : str, logger):
 @retry(
     wait=wait_random_exponential(min=5, max=15),
     stop=stop_after_attempt(15),
-    retry=retry_if_not_exception_type(openai.InvalidRequestError),
+    retry=retry_if_not_exception_type(openai.BadRequestError),
 )
-def get_text_embedding(config : ApiConfiguration, text: str, logger):
-    """get the embedding for a text"""
+def get_text_embedding(config: ApiConfiguration, text: str, logger):
+    """Get the embedding for a text"""
 
     embedding = get_embedding(text, 
                               engine=config.azureEmbedDeploymentName, 
@@ -106,10 +111,10 @@ def get_text_embedding(config : ApiConfiguration, text: str, logger):
 @retry(
     wait=wait_random_exponential(min=5, max=15),
     stop=stop_after_attempt(15),
-    retry=retry_if_not_exception_type(openai.InvalidRequestError),
+    retry=retry_if_not_exception_type(openai.BadRequestError),
 )
-def get_followup_question(config: ApiConfiguration, text : str, logger):
-    """generate a summary using chatgpt"""
+def get_followup_question(config: ApiConfiguration, text: str, logger):
+    """Generate a summary using chatgpt"""
 
     messages = [
         {
@@ -138,7 +143,6 @@ def get_followup_question(config: ApiConfiguration, text : str, logger):
     text = response.get("choices", [])[0].get("message", {}).get("content", text)
     finish_reason = response.get("choices", [])[0].get("finish_reason", "")
 
-    # print(finish_reason)
     if finish_reason != "stop" and finish_reason != 'length' and finish_reason != "":
         logger.warning("Stop reason: %s", finish_reason)
         logger.warning("Text: %s", text)
@@ -150,10 +154,10 @@ def get_followup_question(config: ApiConfiguration, text : str, logger):
 @retry(
     wait=wait_random_exponential(min=5, max=15),
     stop=stop_after_attempt(15),
-    retry=retry_if_not_exception_type(openai.InvalidRequestError),
+    retry=retry_if_not_exception_type(openai.BadRequestError),
 )
-def assess_followup_question(config: ApiConfiguration, text : str, logger):
-    """generate a summary using chatgpt"""
+def assess_followup_question(config: ApiConfiguration, text: str, logger):
+    """Generate a summary using chatgpt"""
 
     messages = [
         {
@@ -182,7 +186,6 @@ def assess_followup_question(config: ApiConfiguration, text : str, logger):
     text = response.get("choices", [])[0].get("message", {}).get("content", text)
     finish_reason = response.get("choices", [])[0].get("finish_reason", "")
 
-    # print(finish_reason)
     if finish_reason != "stop" and finish_reason != 'length' and finish_reason != "":
         logger.warning("Stop reason: %s", finish_reason)
         logger.warning("Text: %s", text)
@@ -195,8 +198,8 @@ def cosine_similarity(a, b):
    result = np.dot(a, b) / (norm(a) * norm(b))
    return result
 
-
 def run_tests(config, testDestinationDir, sourceDir, questions): 
+   """Run tests with given questions"""
 
    logging.basicConfig(level=logging.WARNING)
    logger = logging.getLogger(__name__)
@@ -224,17 +227,17 @@ def run_tests(config, testDestinationDir, sourceDir, questions):
       result = test_result()
       result.question = question
 
-      result.enriched_qustion = get_enriched_question (config, question, logger)
+      result.enriched_question = get_enriched_question(config, question, logger)
 
       # Convert the text of the enriched question to a vector embedding
-      embedding = get_text_embedding(config, result.enriched_qustion, logger)
+      embedding = get_text_embedding(config, result.enriched_question, logger)
    
       # Iterate through the chunks we have stored 
       for chunk in current:
          
          # calculate the similarity between the chunk and the question
-         ada = chunk.get ("ada_v2")
-         similarity = cosine_similarity (ada, embedding)
+         ada = chunk.get("ada_v2")
+         similarity = cosine_similarity(ada, embedding)
 
          # If we pass a reasonableness threshold, count it as a hit
          if similarity > 0.8:
@@ -245,12 +248,12 @@ def run_tests(config, testDestinationDir, sourceDir, questions):
             result.hitRelevance = similarity 
             result.hitSummary = chunk.get("summary")
 
-      # Ask GPT for a follow up question on the best match
-      # Once we have a follow up, ask GPT if the follow up looks like it is about AI            
-      result.followUp = get_followup_question (config, result.hitSummary, logger)
-      result.followUpOnTopic = assess_followup_question (config, result.followUp, logger)            
+      # Ask GPT for a follow-up question on the best match
+      # Once we have a follow-up, ask GPT if the follow-up looks like it is about AI            
+      result.followUp = get_followup_question(config, result.hitSummary, logger)
+      result.followUpOnTopic = assess_followup_question(config, result.followUp, logger)            
 
-      results.append (result)
+      results.append(result)
 
    logger.debug("Total tests processed: %s", len(results))
 
@@ -258,15 +261,16 @@ def run_tests(config, testDestinationDir, sourceDir, questions):
    for result in results:
       output = dict()
       output["question"] = result.question
-      output["enriched_question"] = result.enriched_qustion
+      output["enriched_question"] = result.enriched_question
       output["hit"] = result.hit   
       output["summary"] = result.hitSummary        
       output["hitRelevance"] = result.hitRelevance      
       output["followUp"] = result.followUp  
       output["followUpOnTopic"] = result.followUpOnTopic             
-      output_results.append (output)
+      output_results.append(output)
       
    # save the test results to a json file
    output_file = os.path.join(testDestinationDir, "test_output.json")
    with open(output_file, "w", encoding="utf-8") as f:
       json.dump(output_results, f)
+

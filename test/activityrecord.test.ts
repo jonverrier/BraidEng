@@ -3,7 +3,7 @@
 import { MDynamicStreamable } from '../core/StreamingFramework';
 import { ActivityRecord} from '../core/ActivityRecord';
 import { UrlActivityRecord } from '../core/ActivityRecordUrl';
-import { MessageActivityRecord } from '../core/MessageActivityRecord';
+import { MessageActivityRecord } from '../core/ActivityRecordMessage';
 import { LikeUnlikeActivityRecord } from '../core/ActivityRecordLikeUnlike';
 import { SessionKey } from '../core/Keys';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
@@ -544,6 +544,19 @@ describe("ActivityRepository", function () {
       expect(true).toEqual(true);     
    });  
 
+   it("Needs to remove a Message record", async function () {
+
+      let messageId = keyGenerator.generateKey();
+      var activity = new MessageActivityRecord (messageId, "madeupconversationKey", 
+                                 "jonathanverrier@hotmail.com", new Date(), 
+                                 "Test message");
+
+      let saved = await repository.save (activity);
+
+      let removed = await repository.removeMessageRecord (messageId);
+
+      expect(removed).toEqual(true);     
+   }); 
 });
 
 describe("ActivityRepositoryMongo", function () {

@@ -1,12 +1,14 @@
 # Copyright (c) 2024 Braid Technologies Ltd
 
+# Standard library imports
 import os
 
-azure = True
+azure = True                  
 
 if azure:
    API_TYPE = "Azure" #AZURE VERSION WAS "Azure"
-   API_KEY = os.environ["AZURE_OPENAI_API_KEY"] #AZURE VERSION WAS os.environ["AZURE_OPENAI_API_KEY"] 
+   # API_KEY = os.environ["AZURE_OPENAI_API_KEY"] #AZURE VERSION WAS os.environ["AZURE_OPENAI_API_KEY"]           #uncomment if code breaks - changes for script to exectable on both Windows and Unix machines.  
+   API_KEY = os.getenv("AZURE_OPENAI_API_KEY")  # Use os.getenv() to safely retrieve environment variables       #comment if code breaks  - changes for script to exectable on both Windows and Unix machines. 
    API_VERSION = "2024-02-01" #AZURE VERSION WAS "2023-07-01-preview"
    RESOURCE_ENDPOINT = "https://braidlms.openai.azure.com/" #AZURE VERSION WAS os.environ["AZURE_OPENAI_ENDPOINT"] 
 else:
@@ -19,7 +21,6 @@ else:
 
 class ApiConfiguration:
     def __init__(self) -> None:
-        self.apiType = API_TYPE
         self.apiKey = API_KEY
         self.apiVersion = API_VERSION
         self.resourceEndpoint = RESOURCE_ENDPOINT
@@ -39,13 +40,15 @@ class ApiConfiguration:
     apiVersion: str
     resourceEndpoint: str
     azureDeploymentName: str
+    azureEmbedDeploymentName: str
     modelName: str
+    embedModelName: str
     processingThreads: int
     openAiRequestTimeout: int
     summaryWordCount: int
     chunkDurationMins: int
     maxTokens: int
-    discardIfBelow: 150 
+    discardIfBelow: int 
 
 
 

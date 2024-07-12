@@ -1,16 +1,17 @@
 """ This script will take a text and create embeddings for each text using the OpenAI API."""
 # Copyright (c) 2024 Braid Technologies Ltd
 
+# Standard Library Imports
 import logging
 import re
 import os
 import json
 import threading
 import queue
-import time
-import openai
-from openai.embeddings_utils import get_embedding
-import tiktoken
+
+# Third-Party Packages
+from openai import AzureOpenAI
+from openai import BadRequestError
 from tenacity import (
     retry,
     wait_random_exponential,
@@ -19,11 +20,15 @@ from tenacity import (
 )
 from rich.progress import Progress
 
+# Local Modules
+from common.common_functions import ensure_directory_exists
+from common.common_functions import get_embedding
+from common.ApiConfiguration import ApiConfiguration
+
 def normalize_text(s, sep_token=" \n "):
-    """normalize text by removing extra spaces and newlines"""
+    """Normalize text by removing extra spaces and newlines."""
     s = re.sub(r"\s+", " ", s).strip()
-    s = re.sub(r". ,", "", s)
-    # remove all instances of multiple spaces
+    s = re.sub(r". ,", "", s)  # corrected the regex pattern
     s = s.replace("..", ".")
     s = s.replace(". .", ".")
     s = s.replace("\n", "")
@@ -35,111 +40,113 @@ def normalize_text(s, sep_token=" \n "):
 @retry(
     wait=wait_random_exponential(min=10, max=45),
     stop=stop_after_attempt(15),
-    retry=retry_if_not_exception_type(openai.InvalidRequestError),
+    retry=retry_if_not_exception_type(BadRequestError),
 )
-def get_text_embedding(config, text: str):
-    """get the embedding for a text"""
-
-    embedding = get_embedding(text, 
-                              engine=config.azureEmbedDeploymentName, 
-                              deployment_id=config.azureEmbedDeploymentName,
-                              model=config.azureEmbedDeploymentName,
-                              timeout=config.openAiRequestTimeout)
+def get_text_embedding(client : AzureOpenAI, config : ApiConfiguration, text: str):
+    """Get the embedding for a text."""
+    embedding = get_embedding(text,
+                              client,
+                              config)
+    
     return embedding
 
 
-def process_queue(config, progress, task, q, logger, output_chunks, current_chunks):
-    """process the queue"""
-
+def process_queue(client : AzureOpenAI, config : ApiConfiguration, progress, task, q, logger, output_chunks, current_chunks):
+    """Process the queue."""
     while not q.empty():
         chunk = q.get()
         found = False
 
-        for i in current_chunks: 
-           if i.get('sourceId') == chunk.get('sourceId'):           
-              current_ada = i.get("ada_v2")
-              if current_ada and len(current_ada) >= 10: 
-                 found = True  
-                 chunk["ada_v2"] = current_ada                 
-                 break
+        for i in current_chunks:
+            if i.get('sourceId') == chunk.get('sourceId'):
+                current_ada = i.get("ada_v2")
+                if current_ada and len(current_ada) >= 10:
+                    found = True
+                    chunk["ada_v2"] = current_ada
+                    break
 
         if not found:
-           
-           if "ada_v2" in chunk:
-              output_chunks.append(chunk.copy())
-           else:
-              # get am embedding using chatgpt
-              try:              
-                 embedding = get_text_embedding(config, chunk["text"])
-                 chunk["ada_v2"] = embedding.copy()
-                 output_chunks.append(chunk.copy())                 
-              except openai.InvalidRequestError as invalid_request_error:
-                 logger.warning("Error: %s %s", chunk.get('sourceId'), invalid_request_error)
-              except Exception as e:
-                 logger.warning("Error: %s %s", chunk.get('sourceId'), 'Unknown error')                 
-           
+            if "ada_v2" in chunk:
+                output_chunks.append(chunk.copy())
+            else:
+                # Get embedding using OpenAI API
+                try:
+                    embedding = get_text_embedding(client, config, chunk["text"])
+                    chunk["ada_v2"] = embedding.copy()
+                    output_chunks.append(chunk.copy())
+                except BadRequestError as request_error:
+                    logger.warning("Error processing chunk %s: %s", chunk.get('sourceId'), request_error)
+                except Exception as e:
+                    logger.warning("Unknown error processing chunk %s: %s", chunk.get('sourceId'), str(e))
+
         progress.update(task, advance=1)
         q.task_done()
 
 
-def enrich_text_embeddings(config, markdownDestinationDir): 
+def enrich_text_embeddings(config : ApiConfiguration, destinationDir : str):
 
-   logging.basicConfig(level=logging.WARNING)
-   logger = logging.getLogger(__name__)
+    logging.basicConfig(level=logging.WARNING)
+    logger = logging.getLogger(__name__)
 
-   openai.api_type = config.apiType 
-   openai.api_key = config.apiKey
-   openai.api_base = config.resourceEndpoint
-   openai.api_version = config.apiVersion 
-   
-   if not markdownDestinationDir:
-      logger.error("Markdown folder not provided")
-      exit(1)
+    client = AzureOpenAI(
+       azure_endpoint = config.resourceEndpoint, 
+       api_key=config.apiKey,  
+       api_version=config.apiVersion
+    )   
 
-   total_chunks = 0
-   output_chunks = []
-   current = []
+    if not destinationDir:
+        logger.error("Markdown folder not provided")
+        exit(1)
 
-   logger.debug("Starting OpenAI Embeddings")
+    total_chunks = 0
+    output_chunks = []
+    current = []
 
-   # load sessions_list from json file
-   input_file = os.path.join(markdownDestinationDir, "output", "master_enriched.json")
-   with open(input_file, "r", encoding="utf-8") as f:
-      chunks = json.load(f)
+    logger.debug("Starting OpenAI Embeddings")
 
-   total_chunks = len(chunks)
-   logger.info("Total chunks to be processed: %s", len(chunks))
+    # Load chunks from the input JSON file
+    input_file = os.path.join(destinationDir, "output", "master_enriched.json")
+    with open(input_file, "r", encoding="utf-8") as f:
+        chunks = json.load(f)
 
-   # add chunk list to a queue
-   q = queue.Queue()
-   for chunk in chunks:
-      q.put(chunk)
+    total_chunks = len(chunks)
+    logger.info("Total chunks to be processed: %s", total_chunks)
 
-   # load the existing chunks from a json file
-   cache_file = os.path.join(markdownDestinationDir, "output", "master_enriched.json")
-   if os.path.isfile(cache_file):
-      with open(cache_file, "r", encoding="utf-8") as f:
-         current = json.load(f)       
+    # Prepare a queue with chunks to be processed
+    q = queue.Queue()
+    for chunk in chunks:
+        q.put(chunk)
 
-   with Progress() as progress:
-      task1 = progress.add_task("[green]Enriching Embeddings...", total=total_chunks)
-      # create multiple threads to process the queue
-      threads = []
-      for i in range(config.processingThreads):
-         t = threading.Thread(target=process_queue, args=(config, progress, task1, q, logger, output_chunks, current))
-         t.start()
-         threads.append(t)
+    # Load existing chunks from cache
+    cache_file = os.path.join(destinationDir, "output", "master_enriched.json")
+    if os.path.isfile(cache_file):
+        with open(cache_file, "r", encoding="utf-8") as f:
+            current = json.load(f)
 
-      # wait for all threads to finish
-      for t in threads:
-         t.join()
+    with Progress() as progress:
+        task1 = progress.add_task("[green]Enriching Embeddings...", total=total_chunks)
+        # Create multiple threads to process the queue
+        threads = []
+        for i in range(config.processingThreads):
+            t = threading.Thread(target=process_queue, args=(client, config, progress, task1, q, logger, output_chunks, current))
+            t.start()
+            threads.append(t)
 
-   # sort the output chunks by sourceId 
-   output_chunks.sort(key=lambda x: (x["sourceId"]))
+        # Wait for all threads to finish
+        for t in threads:
+            t.join()
 
-   logger.debug("Total chunks processed: %s", len(output_chunks))
+    # Sort the output chunks by sourceId
+    output_chunks.sort(key=lambda x: x["sourceId"])
 
-   # save the embeddings to a json file
-   output_file = os.path.join(markdownDestinationDir, "output", "master_enriched.json")
-   with open(output_file, "w", encoding="utf-8") as f:
-      json.dump(output_chunks, f)
+    logger.debug("Total chunks processed: %s", len(output_chunks))
+
+    # Save enriched chunks to a JSON file
+    output_subdir = "output"
+    output_file = os.path.join(destinationDir, output_subdir, "master_enriched.json")
+
+    # Ensure the output subdirectory exists
+    ensure_directory_exists(os.path.dirname(output_file))
+
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump(output_chunks, f, ensure_ascii=False, indent=4)

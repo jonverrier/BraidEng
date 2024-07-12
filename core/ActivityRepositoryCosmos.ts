@@ -10,10 +10,9 @@ import { Environment, EEnvironment } from "./Environment";
 import { EConfigStrings } from "./ConfigStrings";
 import { KeyRetriever } from "./KeyRetriever";
 import { logDbError, logApiError } from "./Logging";
-import { DynamicStreamableFactory } from "./StreamingFramework";
 import { ActivityRecord } from './ActivityRecord';
 import { UrlActivityRecord } from "./ActivityRecordUrl";
-import { MessageActivityRecord } from "./MessageActivityRecord";
+import { MessageActivityRecord } from "./ActivityRecordMessage";
 import { SessionKey } from "./Keys";
 import { IActivityRepository } from "./IActivityRepository";
 
@@ -59,6 +58,53 @@ function makePostActivityToken(time: string, key: string) {
 function makeGetActivityToken(time: string, key: string) { 
 
    return activityToken( "get", time, key);
+}
+
+function makeDeleteActivityToken(time: string, key: string, id: string) { 
+
+   return getAuthorizationTokenUsingMasterKey( "delete", "docs", "dbs/BraidLms/colls/Activity/docs/" + id, 
+                                                time, 
+                                                key);
+}
+
+function makePostActivityHeader (key : string, time : string, defaultPartitionKey : string) : object {
+   return {                  
+      "Authorization": key,
+      "Content-Type": "application/json",    
+      "Accept": "application/json",               
+      "x-ms-date": time,
+      "x-ms-version" : "2018-12-31",
+      "Cache-Control": "no-cache",
+      "x-ms-documentdb-is-upsert" : "True",
+      "x-ms-documentdb-partitionkey" : "[\"" + defaultPartitionKey + "\"]", 
+      "x-ms-consistency-level" : "Eventual"
+   };
+}
+
+function makePostActivityQueryHeader (key : string, time : string, defaultPartitionKey : string) : object {
+   return {                  
+      "Authorization": key,
+      "Content-Type": "application/query+json",    
+      "Accept": "application/json",               
+      "x-ms-date": time,
+      "x-ms-version" : "2018-12-31",
+      "Cache-Control": "no-cache",
+      "x-ms-documentdb-partitionkey" : "[\"" + defaultPartitionKey + "\"]", 
+      "x-ms-consistency-level" : "Eventual",
+      "x-ms-documentdb-isquery" : "True"
+   };
+}
+
+function makeDeleteActivityHeader (key : string, time : string, defaultPartitionKey : string) : object {
+   return {                  
+      "Authorization": key,
+      "Accept": "application/json",               
+      "x-ms-date": time,
+      "x-ms-version" : "2018-12-31",
+      "Cache-Control": "no-cache",
+      "x-ms-documentdb-partitionkey" : "[\"" + defaultPartitionKey + "\"]", 
+      "x-ms-consistency-level" : "Eventual"
+   };
 }
 
 // ActivityRecord - email of a person and a datestamp. Will have many derived classes according to different activity types. 
@@ -140,6 +186,7 @@ export class ActivityRepositoryCosmos implements IActivityRepository {
 
          throwIfUndefined(self._dbkey); // Keep compiler happy, should not be able to get here with actual undefined key. 
          let key = makePostActivityToken(time, self._dbkey); 
+         let headers = makePostActivityHeader (key, time, defaultPartitionKey); 
 
          document.partition = defaultPartitionKey; // Dont need real partitions until 10 GB ... 
          document.id = document.data.id; // Need to copy ID up from activity object, since MDynamicallyStreamable streams only the class name. 
@@ -147,17 +194,7 @@ export class ActivityRepositoryCosmos implements IActivityRepository {
          axios.post('https://braidlms.documents.azure.com/dbs/BraidLms/colls/Activity/docs', 
          document,
          {
-            headers: {                  
-               "Authorization": key,
-               "Content-Type": "application/json",    
-               "Accept": "application/json",               
-               "x-ms-date": time,
-               "x-ms-version" : "2018-12-31",
-               "Cache-Control": "no-cache",
-               "x-ms-documentdb-is-upsert" : "True",
-               "x-ms-documentdb-partitionkey" : "[\"" + defaultPartitionKey + "\"]", 
-               "x-ms-consistency-level" : "Eventual"
-            }              
+            headers: headers             
          })
          .then((resp : any) => {
 
@@ -215,7 +252,8 @@ export class ActivityRepositoryCosmos implements IActivityRepository {
 
          let time = new Date().toUTCString();
          throwIfUndefined(self._dbkey); // Keep compiler happy, should not be able to get here with actual undefined key. 
-         let key = makePostActivityToken(time, self._dbkey);         
+         let key = makePostActivityToken(time, self._dbkey);     
+         let headers = makePostActivityQueryHeader (key, time, defaultPartitionKey);              
          let query = "SELECT * FROM Activity a WHERE a.className = @className ORDER BY a.happenedAt DESC OFFSET 0 LIMIT " + count.toString();
 
          axios.post('https://braidlms.documents.azure.com/dbs/BraidLms/colls/Activity/docs', 
@@ -229,17 +267,7 @@ export class ActivityRepositoryCosmos implements IActivityRepository {
             ]  
          },
          {
-            headers: {                  
-               "Authorization": key,
-               "Content-Type": "application/query+json",    
-               "Accept": "application/json",               
-               "x-ms-date": time,
-               "x-ms-version" : "2018-12-31",
-               "Cache-Control": "no-cache",
-               "x-ms-documentdb-partitionkey" : "[\"" + defaultPartitionKey + "\"]", 
-               "x-ms-consistency-level" : "Eventual",
-               "x-ms-documentdb-isquery" : "True"
-            }              
+            headers: headers           
          })
          .then((resp : any) => {
 
@@ -261,6 +289,38 @@ export class ActivityRepositoryCosmos implements IActivityRepository {
          });  
       });
    
+      return done;
+   }
+
+   async removeMessageRecord (messageId: string) : Promise<boolean> {
+
+      let self = this;
+
+      if (!self._dbkey) {
+         await self.connect(self._sessionKey);
+      }
+
+      let done = new Promise<boolean >(function(resolve, reject) {
+         let time = new Date().toUTCString();
+         throwIfUndefined(self._dbkey); // Keep compiler happy, should not be able to get here with actual undefined key. 
+         let key = makeDeleteActivityToken(time, self._dbkey, messageId);     
+         let headers = makeDeleteActivityHeader (key, time, defaultPartitionKey); 
+         let deletePath = 'https://braidlms.documents.azure.com/dbs/BraidLms/colls/Activity/docs/' + messageId;           
+
+         axios.delete(deletePath, 
+         {
+            headers: headers           
+         })
+         .then((resp : any) => {
+
+            resolve(true);
+         })
+         .catch((error: any) => {   
+
+            logDbError ("Error calling database:", error);   
+            reject(false);     
+         });  
+      });
       return done;
    }
 

@@ -13,7 +13,7 @@
             "args": [
                 "-r",
                 "ts-node/register",
-                "${workspaceRoot}/test/uuid*.ts",
+                "${workspaceRoot}/test/activity*.ts",
                 "--no-timeouts"
             ],
             "cwd": "${workspaceRoot}"

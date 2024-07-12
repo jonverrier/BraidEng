@@ -1,5 +1,6 @@
 """ This script will get the speaker name from the YouTube video metadata and the first minute of the transcript using the OpenAI Functions entity extraction."""
 
+# Standard Library Imports
 import json
 import os
 import glob
@@ -8,6 +9,8 @@ import logging
 import queue
 import time
 import argparse
+
+# Third-Party Packages
 import openai
 from openai.embeddings_utils import get_embedding
 from rich.progress import Progress
@@ -100,9 +103,9 @@ counter = Counter()
 @retry(
     wait=wait_random_exponential(min=6, max=10),
     stop=stop_after_attempt(4),
-    retry=retry_if_not_exception_type(openai.InvalidRequestError),
+    retry=retry_if_not_exception_type(openai.BadRequestError),
 )
-def get_speaker_info(text):
+def get_speaker_info(text, config):
     """Gets the OpenAI functions from the text."""
 
     function_name = None
