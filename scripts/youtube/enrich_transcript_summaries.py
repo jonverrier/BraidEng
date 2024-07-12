@@ -4,9 +4,12 @@ import os
 import threading
 import queue
 import logging
+from logging import Logger
 
 # Third-Party Packages
-import openai
+from openai import AzureOpenAI
+from openai import BadRequestError
+
 from tenacity import (
     retry,
     wait_random_exponential,
@@ -15,6 +18,9 @@ from tenacity import (
 )
 from rich.progress import Progress
 
+# Local Modules
+from common.common_functions import ensure_directory_exists
+from common.ApiConfiguration import ApiConfiguration
 
 class Counter:
     """thread safe counter"""
@@ -30,12 +36,12 @@ class Counter:
             self.value += 1
             return self.value
 
-@retry(
-    wait=wait_random_exponential(min=10, max=45),
-    stop=stop_after_attempt(15),
-    retry=retry_if_not_exception_type(openai.InvalidRequestError),
-)
-def chatgpt_summary(config, text, logger):
+#@retry(
+#    wait=wait_random_exponential(min=10, max=45),
+#    stop=stop_after_attempt(15),
+#    retry=retry_if_not_exception_type(BadRequestError),
+#)
+def chatgpt_summary(client : AzureOpenAI, config : ApiConfiguration, text : str, logger : Logger):
     """generate a summary using chatgpt"""
 
     messages = [
@@ -48,9 +54,8 @@ def chatgpt_summary(config, text, logger):
         {"role": "user", "content": text},
     ]
 
-    response = openai.ChatCompletion.create(
-        deployment_id=config.azureDeploymentName,
-        model=config.modelName,
+    response = client.chat.completions.create(
+        model=config.azureDeploymentName,
         messages=messages,
         temperature=0.7,
         max_tokens=config.maxTokens,
@@ -58,11 +63,11 @@ def chatgpt_summary(config, text, logger):
         frequency_penalty=0,
         presence_penalty=0,
         stop=None,
-        request_timeout=config.openAiRequestTimeout,
+        timeout=config.openAiRequestTimeout,
     )
 
-    text = response.get("choices", [])[0].get("message", {}).get("content", text)
-    finish_reason = response.get("choices", [])[0].get("finish_reason", "")
+    text = response.choices[0].message.content
+    finish_reason = response.choices[0].finish_reason
 
     if finish_reason != "stop" and finish_reason != 'length' and finish_reason != "":
         logger.warning("Stop reason: %s", finish_reason)
@@ -72,7 +77,7 @@ def chatgpt_summary(config, text, logger):
 
     return text
 
-def process_queue(config, progress, task, q, counter, logger, output_chunks, current_chunks):
+def process_queue(client : AzureOpenAI, config : ApiConfiguration, progress, task, q, counter, logger, output_chunks, current_chunks):
     """process the queue"""
     while not q.empty():
 
@@ -94,12 +99,12 @@ def process_queue(config, progress, task, q, counter, logger, output_chunks, cur
 
            # get a summary of the text using chatgpt
            try:
-              summary = chatgpt_summary(config, text, logger)
+              summary = chatgpt_summary(client, config, text, logger)
               # add the summary to the segment dictionary
               chunk["summary"] = summary
               output_chunks.append(chunk.copy())
-           except openai.InvalidRequestError as invalid_request_error:
-              logger.warning("Error: %s", invalid_request_error)
+           except BadRequestError as request_error:
+              logger.warning("Error: %s", request_error)
            except Exception as e:
               logger.warning("Error: %s", e)
 
@@ -118,12 +123,13 @@ def convert_time_to_seconds(value):
     else:
         return 0
 
-def enrich_transcript_summaries(config, transcriptDestinationDir): 
+def enrich_transcript_summaries(config : ApiConfiguration, transcriptDestinationDir: str): 
    
-   openai.api_type = config.apiType 
-   openai.api_key = config.apiKey
-   openai.api_base = config.resourceEndpoint
-   openai.api_version = config.apiVersion   
+   client = AzureOpenAI(
+      azure_endpoint = config.resourceEndpoint, 
+      api_key=config.apiKey,  
+      api_version=config.apiVersion
+   )      
 
    logging.basicConfig(level=logging.WARNING)
    logger = logging.getLogger(__name__)
@@ -167,7 +173,7 @@ def enrich_transcript_summaries(config, transcriptDestinationDir):
       # create multiple threads to process the queue
       threads = []
       for i in range(config.processingThreads):
-         t = threading.Thread(target=process_queue, args=(config, progress, task1, q, counter, logger, output_chunks, current))
+         t = threading.Thread(target=process_queue, args=(client, config, progress, task1, q, counter, logger, output_chunks, current))
          t.start()
          threads.append(t)
 
@@ -189,7 +195,3 @@ def enrich_transcript_summaries(config, transcriptDestinationDir):
    with open(output_file, "w", encoding="utf-8") as f:
         json.dump(chunks, f, ensure_ascii=False, indent=4)
 
-def ensure_directory_exists(directory):
-    """Ensure directory exists; if not, create it."""
-    if not os.path.exists(directory):
-        os.makedirs(directory)

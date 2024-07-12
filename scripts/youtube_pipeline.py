@@ -21,6 +21,9 @@ config = ApiConfiguration()
 
 for item in youTubeUrls:
    download_transcripts (item[1], TRANSCRIPT_DESTINATION_DIR)
+# Keep this comment as example of how to just process one file for debugging   
+#download_transcripts ("PL1T8fO7ArWleyIqOy37OVXsP4hFXymdOZ", 
+#                      TRANSCRIPT_DESTINATION_DIR)
 enrich_transcript_chunks(config, TRANSCRIPT_DESTINATION_DIR) 
 enrich_transcript_summaries (config, TRANSCRIPT_DESTINATION_DIR) 
 enrich_transcript_embeddings(config, TRANSCRIPT_DESTINATION_DIR)

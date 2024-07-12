@@ -21,7 +21,6 @@ else:
 
 class ApiConfiguration:
     def __init__(self) -> None:
-        self.apiType = API_TYPE
         self.apiKey = API_KEY
         self.apiVersion = API_VERSION
         self.resourceEndpoint = RESOURCE_ENDPOINT
@@ -41,13 +40,15 @@ class ApiConfiguration:
     apiVersion: str
     resourceEndpoint: str
     azureDeploymentName: str
+    azureEmbedDeploymentName: str
     modelName: str
+    embedModelName: str
     processingThreads: int
     openAiRequestTimeout: int
     summaryWordCount: int
     chunkDurationMins: int
     maxTokens: int
-    discardIfBelow: 150 
+    discardIfBelow: int 
 
 
 

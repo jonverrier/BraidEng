@@ -51,7 +51,7 @@ class test_result:
 @retry(
     wait=wait_random_exponential(min=5, max=15),
     stop=stop_after_attempt(15),
-    retry=retry_if_not_exception_type(openai.InvalidRequestError),
+    retry=retry_if_not_exception_type(openai.BadRequestError),
 )
 def get_enriched_question(config: ApiConfiguration, text: str, logger):
     """Generate a summary using chatgpt"""
@@ -95,7 +95,7 @@ def get_enriched_question(config: ApiConfiguration, text: str, logger):
 @retry(
     wait=wait_random_exponential(min=5, max=15),
     stop=stop_after_attempt(15),
-    retry=retry_if_not_exception_type(openai.InvalidRequestError),
+    retry=retry_if_not_exception_type(openai.BadRequestError),
 )
 def get_text_embedding(config: ApiConfiguration, text: str, logger):
     """Get the embedding for a text"""
@@ -111,7 +111,7 @@ def get_text_embedding(config: ApiConfiguration, text: str, logger):
 @retry(
     wait=wait_random_exponential(min=5, max=15),
     stop=stop_after_attempt(15),
-    retry=retry_if_not_exception_type(openai.InvalidRequestError),
+    retry=retry_if_not_exception_type(openai.BadRequestError),
 )
 def get_followup_question(config: ApiConfiguration, text: str, logger):
     """Generate a summary using chatgpt"""
@@ -154,7 +154,7 @@ def get_followup_question(config: ApiConfiguration, text: str, logger):
 @retry(
     wait=wait_random_exponential(min=5, max=15),
     stop=stop_after_attempt(15),
-    retry=retry_if_not_exception_type(openai.InvalidRequestError),
+    retry=retry_if_not_exception_type(openai.BadRequestError),
 )
 def assess_followup_question(config: ApiConfiguration, text: str, logger):
     """Generate a summary using chatgpt"""

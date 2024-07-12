@@ -7,9 +7,11 @@ import os
 import threading
 import queue
 import logging
+from logging import Logger
 
 # Third-Party Packages
-import openai
+from openai import AzureOpenAI
+from openai import BadRequestError
 from tenacity import (
     retry,
     wait_random_exponential,
@@ -20,11 +22,7 @@ from rich.progress import Progress
 
 # Local Modules
 from common.common_functions import ensure_directory_exists
-
-
-AZURE_OPENAI_MODEL_DEPLOYMENT_NAME = os.getenv(
-    "AZURE_OPENAI_MODEL_DEPLOYMENT_NAME", "gpt-35-turbo"
-)
+from common.ApiConfiguration import ApiConfiguration
 
 class Counter:
     """thread safe counter"""
@@ -46,9 +44,9 @@ counter = Counter()
 @retry(
     wait=wait_random_exponential(min=10, max=45),
     stop=stop_after_attempt(15),
-    retry=retry_if_not_exception_type(openai.InvalidRequestError),
+    retry=retry_if_not_exception_type(BadRequestError),
 )
-def chatgpt_summary(config, text, logger):
+def chatgpt_summary(client : AzureOpenAI, config : ApiConfiguration, text : str, logger : Logger):
     """generate a summary using chatgpt"""
 
     messages = [
@@ -61,9 +59,8 @@ def chatgpt_summary(config, text, logger):
         {"role": "user", "content": text},
     ]
 
-    response = openai.ChatCompletion.create(
-        deployment_id=config.azureDeploymentName,
-        model=config.modelName,
+    response = client.chat.completions.create(
+        model=config.azureDeploymentName,
         messages=messages,
         temperature=0.7,
         max_tokens=config.maxTokens,
@@ -71,13 +68,12 @@ def chatgpt_summary(config, text, logger):
         frequency_penalty=0,
         presence_penalty=0,
         stop=None,
-        request_timeout=config.openAiRequestTimeout,
+        timeout=config.openAiRequestTimeout        
     )
 
     # print(response)
-
-    text = response.get("choices", [])[0].get("message", {}).get("content", text)
-    finish_reason = response.get("choices", [])[0].get("finish_reason", "")
+    text = response.choices[0].message.content
+    finish_reason = response.choices[0].finish_reason
 
     # print(finish_reason)
     if finish_reason != "stop" and finish_reason != 'length' and finish_reason != "":
@@ -89,7 +85,7 @@ def chatgpt_summary(config, text, logger):
     return text
 
 
-def process_queue_for_summaries(config, progress, task, q, total_chunks, output_chunks, current_chunks, logger):
+def process_queue_for_summaries(client : AzureOpenAI, config : ApiConfiguration, progress, task, q, total_chunks, output_chunks, current_chunks, logger):
     """process the queue"""
     
     while not q.empty():
@@ -111,12 +107,12 @@ def process_queue_for_summaries(config, progress, task, q, total_chunks, output_
            text = chunk.get("text")
 
            try:
-              summary = chatgpt_summary(config, text, logger)
+              summary = chatgpt_summary(client, config, text, logger)
               # add the summary to the chunk dictionary
               chunk["summary"] = summary
               output_chunks.append(chunk.copy())
-           except openai.InvalidRequestError as invalid_request_error:
-              logger.warning("Error: %s", invalid_request_error)
+           except BadRequestError as request_error:
+              logger.warning("Error: %s", request_error)
            except Exception as e:
               logger.warning("Error: %s", e)
 
@@ -128,18 +124,19 @@ def process_queue_for_summaries(config, progress, task, q, total_chunks, output_
         q.task_done()
 
 
-def enrich_text_summaries(config, markdownDestinationDir): 
+def enrich_text_summaries(config, destinationDir): 
 
-   openai.api_type = config.apiType 
-   openai.api_key = config.apiKey
-   openai.api_base = config.resourceEndpoint
-   openai.api_version = config.apiVersion 
+   client = AzureOpenAI(
+      azure_endpoint = config.resourceEndpoint, 
+      api_key=config.apiKey,  
+      api_version=config.apiVersion
+   )   
 
    logging.basicConfig(level=logging.WARNING)
    logger = logging.getLogger(__name__)
 
-   if not markdownDestinationDir:
-    logger.error("Markdown folder not provided")
+   if not destinationDir:
+    logger.error("Destination folder not provided")
     exit(1)
 
    chunks = []
@@ -150,7 +147,7 @@ def enrich_text_summaries(config, markdownDestinationDir):
    logger.debug("Starting OpenAI summarization")
 
    # load the chunks from a json file
-   input_file = os.path.join(markdownDestinationDir, "output", "master_text.json")
+   input_file = os.path.join(destinationDir, "output", "master_text.json")
    with open(input_file, "r", encoding="utf-8") as f:
       chunks = json.load(f)
 
@@ -165,7 +162,7 @@ def enrich_text_summaries(config, markdownDestinationDir):
 
    # load the existing chunks from a json file
    output_subdir = "output"
-   cache_file = os.path.join(markdownDestinationDir, "output", "master_enriched.json")
+   cache_file = os.path.join(destinationDir, "output", "master_enriched.json")
    # Ensure the output subdirectory exists
    ensure_directory_exists(os.path.dirname(cache_file))
 
@@ -182,7 +179,7 @@ def enrich_text_summaries(config, markdownDestinationDir):
       # create multiple threads to process the queue
       threads = []
       for i in range(config.processingThreads):
-         t = threading.Thread(target=process_queue_for_summaries, args=(config, progress, task1, q, total_chunks, output_chunks, current, logger))
+         t = threading.Thread(target=process_queue_for_summaries, args=(client, config, progress, task1, q, total_chunks, output_chunks, current, logger))
          t.start()
          threads.append(t)
 
@@ -197,10 +194,10 @@ def enrich_text_summaries(config, markdownDestinationDir):
 
    #print(f"markdownDestinationDir = {markdownDestinationDir}")         #added for debugging 
    output_subdir = "output"
-   output_file = os.path.join(markdownDestinationDir, "output", "master_text.json")
+   output_file = os.path.join(destinationDir, "output", "master_enriched.json")
 
    # Ensure the output subdirectory exists
    ensure_directory_exists(os.path.dirname(output_file))
    # save chunks to a json file
    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(chunks, f, ensure_ascii=False, indent=4)
+        json.dump(output_chunks, f, ensure_ascii=False, indent=4)
