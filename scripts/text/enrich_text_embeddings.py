@@ -65,6 +65,7 @@ def process_queue(client : AzureOpenAI, config : ApiConfiguration, progress, tas
                  chunk["summary"] = current_summary
                  chunk["ada_v2"] = current_ada                
                  found = True  
+                 output_chunks.append(chunk.copy())                 
                  break
 
         if not found:

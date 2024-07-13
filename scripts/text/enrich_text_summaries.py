@@ -101,6 +101,7 @@ def process_queue_for_summaries(client : AzureOpenAI, config : ApiConfiguration,
                  chunk["summary"] = current_summary
                  chunk["ada_v2"] = current_ada                
                  found = True  
+                 output_chunks.append(chunk.copy())                 
                  break
 
         if not found:
