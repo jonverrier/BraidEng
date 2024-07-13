@@ -56,10 +56,12 @@ def process_queue(client, config, progress, task, q, logger, output_chunks, curr
 
         for i in current_chunks: 
            if i.get('sourceId') == chunk.get('sourceId'):           
+              current_summary = i.get("summary")
               current_ada = i.get("ada_v2")
-              if current_ada and len(current_ada) >= 10: 
+              if current_summary and current_ada: 
+                 chunk["summary"] = current_summary
+                 chunk["ada_v2"] = current_ada                
                  found = True  
-                 chunk["ada_v2"] = current_ada                 
                  break
         
         if not found:
