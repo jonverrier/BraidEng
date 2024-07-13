@@ -59,11 +59,13 @@ def process_queue(client : AzureOpenAI, config : ApiConfiguration, progress, tas
 
         for i in current_chunks:
             if i.get('sourceId') == chunk.get('sourceId'):
-                current_ada = i.get("ada_v2")
-                if current_ada and len(current_ada) >= 10:
-                    found = True
-                    chunk["ada_v2"] = current_ada
-                    break
+              current_summary = i.get("summary")
+              current_ada = i.get("ada_v2")
+              if current_summary and current_ada: 
+                 chunk["summary"] = current_summary
+                 chunk["ada_v2"] = current_ada                
+                 found = True  
+                 break
 
         if not found:
             if "ada_v2" in chunk:
