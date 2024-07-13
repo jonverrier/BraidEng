@@ -36,11 +36,11 @@ class Counter:
             self.value += 1
             return self.value
 
-#@retry(
-#    wait=wait_random_exponential(min=10, max=45),
-#    stop=stop_after_attempt(15),
-#    retry=retry_if_not_exception_type(BadRequestError),
-#)
+@retry(
+    wait=wait_random_exponential(min=10, max=45),
+    stop=stop_after_attempt(15),
+    retry=retry_if_not_exception_type(BadRequestError),
+)
 def chatgpt_summary(client : AzureOpenAI, config : ApiConfiguration, text : str, logger : Logger):
     """generate a summary using chatgpt"""
 
