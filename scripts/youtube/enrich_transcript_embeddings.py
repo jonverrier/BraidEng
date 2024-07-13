@@ -36,11 +36,11 @@ def normalize_text(s, sep_token=" \n "):
 
     return s
 
-#@retry(
-#    wait=wait_random_exponential(min=10, max=45),
-#    stop=stop_after_attempt(15),
-#    retry=retry_if_not_exception_type(BadRequestError),
-#)
+@retry(
+    wait=wait_random_exponential(min=10, max=45),
+    stop=stop_after_attempt(15),
+    retry=retry_if_not_exception_type(BadRequestError),
+)
 def get_text_embedding(client : AzureOpenAI, config : ApiConfiguration, text: str):
     """get the embedding for a text"""
     embedding = get_embedding(text, 

@@ -9,6 +9,7 @@ import os
 import json
 import logging
 from pathlib import Path
+import math
 
 # Third-Party Packages
 import tiktoken
@@ -20,6 +21,7 @@ from common.common_functions import ensure_directory_exists
 PERCENTAGE_OVERLAP = 0.05
 AVERAGE_CHARACTERS_PER_TOKEN = 4
 AVERAGE_WORDS_PER_MINUTE = 100
+AVERAGE_TOKENS_PER_WORD=1.33
 
 total_files = 0
 
@@ -130,7 +132,8 @@ def parse_json_mdd_transcript(config, mdd, metadata, tokenizer, chunks):
                word_count = len(words)
                   
                while currentWordCount < word_count:
-                  thisTextWordCount = min(seg_finish_tokens, word_count - currentWordCount);
+                  maxWords = math.floor (seg_finish_tokens / AVERAGE_TOKENS_PER_WORD)
+                  thisTextWordCount = min(maxWords, word_count - currentWordCount);
                   thisText = " ".join(words[currentWordCount : thisTextWordCount])
                   add_new_chunk(metadata, thisText, seg_begin_tokens, chunks, config.discardIfBelow)
 
