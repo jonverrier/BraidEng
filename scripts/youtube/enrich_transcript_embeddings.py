@@ -60,23 +60,20 @@ def process_queue(client, config, progress, task, q, logger, output_chunks, curr
               current_ada = i.get("ada_v2")
               if current_summary and current_ada: 
                  chunk["summary"] = current_summary
-                 chunk["ada_v2"] = current_ada                
+                 chunk["ada_v2"] = current_ada   
+                 output_chunks.append(chunk.copy())                                 
                  found = True  
                  break
         
         if not found:
-           if "ada_v2" in chunk:
-              output_chunks.append(chunk.copy())        
-           else:
-              try:
-                 embedding = get_text_embedding(client, config, chunk["text"])
-                 chunk["ada_v2"] = embedding.copy()                 
-              except BadRequestError as request_error:
-                 logger.warning("Error: %s %s", chunk.get('sourceId'), request_error)
-              except Exception as e:
-                 logger.warning("Error: %s %s", chunk.get('sourceId'), 'Unknown error')
-          
-              output_chunks.append(chunk.copy())
+           try:
+              embedding = get_text_embedding(client, config, chunk["text"])
+              chunk["ada_v2"] = embedding.copy()     
+              output_chunks.append(chunk.copy())                          
+           except BadRequestError as request_error:
+              logger.warning("Error: %s %s", chunk.get('sourceId'), request_error)
+           except Exception as e:
+              logger.warning("Error: %s %s", chunk.get('sourceId'), 'Unknown error')          
 
         progress.update(task, advance=1)
         q.task_done()

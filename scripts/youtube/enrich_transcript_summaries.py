@@ -90,7 +90,8 @@ def process_queue(client : AzureOpenAI, config : ApiConfiguration, progress, tas
               current_ada = i.get("ada_v2")
               if current_summary and current_ada: 
                  chunk["summary"] = current_summary
-                 chunk["ada_v2"] = current_ada                
+                 chunk["ada_v2"] = current_ada   
+                 output_chunks.append(chunk.copy())                                 
                  found = True  
                  break
 
