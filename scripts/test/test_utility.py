@@ -3,12 +3,15 @@
 
 # Standard Library Imports
 import logging
+from logging import Logger
 import os
 import json
 
 # Third-Party Packages
 import openai
-from openai.embeddings_utils import get_embedding
+from openai import AzureOpenAI
+from openai import BadRequestError
+
 from tenacity import (
     retry,
     wait_random_exponential,
@@ -21,7 +24,7 @@ from numpy.linalg import norm
 
 # Local Modules
 from common.ApiConfiguration import ApiConfiguration
-
+from common.common_functions import get_embedding
 
 kOpenAiPersonaPrompt = "You are an AI assistant helping an application developer understand generative AI. You explain complex concepts in simple language, using Python examples if it helps. You limit replies to 50 words or less. If you don't know the answer, say 'I don't know'. If the question is not related to building AI applications, Python, or Large Language Models (LLMs), say 'That doesn't seem to be about AI'."
 kInitialQuestionPrompt = "You are an AI assistant helping an application developer understand generative AI. You will be presented with a question. Answer the question in a few sentences, using language a suitable for a technical graduate student will understand. Limit your reply to 50 words or less. If you don't know the answer, say 'I don't know'. If the question is not related to building AI applications, Python, or Large Language Models (LLMs), say 'That doesn't seem to be about AI'.\n"
@@ -48,12 +51,12 @@ class test_result:
     followUp: str
     followUpOnTopic: str  # Corrected typo here
 
-@retry(
-    wait=wait_random_exponential(min=5, max=15),
-    stop=stop_after_attempt(15),
-    retry=retry_if_not_exception_type(openai.BadRequestError),
-)
-def get_enriched_question(config: ApiConfiguration, text: str, logger):
+#@retry(
+#    wait=wait_random_exponential(min=5, max=15),
+#    stop=stop_after_attempt(15),
+#    retry=retry_if_not_exception_type(openai.BadRequestError),
+#)
+def get_enriched_question(client: AzureOpenAI, config: ApiConfiguration, text: str, logger):
     """Generate a summary using chatgpt"""
 
     messages = [
@@ -67,9 +70,8 @@ def get_enriched_question(config: ApiConfiguration, text: str, logger):
         },
     ]
 
-    response = openai.ChatCompletion.create(
-        deployment_id=config.azureDeploymentName,
-        model=config.modelName,
+    response = client.chat.completions.create(
+        model=config.azureDeploymentName,
         messages=messages,
         temperature=0.7,
         max_tokens=config.maxTokens,
@@ -77,11 +79,11 @@ def get_enriched_question(config: ApiConfiguration, text: str, logger):
         frequency_penalty=0,
         presence_penalty=0,
         stop=None,
-        request_timeout=config.openAiRequestTimeout,
+        timeout=config.openAiRequestTimeout
     )
 
-    text = response.get("choices", [])[0].get("message", {}).get("content", text)
-    finish_reason = response.get("choices", [])[0].get("finish_reason", "")
+    text = response.choices[0].message.content
+    finish_reason = response.choices[0].finish_reason
 
     if finish_reason != "stop" and finish_reason != 'length' and finish_reason != "":
         logger.warning("Stop reason: %s", finish_reason)
@@ -97,14 +99,10 @@ def get_enriched_question(config: ApiConfiguration, text: str, logger):
     stop=stop_after_attempt(15),
     retry=retry_if_not_exception_type(openai.BadRequestError),
 )
-def get_text_embedding(config: ApiConfiguration, text: str, logger):
+def get_text_embedding(client: AzureOpenAI, config: ApiConfiguration, text: str, logger: Logger) : 
     """Get the embedding for a text"""
 
-    embedding = get_embedding(text, 
-                              engine=config.azureEmbedDeploymentName, 
-                              deployment_id=config.azureEmbedDeploymentName,
-                              model=config.azureEmbedDeploymentName,
-                              timeout=config.openAiRequestTimeout)
+    embedding = get_embedding (text, client, config)
     return embedding
 
 
@@ -113,7 +111,7 @@ def get_text_embedding(config: ApiConfiguration, text: str, logger):
     stop=stop_after_attempt(15),
     retry=retry_if_not_exception_type(openai.BadRequestError),
 )
-def get_followup_question(config: ApiConfiguration, text: str, logger):
+def get_followup_question(client: AzureOpenAI, config: ApiConfiguration, text: str, logger):
     """Generate a summary using chatgpt"""
 
     messages = [
@@ -127,9 +125,8 @@ def get_followup_question(config: ApiConfiguration, text: str, logger):
         },
     ]
 
-    response = openai.ChatCompletion.create(
-        deployment_id=config.azureDeploymentName,
-        model=config.modelName,
+    response = client.chat.completions.create(
+        model=config.azureDeploymentName,
         messages=messages,
         temperature=0.7,
         max_tokens=config.maxTokens,
@@ -137,11 +134,11 @@ def get_followup_question(config: ApiConfiguration, text: str, logger):
         frequency_penalty=0,
         presence_penalty=0,
         stop=None,
-        request_timeout=config.openAiRequestTimeout,
+        timeout=config.openAiRequestTimeout
     )
 
-    text = response.get("choices", [])[0].get("message", {}).get("content", text)
-    finish_reason = response.get("choices", [])[0].get("finish_reason", "")
+    text = response.choices[0].message.content
+    finish_reason = response.choices[0].finish_reason
 
     if finish_reason != "stop" and finish_reason != 'length' and finish_reason != "":
         logger.warning("Stop reason: %s", finish_reason)
@@ -156,7 +153,7 @@ def get_followup_question(config: ApiConfiguration, text: str, logger):
     stop=stop_after_attempt(15),
     retry=retry_if_not_exception_type(openai.BadRequestError),
 )
-def assess_followup_question(config: ApiConfiguration, text: str, logger):
+def assess_followup_question(client: AzureOpenAI, config: ApiConfiguration, text: str, logger):
     """Generate a summary using chatgpt"""
 
     messages = [
@@ -170,9 +167,8 @@ def assess_followup_question(config: ApiConfiguration, text: str, logger):
         },
     ]
 
-    response = openai.ChatCompletion.create(
-        deployment_id=config.azureDeploymentName,
-        model=config.modelName,
+    response = client.chat.completions.create(
+        model=config.azureDeploymentName,
         messages=messages,
         temperature=0.7,
         max_tokens=config.maxTokens,
@@ -180,11 +176,11 @@ def assess_followup_question(config: ApiConfiguration, text: str, logger):
         frequency_penalty=0,
         presence_penalty=0,
         stop=None,
-        request_timeout=config.openAiRequestTimeout,
+        timeout=config.openAiRequestTimeout
     )
 
-    text = response.get("choices", [])[0].get("message", {}).get("content", text)
-    finish_reason = response.get("choices", [])[0].get("finish_reason", "")
+    text = response.choices[0].message.content
+    finish_reason = response.choices[0].finish_reason
 
     if finish_reason != "stop" and finish_reason != 'length' and finish_reason != "":
         logger.warning("Stop reason: %s", finish_reason)
@@ -204,10 +200,11 @@ def run_tests(config, testDestinationDir, sourceDir, questions):
    logging.basicConfig(level=logging.WARNING)
    logger = logging.getLogger(__name__)
 
-   openai.api_type = config.apiType 
-   openai.api_key = config.apiKey
-   openai.api_base = config.resourceEndpoint
-   openai.api_version = config.apiVersion 
+   client = AzureOpenAI(
+      azure_endpoint = config.resourceEndpoint, 
+      api_key=config.apiKey,  
+      api_version=config.apiVersion
+   )      
    
    if not testDestinationDir:
       logger.error("Test data folder not provided")
@@ -227,10 +224,10 @@ def run_tests(config, testDestinationDir, sourceDir, questions):
       result = test_result()
       result.question = question
 
-      result.enriched_question = get_enriched_question(config, question, logger)
+      result.enriched_question = get_enriched_question(client, config, question, logger)
 
       # Convert the text of the enriched question to a vector embedding
-      embedding = get_text_embedding(config, result.enriched_question, logger)
+      embedding = get_text_embedding(client, config, result.enriched_question, logger)
    
       # Iterate through the chunks we have stored 
       for chunk in current:
@@ -250,8 +247,8 @@ def run_tests(config, testDestinationDir, sourceDir, questions):
 
       # Ask GPT for a follow-up question on the best match
       # Once we have a follow-up, ask GPT if the follow-up looks like it is about AI            
-      result.followUp = get_followup_question(config, result.hitSummary, logger)
-      result.followUpOnTopic = assess_followup_question(config, result.followUp, logger)            
+      result.followUp = get_followup_question(client, config, result.hitSummary, logger)
+      result.followUpOnTopic = assess_followup_question(client, config, result.followUp, logger)            
 
       results.append(result)
 
