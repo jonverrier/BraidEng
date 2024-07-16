@@ -15,7 +15,7 @@ import { describe, it } from 'mocha';
 
 let myMessageId: string = "1234";
 let myAuthorId: string = "Jon";
-let myText = "Braid What is back propagation?";
+let myText = "Boxer What is back propagation?";
 let mySentAt = new Date();
 
 let botMessageId: string = "5678";
@@ -24,7 +24,7 @@ let botText = "Back propogation is a technique used to train nueral networks.";
 var botSentAt = new Date(0);
 
 let myBotRequestId: string = "12345";
-let myBotRequestText = "Hello @Braid What is back propagation?";
+let myBotRequestText = "Hello @Boxer What is back propagation?";
 
 describe("AIConnection", async function () {
 

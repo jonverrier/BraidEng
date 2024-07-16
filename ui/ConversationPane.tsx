@@ -103,10 +103,10 @@ export const ConversationHeaderRow = (props: IConversationHeaderProps) => {
    let chatLevelForPrompt = props.braidChattinessLevel + 1;
    let maxChatLevelForPrompt = EConfigNumbers.kMaxChatLevel + 1; 
 
-   let lessChatPrompt = EUIStrings.kBraidLessChatButtonPrompt.replace ("%%1", chatLevelForPrompt.toString())
+   let lessChatPrompt = EUIStrings.kBoxerLessChatButtonPrompt.replace ("%%1", chatLevelForPrompt.toString())
                                                              .replace ("%%2", maxChatLevelForPrompt.toString());
 
-   let moreChatPrompt = EUIStrings.kBraidMoreChatButtonPrompt.replace ("%%1", chatLevelForPrompt.toString())
+   let moreChatPrompt = EUIStrings.kBoxerMoreChatButtonPrompt.replace ("%%1", chatLevelForPrompt.toString())
                                                              .replace ("%%2", maxChatLevelForPrompt.toString());
 
    let canHaveLessChat = props.braidChattinessLevel > 0;

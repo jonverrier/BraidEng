@@ -23,13 +23,13 @@ export enum EConfigStrings {
    kAzureProductionFluidHost = "https://eu.fluidrelay.azure.com",
    kAzureLocalFluidHost = "http://localhost:7070",
 
-   kLLMName = 'Braid',
-   kLLMNameLowerCase = 'braid',   
+   kLLMName = 'Boxer',
+   kLLMNameLowerCase = 'boxer',   
    kLLMGuid = "313aafdb-a05c-4dc7-98d0-4db7f28f122f",
-   kLLMRequestSignature = '@Braid',
-   kLLMRequestSignatureLowerCase = '@braid',
-   kLLMNearRequestSignature = 'Braid',
-   kLLMNearRequestSignatureLowerCase = 'braid',   
+   kLLMRequestSignature = '@Boxer',
+   kLLMRequestSignatureLowerCase = '@boxer',
+   kLLMNearRequestSignature = 'Boxer',
+   kLLMNearRequestSignatureLowerCase = 'boxer',   
    kOpenAiPersonaPrompt = "You are an AI assistant helping an application developer understand generative AI. You explain complex concepts in simple language, using Python examples if it helps. You limit replies to 50 words or less. If you don't know the answer, say 'I don't know'. If the question is not related to building AI applications, Python, or Large Language Models (LLMs),, say 'That doesn't seem to be about AI'.",
    kInitialQuestionPrompt = "You are an AI assistant helping an application developer understand generative AI. You will be presented with a question. Answer the question in a few sentences, using language a technical graduate student will understand. Limit your reply to 50 words or less. If you don't know the answer, say 'I don't know'. If the question is not related to building AI applications, Python, or Large Language Models (LLMs), say 'That doesn't seem to be about AI'.\n",
    kEnrichmentPrompt = "You will be provided with a question about building applications that use generative AI technology. Write a 50 word summary of an article that would be a great answer to the question. Consider enriching the question with additional topics that the question asker might want to understand. Write the summary in the present tense, as though the article exists. If the question is not related to building AI applications, Python, or Large Language Models (LLMs), say 'That doesn't seem to be about AI'.\n",
@@ -57,7 +57,7 @@ export enum EConfigStrings {
    kResponseNotRelevantMarker = "That doesn't seem to be about AI",
    kResponseDontKnowMarker = "I don't know",   
 
-   kErrorConnectingToKeyAPI = "Error connecting to Braid server.",
+   kErrorConnectingToKeyAPI = "Error connecting to the Boxer server.",
    kErrorConnectingToAiAPI = "Error connecting to AI server.",
 
    kSessionParamName = "session",
@@ -72,7 +72,7 @@ export enum EConfigStrings {
    kCohort1Team3ConversationKey = "f1464b64-e487-4929-a51a-fcacdb0256bf",   
    kCohort1Team4ConversationKey = "21f34669-134d-44fb-a0ad-5f7ef6e2f185",     
    kDemoConversationKey = "8cf7e424-fea8-45d7-b8f6-1e7dd694f939",
-   kBraidPlatformConversationKey = "63c88ddc-956c-49a4-be38-bbc62aa562f5",
+   kBoxerPlatformConversationKey = "63c88ddc-956c-49a4-be38-bbc62aa562f5",
 
    kEmbeddingFileUrlLocal = 'http://localhost:1337/embeddings_lite.json',
    kEmbeddingFileUrlProduction = 'https://braidapps.io/embeddings_lite.json',
@@ -82,7 +82,7 @@ export enum EConfigStrings {
 
 export enum EConfigNumbers {
    kInitialHelpfulPromptDelayMsecs = 1000,
-   kBraidChattinessMessageCount = 20,
+   kBoxerChattinessMessageCount = 20,
    kMaximumLinkTextlength = 40,
    kMaximumLinkTextlengthMobile = 30,   
    kHelpfulPromptMinimumGapMins = 10, // At least 10 minutes between AI suggestions
