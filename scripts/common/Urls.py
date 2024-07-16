@@ -1,4 +1,3 @@
-
 # Standard library imports
 import os
 import json
@@ -65,6 +64,10 @@ class UrlHit:
     desc: str
     hits: int
 
+#original countUrlHits()
+
+'''
+
 def countUrlHits (destinationDir, urls, fileName): 
    #we make use of logging for error and debug messages 
    logging.basicConfig(level=logging.WARNING)
@@ -128,4 +131,160 @@ def countUrlHits (destinationDir, urls, fileName):
          raise AssertionError ('All chunks should have a ada')      
 
    for hit in hits:  
-      print (hit.desc + ', ' + hit.path + ', ' + str(hit.hits))    
+      print (hit.desc + ', ' + hit.path + ', ' + str(hit.hits))
+
+'''
+# countUrlHits() with error logs 
+
+'''
+
+def countUrlHits(destinationDir, urls, fileName):
+    # Set up logging
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+
+    if not destinationDir:
+        logger.error("Output folder not provided")
+        exit(1)
+
+    logger.debug("Starting hit counting")
+
+    # Load the chunks from a JSON file
+    input_file = os.path.join(destinationDir, "output", fileName)
+    logger.debug("Input file path: %s", input_file)
+
+    try:
+        with open(input_file, "r", encoding="utf-8") as f:
+            chunks = json.load(f)
+    except FileNotFoundError:
+        logger.error("Input file '%s' not found", input_file)
+        exit(1)
+    except Exception as e:
+        logger.error("Error loading JSON file: %s", str(e))
+        exit(1)
+
+    total_chunks = len(chunks)
+    logger.debug("Total chunks to be processed: %s", total_chunks)
+
+    # Initialize hits array
+    hits = []
+    for url in urls:
+        hit = UrlHit()
+        hit.desc = url[0]
+        hit.path = url[1]
+        hits.append(hit)
+
+    # Iterate through chunks and count hits
+    for chunk in chunks:
+        haveHit = False
+        haveAda = False
+
+        ada = chunk.get('hitTrackingId')
+        if ada:
+            haveAda = True
+
+        for hit in hits:
+            source = chunk.get('hitTrackingId')
+            if source and source in hit.path:
+                hit.hits += 1
+                haveHit = True
+
+        if not haveHit:
+            logger.error('All chunks should have a hit: %s', chunk.get('sourceId'))
+            raise AssertionError('All chunks should have a hit: ' + chunk.get('sourceId'))
+
+        if not haveAda:
+            logger.error('All chunks should have an ada')
+            raise AssertionError('All chunks should have an ada')
+
+    for hit in hits:
+        print(hit.desc + ', ' + hit.path + ', ' + str(hit.hits))
+
+    # Save the hits to an output file
+    output_file = os.path.join(destinationDir, "master_text.json")
+    try:
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump([hit.__dict__ for hit in hits], f)
+        logger.debug("Output file saved: %s", output_file)
+    except Exception as e:
+        logger.error("Error saving output file: %s", str(e))
+        exit(1)
+'''
+
+# countUrlHits() with saving to master_text.json
+
+def countUrlHits(destinationDir, urls, fileName):
+    # Set up logging
+    logging.basicConfig(level=logging.WARNING)
+    logger = logging.getLogger(__name__)
+
+    if not destinationDir:
+        logger.error("Output folder not provided")
+        exit(1)
+
+    chunks = []
+    total_chunks = 0
+
+    logger.debug("Starting hit counting")
+
+    # Load the chunks from a JSON file
+    input_file = os.path.join(destinationDir, "output", fileName)
+    logger.debug("Input file path: %s", input_file)
+
+    try:
+        with open(input_file, "r", encoding="utf-8") as f:
+            chunks = json.load(f)
+    except FileNotFoundError:
+        logger.error("Input file '%s' not found", input_file)
+        exit(1)
+    except Exception as e:
+        logger.error("Error loading JSON file: %s", str(e))
+        exit(1)
+
+    total_chunks = len(chunks)
+    logger.debug("Total chunks to be processed: %s", total_chunks)
+
+    # Build an empty array to accumulate hits
+    hits = [None] * len(urls)
+    for i, url in enumerate(urls):
+        hit = UrlHit()
+        hit.desc = url[0]
+        hit.path = url[1]
+        hit.hits = 0
+        hits[i] = hit
+
+    # Iterate through chunks accumulating hit count
+    for chunk in chunks:
+        haveHit = False
+        haveAda = False
+
+        ada = chunk.get('hitTrackingId')
+        if (len(ada) > 0):
+            haveAda = True
+
+        for hit in hits:
+            source = chunk.get('hitTrackingId')
+            if source in hit.path:
+                hit.hits += 1
+                haveHit = True
+
+        if not haveHit:
+            raise AssertionError('All chunks should have a hit: ' + chunk.get('sourceId'))
+
+        if not haveAda:
+            raise AssertionError('All chunks should have an ada')
+
+    # Print the results
+    for hit in hits:
+        print(hit.desc + ', ' + hit.path + ', ' + str(hit.hits))
+
+    # Save the hits to an output file
+    output_file = os.path.join(destinationDir, "master_text.json")
+    try:
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump([hit.__dict__ for hit in hits], f)
+        logger.debug("Output file saved: %s", output_file)
+    except Exception as e:
+        logger.error("Error saving output file: %s", str(e))
+        exit(1)
+
