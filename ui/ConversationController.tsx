@@ -391,7 +391,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
       // Use a random number generator, between 0 & the max number of messages. If it is zero,
       // make a suggestion 
-      let upper = Math.floor (EConfigNumbers.kBraidChattinessMessageCount / (chatLevel + 1));
+      let upper = Math.floor (EConfigNumbers.kBoxerChattinessMessageCount / (chatLevel + 1));
       const index = Math.floor(Math.random() * upper);
 
       if (chatLevel > 0 && index === 0) {

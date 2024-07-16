@@ -95,8 +95,8 @@ const dropdownStyles = makeStyles({
          return new ConversationKey (EConfigStrings.kCohort1Team3ConversationKey);    
       case EUIStrings.kCohort1Team4ConversationName:
          return new ConversationKey (EConfigStrings.kCohort1Team4ConversationKey);   
-      case EUIStrings.kBraidPlatformConversationName:
-         return new ConversationKey (EConfigStrings.kBraidPlatformConversationKey);
+      case EUIStrings.kBoxerPlatformConversationName:
+         return new ConversationKey (EConfigStrings.kBoxerPlatformConversationKey);
       case EUIStrings.kCohort1ConversationName:
       default:
          return new ConversationKey (EConfigStrings.kCohort1ConversationKey);                   
@@ -139,7 +139,7 @@ export const JoinPane = (props: IJoinPageProps) => {
          EUIStrings.kCohort1Team3ConversationName,
          EUIStrings.kCohort1Team4ConversationName,
          EUIStrings.kDemoConversationName,
-         EUIStrings.kBraidPlatformConversationName
+         EUIStrings.kBoxerPlatformConversationName
       ];
       defaultConversationName = EUIStrings.kCohort1ConversationName;    
    }

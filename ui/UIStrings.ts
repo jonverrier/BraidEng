@@ -3,7 +3,7 @@
 export enum EUIStrings {
 
    kMaxColumnWidth = "896px",
-   kJoinPagePreamble = "To join a conversation with @Braid, you need to enter the key from your contact at Braid, pick a conversation to join, then login with LinkedIn to identify yourself.",
+   kJoinPagePreamble = "To join a conversation with @Boxer, you need to enter the key from your contact at Braid, pick a conversation to join, then login with LinkedIn to identify yourself.",
    kJoinConversationKeyPrompt = "Key",
    kJoinConversationKeyPlaceholder = "Key... ",  
    kJoinConversationDoesNotLookLikeKey = "It does not look like the key is valid.",
@@ -18,15 +18,15 @@ export enum EUIStrings {
    kCohort1Team4ConversationName = "4x400m run",
    kDemoConversationName = "Demo",
    kTestConversationName = "Test",   
-   kBraidPlatformConversationName = "Braid Platform",
+   kBoxerPlatformConversationName = "Boxer Platform",
 
    kPageErrorCaption = "Error",
    
    kJoinApiError = "Sorry, we were not able to connect to the conversation.",
    kAiApiError = "Sorry, we were not able to connect to the AI.", 
-   kSecretError = "Sorry, we were not able to validate end-end security in your login. Please try again. If this recurs, please ask your Braid contect for support.",  
+   kSecretError = "Sorry, we were not able to validate end-end security in your login. Please try again. If this rekeeps happening, please ask your contact at Braid for support.",  
 
-   kSendMessagePreamble = "Type a message below. If you want @Braid to reply, put '@Braid' in the message. Treat your messages as public and do not enter confidential information.",
+   kSendMessagePreamble = "Type a message below. If you want @Boxer to reply, put '@Boxer' in the message. Treat your messages as public and do not enter confidential information.",
    kNoThanks = "No thanks.",
    kLikedThis = "Click to like.",
    kDidNotLikeThis = "Click if you don't like it any more.",
@@ -36,15 +36,15 @@ export enum EUIStrings {
    kCopyConversationUrlButtonPrompt = "Copy the URL for this conversation to the clipboard.",
    kTrimConversationButtonPrompt = "Delete the conversation history.",
    kExitConversationButtonPrompt = "Leave this conversation.",   
-   kBraidMoreChatButtonPrompt = "Make @Braid chattier. Currently %%1 out of %%2.",
-   kBraidLessChatButtonPrompt = "Make @Braid less chatty. Currently %%1 out of %%2.",   
-   kAiHasNoSuggestedDocuments = "No suggestions at present. Interacting with @Braid will generate suggestions.", 
+   kBoxerMoreChatButtonPrompt = "Make @Boxer chattier. Currently %%1 out of %%2.",
+   kBoxerLessChatButtonPrompt = "Make @Boxer less chatty. Currently %%1 out of %%2.",   
+   kAiHasNoSuggestedDocuments = "No suggestions at present. Interacting with @Boxer will generate suggestions.", 
    kPomptToGetStarted = "Where is a good place to start learning about building applications with LLMs? With some examples in Python?",
 
-   kAiNoGoodSources = "@Braid does not have good backup for this answer. AI can make mistakes. Consider checking important information.",
+   kAiNoGoodSources = "@Boxer does not have good backup for this answer. AI can make mistakes. Consider checking important information.",
    kAiContentWarning = "AI can make mistakes. Consider checking important information.",
 
-   kLLMNameReminder = "Just checking...  if you want your request to be sent to @Braid, include the phrase '@Braid' in your message. With an '@' sign.",
+   kLLMNameReminder = "Just checking...  if you want your request to be sent to @Boxer, include the phrase '@Boxer' in your message. With an '@' sign.",
 
    kLikeSignular = "like.",
    kLikePlural = "likes."
