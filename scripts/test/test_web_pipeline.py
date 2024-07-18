@@ -47,6 +47,9 @@ def config():
 def check_content(file_path, source_url):
     logger.info(f"Checking content for source URL: {source_url}")
     try:
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Could not find master_text.json at {file_path}")
+        
         with open(file_path, "r", encoding="utf-8") as f:
             content = json.load(f)
         matching_chunks = [chunk for chunk in content if chunk["hitTrackingId"] == source_url]
@@ -71,58 +74,86 @@ def run_pipeline(config, output_dir):
         raise
 
 # Function to verify the hit counts for the expected number of sources
+
 def verify_hit_counts(output_dir, expected_sources):
     logger.info(f"Verifying hit counts for {expected_sources} expected sources")
     try:
-        with open(os.path.join(output_dir, "master_text.json"), "r", encoding="utf-8") as f:
+        with open(os.path.join(output_dir, "hit_test_results.json"), "r", encoding="utf-8") as f:
             hit_counts = json.load(f)
+        
         assert len(hit_counts) == expected_sources, f"Expected hit counts for {expected_sources} sources, got {len(hit_counts)}"
+        
         for i, hit in enumerate(hit_counts):
-            logger.info(f"Source {i+1} hit count: {hit['hits']}")
-            assert hit["hits"] > 0, f"No hits found for source {i+1}. Hit counts: {hit_counts}"
+            logger.info(f"Source {i+1} ({hit['path']}) hit count: {hit['hits']}")
+            assert hit['hits'] > 0, f"No hits found for source {hit['path']}. Hit counts: {hit_counts}"
+        
         logger.info("Hit count verification completed successfully")
     except Exception as e:
         logger.error(f"Error verifying hit counts: {str(e)}")
         raise
 
-# Test case for the web pipeline
-def test_web_pipeline(test_output_dir, config):
+def test_web_pipeline(tmp_path, config: ApiConfiguration):
     logger.info("Starting web pipeline test")
 
+    # Create a new directory for test output
+    test_output_dir = os.path.join(str(tmp_path), "test_output")
+    os.makedirs(test_output_dir, exist_ok=True)
+    logger.info(f"Created test output directory: {test_output_dir}")
+
+    # Clean contents (in case of a failed previous run)
+    for item in os.listdir(test_output_dir):
+        item_path = os.path.join(test_output_dir, item)
+        if os.path.isdir(item_path):
+            shutil.rmtree(item_path)
+        else:
+            os.remove(item_path)
+    logger.info("Cleaned test output directory")
+
     source1 = webUrls[0]  # First source URL
-    source2 = webUrls[1]  # Second source URL  
+    source2 = webUrls[1]  # Second source URL
 
     try:
-        # Source 1: Download and run the pipeline
+        # Download source 1 and run the whole pipeline
         logger.info(f"Downloading and processing source 1: {source1[1]}")
         download_html(source1[1], source1[2], test_output_dir, config.discardIfBelow)
         run_pipeline(config, test_output_dir)
 
-        logger.info("Checking content from source 1")
+        # Load JSON output and confirm content from source 1
         master_text_path = os.path.join(test_output_dir, "output", "master_text.json")
         source1_chunks = check_content(master_text_path, source1[1])
+        assert source1_chunks, f"No content found for source 1: {source1[1]}"
+        logger.info("Confirmed content from source 1")
 
-        # Source 2: Add another source and run the pipeline again
+        # Add source 2 and run the whole pipeline again
         logger.info(f"Downloading and processing source 2: {source2[1]}")
         download_html(source2[1], source2[2], test_output_dir, config.discardIfBelow)
         run_pipeline(config, test_output_dir)
 
-        logger.info("Checking content from both sources")
+        # Load JSON output and confirm content from both sources
         source1_chunks = check_content(master_text_path, source1[1])
         source2_chunks = check_content(master_text_path, source2[1])
+        assert source1_chunks, f"No content found for source 1: {source1[1]}"
+        assert source2_chunks, f"No content found for source 2: {source2[1]}"
+        logger.info("Confirmed content from both sources")
 
         # Count URL hits
         test_webUrls = [source1, source2]
         logger.info("Counting URL hits")
-        countUrlHits(test_output_dir, test_webUrls, "master_text.json")
+        output_dir = os.path.join(test_output_dir, "output")
+        countUrlHits(output_dir, test_webUrls, "master_text.json", "hit_test_results.json")
 
         # Verify the hit counts
-        verify_hit_counts(test_output_dir, 2)  # Expect 2 sources with hits           
+        verify_hit_counts(output_dir, 2)  # Expect 2 sources with hits
 
         logger.info("Web pipeline test completed successfully")
 
     except Exception as e:
         logger.error(f"Web pipeline test failed: {str(e)}")
         raise
+
+    finally:
+        # Clean up by deleting the test output directory and all files
+        shutil.rmtree(test_output_dir)
+        logger.info(f"Cleaned up test output directory: {test_output_dir}")
 
     logger.info("Web pipeline test completed")
