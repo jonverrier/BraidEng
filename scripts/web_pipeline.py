@@ -34,4 +34,5 @@ enrich_text_embeddings(config, HTML_DESTINATION_DIR)
 enrich_lite(HTML_DESTINATION_DIR)
 
 # Count URL hits
-countUrlHits(HTML_DESTINATION_DIR, webUrls, "master_text.json")
+ENRICHMENT_OUTPUT_DIR = os.path.join(HTML_DESTINATION_DIR, "output")
+countUrlHits(ENRICHMENT_OUTPUT_DIR, webUrls, "master_text.json", "hit_test_results_web.json")
