@@ -87,13 +87,25 @@ def check_content(file_path, source_id):
 def run_pipeline(config, output_dir):
     logger.info(f"Running pipeline for output directory: {output_dir}")
     try:
+        logger.info("Starting enrich_transcript_chunks")
         enrich_transcript_chunks(config, output_dir)
+        logger.info("Completed enrich_transcript_chunks")
+
+        logger.info("Starting enrich_transcript_summaries")
         enrich_transcript_summaries(config, output_dir)
+        logger.info("Completed enrich_transcript_summaries")
+
+        logger.info("Starting enrich_transcript_embeddings")
         enrich_transcript_embeddings(config, output_dir)
+        logger.info("Completed enrich_transcript_embeddings")
+
+        logger.info("Starting enrich_lite")
         enrich_lite(output_dir)
+        logger.info("Completed enrich_lite")
+
         logger.info("Pipeline completed successfully")
     except Exception as e:
-        logger.error(f"Error running pipeline: {str(e)}")
+        logger.error(f"Error running pipeline: {str(e)}", exc_info=True)
         raise
 
 # Function to verify the hit counts for the expected number of sources
@@ -113,6 +125,7 @@ def verify_hit_counts(output_dir, expected_sources):
     except Exception as e:
         logger.error(f"Error verifying hit counts: {str(e)}")
         raise
+
 
 def test_youtube_pipeline(tmp_path, config: ApiConfiguration):
     logger.info("Starting YouTube pipeline test")
