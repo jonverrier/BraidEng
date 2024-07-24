@@ -55,6 +55,6 @@ logger.info("Enriching transcripts with lite enrichment...")
 enrich_lite(TRANSCRIPT_DESTINATION_DIR)
 
 logger.info("Counting URL hits...")
-countUrlHits(TRANSCRIPT_DESTINATION_DIR, youTubeUrls, "master_transcriptions.json")
+countUrlHits(TRANSCRIPT_DESTINATION_DIR, youTubeUrls, "master_transcriptions.json","hit_test_results.json")
 
 logger.info("Script finished.")
