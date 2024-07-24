@@ -89,12 +89,22 @@ def get_transcript(playlist_item, counter_id, transcriptDestinationDir, logger):
         with open(filename, "w", encoding="utf-8") as file:
             json.dump(transcript, file, indent=4, ensure_ascii=False)
 
+    except NoTranscriptFound:
+        logger.debug("No transcript found for video: %s", video_id)
+        return False
+    except TranscriptsDisabled:
+        logger.debug("Transcripts are disabled for video: %s", video_id)
+        return False
+    except VideoUnavailable:
+        logger.debug("Video unavailable: %s", video_id)
+        return False
     except Exception as exception:
-        logger.debug(exception)
+        logger.debug("An error occurred: %s", str(exception))
         logger.debug("Transcription not found for video: %s", video_id)
         return False
 
     return True
+
 
 
 def process_queue(q, counter, transcriptDestinationDir, logger):
