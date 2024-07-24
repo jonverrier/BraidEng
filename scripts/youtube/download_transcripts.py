@@ -11,9 +11,11 @@ import queue
 # Third-Party Packages
 import googleapiclient.discovery
 import googleapiclient.errors
-from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled, VideoUnavailable
 from youtube_transcript_api.formatters import WebVTTFormatter
 
+
+logger = logging.getLogger(__name__)
 
 GOOGLE_DEVELOPER_API_KEY = os.environ["GOOGLE_DEVELOPER_API_KEY"]
 
@@ -87,12 +89,22 @@ def get_transcript(playlist_item, counter_id, transcriptDestinationDir, logger):
         with open(filename, "w", encoding="utf-8") as file:
             json.dump(transcript, file, indent=4, ensure_ascii=False)
 
+    except NoTranscriptFound:
+        logger.debug("No transcript found for video: %s", video_id)
+        return False
+    except TranscriptsDisabled:
+        logger.debug("Transcripts are disabled for video: %s", video_id)
+        return False
+    except VideoUnavailable:
+        logger.debug("Video unavailable: %s", video_id)
+        return False
     except Exception as exception:
-        logger.debug(exception)
+        logger.debug("An error occurred: %s", str(exception))
         logger.debug("Transcription not found for video: %s", video_id)
         return False
 
     return True
+
 
 
 def process_queue(q, counter, transcriptDestinationDir, logger):
@@ -178,3 +190,4 @@ def download_transcripts (playlistId, transcriptDestinationDir):
 
    finish_time = time.time()
    logger.debug("Total time taken: %s", finish_time - start_time)
+

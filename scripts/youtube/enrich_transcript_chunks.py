@@ -87,6 +87,9 @@ def parse_json_vtt_transcript(vtt, metadata, chunks, chunkMinutes, maxTokens):
     current_token_length = 0
     first_chunk = True
 
+    logger.debug(f"Processing VTT file: {vtt}")
+    logger.debug(f"Initial metadata: {metadata}")
+
     if "speaker" in metadata and metadata["speaker"] != "":
         metadata["speaker"] = clean_text(metadata.get("speaker"))
         text = "The speaker's name is " + metadata["speaker"] + ". "
@@ -101,48 +104,59 @@ def parse_json_vtt_transcript(vtt, metadata, chunks, chunkMinutes, maxTokens):
 
     current_token_length = len(tokenizer.encode(text))
 
-    with open(vtt, "r", encoding="utf-8") as json_file:
-        json_vtt = json.load(json_file)
+    try:
+        with open(vtt, "r", encoding="utf-8") as json_file:
+            json_vtt = json.load(json_file)
+    except FileNotFoundError:
+        logger.error(f"VTT file not found: {vtt}")
+        return chunks
+    except json.JSONDecodeError:
+        logger.error(f"Invalid JSON in VTT file: {vtt}")
+        return chunks
 
-        for chunk in json_vtt:
-            seg = VttChunk(chunk)
-            current_seconds = int(seg.start)
-            current_text = seg.text
+    logger.debug(f"Loaded {len(json_vtt)} segments from VTT file")
 
-            if seg_begin_seconds is None:
-                seg_begin_seconds = current_seconds
-                seg_finish_seconds = seg_begin_seconds + chunkMinutes * 60
+    for chunk in json_vtt:
+        seg = VttChunk(chunk)
+        current_seconds = int(seg.start)
+        current_text = seg.text
 
-            total_tokens = len(tokenizer.encode(current_text)) + current_token_length
+        if seg_begin_seconds is None:
+            seg_begin_seconds = current_seconds
+            seg_finish_seconds = seg_begin_seconds + chunkMinutes * 60
 
-            if current_seconds < seg_finish_seconds and total_tokens < maxTokens:
-                text += current_text + " "
-                current_token_length = total_tokens
-            else:
-                if not first_chunk:
-                    append_text_to_previous_chunk(text, chunks)
-                first_chunk = False
-                add_new_chunk(metadata, text, seg_begin_seconds, chunks)
+        total_tokens = len(tokenizer.encode(current_text)) + current_token_length
 
-                text = current_text + " "
+        if current_seconds < seg_finish_seconds and total_tokens < maxTokens:
+            text += current_text + " "
+            current_token_length = total_tokens
+        else:
+            if not first_chunk:
+                append_text_to_previous_chunk(text, chunks)
+            first_chunk = False
+            add_new_chunk(metadata, text, seg_begin_seconds, chunks)
 
-                seg_begin_seconds = None
-                seg_finish_seconds = None
+            text = current_text + " "
+            seg_begin_seconds = current_seconds
+            seg_finish_seconds = seg_begin_seconds + chunkMinutes * 60
+            current_token_length = len(tokenizer.encode(text))
 
-                current_token_length = len(tokenizer.encode(text))
-
-        if seg_begin_seconds and text != "":
+    if seg_begin_seconds is not None and text != "":
+        if chunks and not first_chunk:
             previous_chunk_tokens = len(tokenizer.encode(chunks[-1]["text"]))
             current_chunk_tokens = len(tokenizer.encode(text))
 
             if previous_chunk_tokens + current_chunk_tokens < maxTokens:
                 chunks[-1]["text"] += text
             else:
-                if not first_chunk:
-                    append_text_to_previous_chunk(text, chunks)
-                first_chunk = False
-                add_new_chunk(metadata, text, seg_begin_seconds, chunks)
+                append_text_to_previous_chunk(text, chunks)
+        else:
+            add_new_chunk(metadata, text, seg_begin_seconds, chunks)
 
+    logger.debug(f"Processed {len(chunks)} chunks")
+
+    return chunks
+    
 def get_transcript(metadata, transcriptDestinationDir, chunks, chunkMinutes, maxTokens):
     """get the transcript from the .vtt file"""
     global total_files

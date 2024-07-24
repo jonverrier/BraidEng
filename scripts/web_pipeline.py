@@ -1,5 +1,8 @@
 # Copyright (c) 2024 Braid Technologies Ltd
 
+# Standard Library Imports
+import os
+
 # Local Modules
 from common.ApiConfiguration import ApiConfiguration
 from common.Urls import webUrls, countUrlHits
@@ -10,7 +13,6 @@ from text.enrich_text_summaries import enrich_text_summaries
 from text.enrich_text_embeddings import enrich_text_embeddings
 from text.enrich_lite import enrich_lite
 
-import os
 
 # Set HTML destination directory
 HTML_DESTINATION_DIR = os.path.join("data", "web")
@@ -33,5 +35,7 @@ enrich_text_summaries(config, HTML_DESTINATION_DIR)
 enrich_text_embeddings(config, HTML_DESTINATION_DIR)
 enrich_lite(HTML_DESTINATION_DIR)
 
-# Count URL hits
-countUrlHits(HTML_DESTINATION_DIR, webUrls, "master_text.json")
+ENRICHMENT_OUTPUT_DIR = os.path.join(HTML_DESTINATION_DIR, "output")
+
+# Count URL hits 
+countUrlHits(ENRICHMENT_OUTPUT_DIR, webUrls, "master_text.json", "hit_test_results_web.json")
