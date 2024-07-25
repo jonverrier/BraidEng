@@ -9,16 +9,9 @@ import sys
 import logging
 
 # Set up logging to display information about the execution of the script
-# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    handlers=[
-                        logging.FileHandler("debug.log"),
-                        logging.StreamHandler()
-                    ])
-
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+logging.getLogger().setLevel(logging.INFO)
 
 # Add the project root and scripts directory to the Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -34,6 +27,68 @@ from text.enrich_text_chunks import enrich_text_chunks
 from text.enrich_text_summaries import enrich_text_summaries
 from text.enrich_text_embeddings import enrich_text_embeddings
 from text.enrich_lite import enrich_lite
+
+def create_mock_html_files(test_output_dir, source_url):
+    """Create mock HTML files for testing."""
+    html_dir = os.path.join(test_output_dir, "html")
+    os.makedirs(html_dir, exist_ok=True)
+    
+    # Create three mock HTML files
+    for i in range(3):
+        filename = f"mock_page_{i}.json.mdd"
+        filepath = os.path.join(html_dir, filename)
+        content = [{"text": f"This is mock content for chunk {i}", "start": str(i * 100)}]
+        with open(filepath, "w") as f:
+            json.dump(content, f)
+        
+        # Create corresponding metadata file
+        meta_filename = f"mock_page_{i}.json"
+        meta_filepath = os.path.join(html_dir, meta_filename)
+        metadata = {
+            "speaker": "",
+            "title": f"Mock Page {i}",
+            "sourceId": f"{source_url}/page{i}",
+            "filename": filename,
+            "description": f"Mock description for page {i}",
+            "hitTrackingId": source_url
+        }
+        with open(meta_filepath, "w") as f:
+            json.dump(metadata, f)
+
+def test_chunk_addition(tmp_path, config: ApiConfiguration):
+    logger.info("Starting chunk addition test")
+
+    test_output_dir = os.path.join(str(tmp_path), "test_output")
+    os.makedirs(test_output_dir, exist_ok=True)
+    logger.info(f"Created test output directory: {test_output_dir}")
+
+    source_url = "http://example.com/test"
+    create_mock_html_files(test_output_dir, source_url)
+
+    # Mock the download_html function to avoid actual web requests
+    with patch('web.download_html.download_html', return_value=None):
+        # Run the enrichment process
+        enrich_text_chunks(config, test_output_dir)
+
+    # Check the output
+    master_text_path = os.path.join(test_output_dir, "output", "master_text.json")
+    assert os.path.exists(master_text_path), f"master_text.json not found at {master_text_path}"
+
+    with open(master_text_path, "r") as f:
+        chunks = json.load(f)
+
+    # Verify that we have exactly 3 chunks
+    assert len(chunks) == 3, f"Expected 3 chunks, but got {len(chunks)}"
+
+    # Verify that each chunk has the correct structure and content
+    for i, chunk in enumerate(chunks):
+        assert chunk["sourceId"] == f"{source_url}/page{i}", f"Incorrect sourceId for chunk {i}"
+        assert chunk["text"].startswith(f"This is mock content for chunk {i}"), f"Incorrect content for chunk {i}"
+        assert chunk["start"] == str(i * 100), f"Incorrect start time for chunk {i}"
+        assert "seconds" in chunk, f"Missing 'seconds' field in chunk {i}"
+        assert chunk["hitTrackingId"] == source_url, f"Incorrect hitTrackingId for chunk {i}"
+
+    logger.info("Chunk addition test completed successfully")
 
 # Fixture to create a temporary directory for test output
 @pytest.fixture
