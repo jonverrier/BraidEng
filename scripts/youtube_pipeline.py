@@ -28,15 +28,9 @@ ensure_directory_exists(TRANSCRIPT_DESTINATION_DIR)
 
 config = ApiConfiguration()
 
-loopCounterForDebugging = 0
-maxLoopCountForDebugging = 1
 for item in youTubeUrls:
-   if loopCounterForDebugging < maxLoopCountForDebugging:
-      logger.debug(f"Downloading transcripts for URL: {item[1]}")
-      download_transcripts(item[1], TRANSCRIPT_DESTINATION_DIR)
-      loopCounterForDebugging += 1
-   else:
-      break 
+   logger.debug(f"Downloading transcripts for URL: {item[1]}")
+   download_transcripts(item[1], TRANSCRIPT_DESTINATION_DIR)
 
 # Keep this comment as example of how to just process one file for debugging   
 #download_transcripts ("PL1T8fO7ArWleyIqOy37OVXsP4hFXymdOZ", TRANSCRIPT_DESTINATION_DIR)
@@ -55,6 +49,7 @@ logger.info("Enriching transcripts with lite enrichment...")
 enrich_lite(TRANSCRIPT_DESTINATION_DIR)
 
 logger.info("Counting URL hits...")
-countUrlHits(TRANSCRIPT_DESTINATION_DIR, youTubeUrls, "master_transcriptions.json","hit_test_results.json")
+output_dir = os.path.join(TRANSCRIPT_DESTINATION_DIR, "output") 
+countUrlHits(output_dir, youTubeUrls, "master_transcriptions.json","hit_test_results.json")
 
 logger.info("Script finished.")
