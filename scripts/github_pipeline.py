@@ -24,4 +24,5 @@ enrich_text_summaries(config, MARKDOWN_DESTINATION_DIR)
 enrich_text_embeddings(config, MARKDOWN_DESTINATION_DIR)
 enrich_lite(MARKDOWN_DESTINATION_DIR)
 
-countUrlHits (MARKDOWN_DESTINATION_DIR, gitHubUrls, "master_text.json")
+output_dir = os.path.join(MARKDOWN_DESTINATION_DIR, "output") 
+countUrlHits (output_dir, gitHubUrls, "master_text.json", "hit_test_results.json")
