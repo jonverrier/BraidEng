@@ -22,12 +22,12 @@ config = ApiConfiguration()
 
 # For debugging purposes, you might want to comment/uncomment the following block
 # Uncomment to download all URLs
-#for item in webUrls:
-#    download_html(item[1], item[2], HTML_DESTINATION_DIR, config.discardIfBelow)
+for item in webUrls:
+    download_html(item[1], item[2], HTML_DESTINATION_DIR, config.discardIfBelow)
 
 # Keep this comment as example of how to just process one file for debugging
-download_html("https://www.interaction-design.org/literature/topics/design-thinking", 
-              True, HTML_DESTINATION_DIR, 150)
+#download_html("https://www.interaction-design.org/literature/topics/design-thinking", 
+#              True, HTML_DESTINATION_DIR, 150)
 
 # Enrich the text chunks, summaries, embeddings, and run lite enrichment
 enrich_text_chunks(config, HTML_DESTINATION_DIR) 
