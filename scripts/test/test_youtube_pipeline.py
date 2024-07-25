@@ -7,6 +7,10 @@ import json
 import shutil
 import sys
 import logging
+from unittest.mock import patch, MagicMock
+
+# Third-Party Packages
+from youtube_transcript_api import NoTranscriptFound, TranscriptsDisabled, VideoUnavailable
 
 # Set up logging to display information about the execution of the script
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -21,7 +25,7 @@ sys.path.extend([project_root, scripts_dir])
 from common.ApiConfiguration import ApiConfiguration
 from common.Urls import youTubeUrls, countUrlHits
 from common.common_functions import ensure_directory_exists
-from youtube.download_transcripts import download_transcripts
+from youtube.download_transcripts import download_transcripts, get_transcript
 from youtube.enrich_transcript_chunks import enrich_transcript_chunks
 from youtube.enrich_transcript_summaries import enrich_transcript_summaries
 from youtube.enrich_transcript_embeddings import enrich_transcript_embeddings
@@ -126,7 +130,6 @@ def verify_hit_counts(output_dir, expected_sources):
         logger.error(f"Error verifying hit counts: {str(e)}")
         raise
 
-
 def test_youtube_pipeline(tmp_path, config: ApiConfiguration):
     logger.info("Starting YouTube pipeline test")
 
@@ -198,5 +201,68 @@ def test_youtube_pipeline(tmp_path, config: ApiConfiguration):
 
     logger.info("YouTube pipeline test completed")
 
+# New test function to check edge cases in get_transcript()
+
+@pytest.mark.parametrize("exception_class, expected_result", [
+    (TranscriptsDisabled, False),
+    (VideoUnavailable, False),
+    (Exception, False)
+])
+def test_get_transcript_exceptions(exception_class, expected_result):
+    mock_playlist_item = {
+        "snippet": {
+            "resourceId": {
+                "videoId": "test_video_id"
+            }
+        }
+    }
+    mock_logger = MagicMock()
+    
+    with patch('youtube.download_transcripts.YouTubeTranscriptApi.get_transcript') as mock_get_transcript:
+        mock_get_transcript.side_effect = exception_class("Test exception")
+        
+        result = get_transcript(mock_playlist_item, 1, "/tmp/test_dir", mock_logger)
+        
+        assert result == expected_result
+        mock_logger.debug.assert_called()
+
+def test_get_transcript_success():
+    mock_playlist_item = {
+        "snippet": {
+            "resourceId": {
+                "videoId": "test_video_id"
+            }
+        }
+    }
+    mock_logger = MagicMock()
+    mock_transcript = [{"text": "Test transcript"}]
+    
+    with patch('youtube.download_transcripts.YouTubeTranscriptApi.get_transcript') as mock_get_transcript, \
+         patch('builtins.open', MagicMock()) as mock_open, \
+         patch('os.makedirs') as mock_makedirs:
+        mock_get_transcript.return_value = mock_transcript
+        
+        result = get_transcript(mock_playlist_item, 1, "/tmp/test_dir", mock_logger)
+        
+        assert result == True
+        mock_logger.debug.assert_called_with("Transcription download completed: %d, %s", 1, "test_video_id")
+        mock_open.assert_called_once()
+        mock_makedirs.assert_called_once()
+
+def test_get_transcript_file_exists():
+    mock_playlist_item = {
+        "snippet": {
+            "resourceId": {
+                "videoId": "test_video_id"
+            }
+        }
+    }
+    mock_logger = MagicMock()
+    
+    with patch('os.path.exists', return_value=True):
+        result = get_transcript(mock_playlist_item, 1, "/tmp/test_dir", mock_logger)
+        
+        assert result == False
+        mock_logger.debug.assert_called_with("Skipping video %d, %s", 1, "test_video_id")
 if __name__ == "__main__":
     pytest.main([__file__])

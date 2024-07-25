@@ -15,7 +15,7 @@ from youtube.enrich_transcript_embeddings import enrich_transcript_embeddings
 from text.enrich_lite import enrich_lite
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ ensure_directory_exists(TRANSCRIPT_DESTINATION_DIR)
 config = ApiConfiguration()
 
 loopCounterForDebugging = 0
-maxLoopCountForDebugging = 1  
+maxLoopCountForDebugging = 1
 for item in youTubeUrls:
    if loopCounterForDebugging < maxLoopCountForDebugging:
       logger.debug(f"Downloading transcripts for URL: {item[1]}")
