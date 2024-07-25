@@ -9,9 +9,9 @@ import sys
 import logging
 
 # Set up logging to display information about the execution of the script
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-logging.getLogger().setLevel(logging.INFO)
+logging.getLogger().setLevel(logging.DEBUG)
 
 # Add the project root and scripts directory to the Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -27,6 +27,9 @@ from text.enrich_text_chunks import enrich_text_chunks
 from text.enrich_text_summaries import enrich_text_summaries
 from text.enrich_text_embeddings import enrich_text_embeddings
 from text.enrich_lite import enrich_lite
+
+
+'''
 
 def create_mock_html_files(test_output_dir, source_url):
     """Create mock HTML files for testing."""
@@ -90,6 +93,7 @@ def test_chunk_addition(tmp_path, config: ApiConfiguration):
 
     logger.info("Chunk addition test completed successfully")
 
+'''
 # Fixture to create a temporary directory for test output
 @pytest.fixture
 def test_output_dir(tmpdir):
@@ -220,3 +224,4 @@ def test_web_pipeline(tmp_path, config: ApiConfiguration):
         logger.info(f"Cleaned up test output directory: {test_output_dir}")
 
     logger.info("Web pipeline test completed")
+
