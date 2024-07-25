@@ -100,39 +100,3 @@ By design, the app builds to a single .JS file using webpack. The JS file is the
 GNU AFFERO GENERAL PUBLIC LICENSE.
 
 This is intentionally a restrictive licence. The source is effectively available for non-commercial use (subject to the licence terms as listed, which enable use for learning, self study etc). Commercial use either must abide by the licence terms, which are strong, or a separate licence that enables more normal commercial use & distribution is available from Braid. Contact us for more details mailto:info@braidtechnologies.io.
-
-# Braid Engine
-
-## Table of Contents
-
-- [General Information](#general-information)
-- [Technologies](#technologies)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Project Structure](#project-structure)
-- [Running Tests](#running-tests)
-- [License](#license)
-
-## General Information
-
-The Braid Engine is an AI-enabled Learning Management System (LMS) designed to build a curriculum using open-source documents from the web (YouTube videos, GitHub repositories, and plain HTML text). It processes these documents to load AI-generated summaries into a document store. A simple frontend allows students to ask questions, which the model can answer based on embedded content. The model also provides suggestions based on student interactions.
-
-The specific domain focuses on teaching students how to build AI applications using modern Large Language Model (LLM) technology, particularly Retrieval-Assisted Generation (RAG) and multi-step workflows for generating summaries and answering questions.
-
-## Technologies
-
-- **Frontend:** TypeScript, Microsoft Fluent UI framework ([React Fluent UI](https://react.fluentui.dev/))
-- **Messaging:** Microsoft Fluent Framework ([Fluid Framework Documentation](https://fluidframework.com/docs/))
-- **Backend APIs:** Node.js APIs on Azure stack
-- **AI Model:** GPT-3.5
-- **Document Database:** Python with custom scripts
-- **Testing:** Mocha ([Mocha Documentation](https://mochajs.org/))
-- **Web Scraping:** Python, Beautiful Soup ([Python](https://www.python.org/), [Beautiful Soup Documentation](https://beautiful-soup-4.readthedocs.io/))
-
-## Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/your_username/your_project.git
-   cd your_project
-   ```
