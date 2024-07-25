@@ -1,11 +1,5 @@
 # Copyright (c) 2024 Braid Technologies Ltd
 
-'''
-
-CODE WITH UPDATES FOR IMPROVED READIBILITY - 2 
-
-'''
-
 # Standard Library Imports
 import pytest
 import os
