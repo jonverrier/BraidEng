@@ -2,7 +2,7 @@
 
 '''
 
-CODE WITH UPDATES FOR IMPROVED READIBILITY 
+CODE WITH UPDATES FOR IMPROVED READIBILITY - 2 
 
 '''
 
@@ -13,6 +13,7 @@ import json
 import shutil
 import sys
 import logging
+import re
 from unittest.mock import patch, MagicMock
 from typing import List, Dict, Any, Optional
 
@@ -23,13 +24,50 @@ from youtube_transcript_api import NoTranscriptFound, TranscriptsDisabled, Video
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# New configuration to omit an out of scope log 
+#Configurations to omit an out of scope log 
 logging.getLogger("openai._base_client").setLevel(logging.WARNING)
 
 # Add the project root and scripts directory to the Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 scripts_dir = os.path.join(project_root, 'scripts')
 sys.path.extend([project_root, scripts_dir])
+
+class IgnoreSpecificWarningsFilter(logging.Filter):
+    """
+    A custom logging filter to ignore specific warning messages.
+
+    This filter is designed to remove warning logs that match a specific pattern
+    related to RetryError and APIConnectionError.
+    """
+
+    def __init__(self) -> None:
+        """
+        Initialize the IgnoreSpecificWarningsFilter.
+
+        Sets up the regex pattern to match the specific warning messages to be filtered.
+        """
+        super().__init__()
+        self.pattern = re.compile(r'Error: RetryError\[<Future at 0x[0-9a-fA-F]+ state=finished raised APIConnectionError>\]')
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        """
+        Filter log records based on the predefined pattern.
+
+        Args:
+            record (logging.LogRecord): The log record to be filtered.
+
+        Returns:
+            bool: True if the log should be kept, False if it should be filtered out.
+        """
+        if record.levelno == logging.WARNING:
+            return not self.pattern.search(record.getMessage())
+        return True
+
+
+custom_filter = IgnoreSpecificWarningsFilter()
+
+for name in logging.root.manager.loggerDict:
+    logging.getLogger(name).addFilter(custom_filter)
 
 # Import necessary modules from the project
 from common.ApiConfiguration import ApiConfiguration
