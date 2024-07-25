@@ -1,10 +1,13 @@
-
 # Standard library imports
 import os
 import json
 import logging
 
-youTubeUrls = [
+logging.basicConfig(level=logging.INFO)
+
+youTubeUrls = [  
+["Building Safe and Secure LLM Applications Using NVIDIA NeMo Guardrails" ,"PLFnkruiXQop4Robpmim_3FMZbv_1lAwBu"],
+["Build a Large Language Model AI Chatbot using Retrieval Augmented Generation" ,"PLFnkruiXQop5oxQp0AuXtncxRVBDopCCI"], # URL with transcripts disabled 
 ["Stanford CS229: Machine Learning Full Course taught by Andrew Ng | Autumn 2018 - YouTube", "PLoROMvodv4rMiGQp3WXShtMGgzqpfVfbU"],
 ["Stanford CS224N: Natural Language Processing with Deep Learning | Winter 2021 - YouTube", "PLoROMvodv4rOSH4v6133s9LFPRHjEmbmJ"],
 ["Braid AI Canon", "PL9LkXkIUrSoxIlFSKcyB21XFFLCCYfPGv"],
@@ -19,8 +22,8 @@ gitHubUrls = [
 
 webUrls = [
 ["Software 2.0. by Andrej Karpathy", "https://karpathy.medium.com/software-2-0-a64152b37c35", False],
-["What Is ChatGPT Doing … and Why Does It Work?—Stephen Wolfram", "https://writings.stephenwolfram.com/2023/02/what-is-chatgpt-doing-and-why-does-it-work/", False],
 ["Transformers, Explained: Understand the Model Behind GPT-3, BERT, and T5 (daleonai.com)", "https://daleonai.com/transformers-explained", False],
+["What Is ChatGPT Doing … and Why Does It Work?—Stephen Wolfram", "https://writings.stephenwolfram.com/2023/02/what-is-chatgpt-doing-and-why-does-it-work/", False],
 ["How Stable Diffusion Works · Chris McCormick (mccormickml.com)", "https://mccormickml.com/2022/12/21/how-stable-diffusion-works/", False],
 ["Deep Learning in a Nutshell: Core Concepts | NVIDIA Technical Blog", "https://developer.nvidia.com/blog/deep-learning-nutshell-core-concepts/", False],
 ["Practical Deep Learning for Coders - Practical Deep Learning (fast.ai)", "https://course.fast.ai/", True],
@@ -65,67 +68,81 @@ class UrlHit:
     desc: str
     hits: int
 
-def countUrlHits (destinationDir, urls, fileName): 
-   #we make use of logging for error and debug messages 
-   logging.basicConfig(level=logging.WARNING)
-   logger = logging.getLogger(__name__)     
 
-   if not destinationDir:
-      logger.error("Output folder not provided")
-      exit(1)
+def countUrlHits(destinationDir, urls, input_filename, output_filename):
+    # Set up logging
+    logging.basicConfig(level=logging.WARNING)
+    logger = logging.getLogger(__name__)
 
-   chunks = []
-   total_chunks = 0
+    if not destinationDir:
+        logger.error("Output folder not provided")
+        exit(1)
 
-   logger.debug("Starting hit counting")
+    chunks = []
+    total_chunks = 0
 
-   # Load the chunks from a JSON file
-   input_file = os.path.join(destinationDir, "output", fileName)
-   logger.debug("Input file path: %s", input_file)
+    logger.debug("Starting hit counting")
 
-   try:
-      with open(input_file, "r", encoding="utf-8") as f:
-         chunks = json.load(f)
-   except FileNotFoundError:
-      logger.error("Input file '%s' not found", input_file)
-      exit(1)
-   except Exception as e:
-      logger.error("Error loading JSON file: %s", str(e))
-      exit(1)
+    # Load the chunks from a JSON file
+    input_file = os.path.join(destinationDir, input_filename)  # Adjusted input_file path
 
-   total_chunks = len(chunks)
-   logger.debug("Total chunks to be processed: %s", total_chunks)
+    logger.debug("Input file path: %s", input_file)
 
-   # Build an empty array to accumlulate hits
-   hits = [None] * len(urls)
-   for i, url in enumerate(urls):      
-      hit = UrlHit()
-      hit.desc = url[0]
-      hit.path = url[1]
-      hit.hits = 0;   
-      hits[i] = hit
+    try:
+        with open(input_file, "r", encoding="utf-8") as f:
+            chunks = json.load(f)
+    except FileNotFoundError:
+        logger.error("Input file '%s' not found", input_file)
+        exit(1)
+    except Exception as e:
+        logger.error("Error loading JSON file: %s", str(e))
+        exit(1)
 
+    total_chunks = len(chunks)
+    logger.debug("Total chunks to be processed: %s", total_chunks)
 
-   # iterate through chunks accumulating hit count 
-   for chunk in chunks:
-      haveHit = False
-      haveAda = False
+    # Build an empty array to accumulate hits
+    hits = [None] * len(urls)
+    for i, url in enumerate(urls):
+        hit = UrlHit()
+        hit.desc = url[0]
+        hit.path = url[1]
+        hit.hits = 0
+        hits[i] = hit
 
-      ada = chunk.get('hitTrackingId')  
-      if (len(ada) > 0):  
-         haveAda = True
+    # Iterate through chunks accumulating hit count
+    for chunk in chunks:
+        haveHit = False
+        haveAda = False
 
-      for hit in hits:
-         source = chunk.get('hitTrackingId')
-         if source in hit.path:
-            hit.hits = hit.hits + 1
-            haveHit = True
-    
-      if not haveHit:
-         raise AssertionError ('All chunks should have a hit:' + chunk.get('sourceId'))
-      
-      if not haveAda:
-         raise AssertionError ('All chunks should have a ada')      
+        ada = chunk.get('hitTrackingId')
+        if (len(ada) > 0):
+            haveAda = True
 
-   for hit in hits:  
-      print (hit.desc + ', ' + hit.path + ', ' + str(hit.hits))    
+        for hit in hits:
+            source = chunk.get('hitTrackingId')
+            if source in hit.path:
+                hit.hits += 1
+                haveHit = True
+
+        if not haveHit:
+            raise AssertionError('All chunks should have a hit: ' + chunk.get('sourceId'))
+
+        if not haveAda:
+            raise AssertionError('All chunks should have an ada')
+
+    # Print the results
+    for hit in hits:
+        print(hit.desc + ', ' + hit.path + ', ' + str(hit.hits))
+
+    # Save the hits to an output file
+    output_file = os.path.join(destinationDir, output_filename)
+    logger.debug("Output file path: %s", output_file)   
+
+    try:
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump([hit.__dict__ for hit in hits], f)
+        logger.debug("Output file saved at: %s", output_file)
+    except Exception as e:
+        logger.error("Error saving output file: %s", str(e))
+        exit(1)
