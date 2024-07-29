@@ -58,7 +58,7 @@ By design, the app builds to a single .JS file using webpack. The JS file is the
 
 ## Installation
 
-Follow these steps to set up your development environment for the Braid Engine project:
+Follow these steps to set up your development environment for the project:
 
 1. **Install Python 3.12.4:**
 
@@ -139,7 +139,11 @@ Follow these steps to set up your development environment for the Braid Engine p
 10. **Set up environment variables:**
 
     - Create a `.env` file in the root directory
-    - Add necessary environment variables (e.g., API keys, database connection strings)
+    - Add the following environment variables:
+      ```
+      GOOGLE_DEVELOPER_API_KEY=your_google_api_key_here
+      AZURE_OPENAI_API_KEY=your_azure_openai_api_key_here
+      ```
 
 11. **Open the project in VS Code:**
 
