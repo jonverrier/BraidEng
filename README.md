@@ -60,20 +60,25 @@ By design, the app builds to a single .JS file using webpack. The JS file is the
 
 Follow these steps to set up your development environment for the Braid Engine project:
 
-1. **Clone the repository:**
+1. **Install Python 3.12.4:**
+
+   - Download and install Python 3.12.4 from [https://www.python.org/downloads/release/python-3124/](https://www.python.org/downloads/release/python-3124/)
+   - Make sure to add Python to your PATH during installation
+
+2. **Clone the repository:**
 
    ```bash
    git clone https://github.com/jonverrier/BraidEng.git
    cd BraidEng
    ```
 
-2. **Set up the upstream remote:**
+3. **Set up the upstream remote:**
 
    ```bash
    git remote add upstream https://github.com/jonverrier/BraidEng.git
    ```
 
-3. **Verify the upstream remote:**
+4. **Verify the upstream remote:**
 
    ```bash
    git remote -v
@@ -88,7 +93,7 @@ Follow these steps to set up your development environment for the Braid Engine p
    upstream  https://github.com/jonverrier/BraidEng.git (push)
    ```
 
-4. **Install Visual Studio Code:**
+5. **Install Visual Studio Code:**
 
    - Download and install VS Code from [https://code.visualstudio.com/](https://code.visualstudio.com/)
    - Open VS Code and install the following extensions:
@@ -97,7 +102,7 @@ Follow these steps to set up your development environment for the Braid Engine p
      - ESLint
      - Prettier
 
-5. **Set up the Python virtual environment:**
+6. **Set up the Python virtual environment:**
 
    ```bash
    python -m venv venv
@@ -114,35 +119,35 @@ Follow these steps to set up your development environment for the Braid Engine p
      source venv/bin/activate
      ```
 
-6. **Install Python dependencies:**
+7. **Install Python dependencies:**
 
    ```bash
    pip install -r scripts/requirements.txt
    ```
 
-7. **Install Node.js and npm:**
+8. **Install Node.js and npm:**
 
    - Download and install Node.js from [https://nodejs.org/](https://nodejs.org/)
    - npm comes bundled with Node.js
 
-8. **Install JavaScript dependencies:**
+9. **Install JavaScript dependencies:**
 
    ```bash
    npm install
    ```
 
-9. **Set up environment variables:**
+10. **Set up environment variables:**
 
-   - Create a `.env` file in the root directory
-   - Add necessary environment variables (e.g., API keys, database connection strings)
+    - Create a `.env` file in the root directory
+    - Add necessary environment variables (e.g., API keys, database connection strings)
 
-10. **Open the project in VS Code:**
+11. **Open the project in VS Code:**
 
     ```bash
     code .
     ```
 
-11. **Configure VS Code settings:**
+12. **Configure VS Code settings:**
     - Open the Command Palette (Ctrl+Shift+P or Cmd+Shift+P)
     - Type "Python: Select Interpreter" and choose the interpreter from your virtual environment
 
