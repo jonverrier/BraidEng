@@ -43,7 +43,9 @@ Scripts to build the RAG database are written in Python, using Beautiful Soup fo
 - **Backend APIs:** Node.js APIs on Azure stack
 - **AI Model:** GPT-3.5
 - **Document Database:** Python with custom scripts
-- **Testing:** Mocha ([Mocha Documentation](https://mochajs.org/))
+- **Testing:**
+  -Mocha ([Mocha Documentation](https://mochajs.org/))
+  -Python: pytest and unittest frameworks ([pytest Documentation](https://docs.pytest.org/), [unittest Documentation](https://docs.python.org/3/library/unittest.html))
 - **Web Scraping:** Python, Beautiful Soup ([Python](https://www.python.org/), [Beautiful Soup Documentation](https://beautiful-soup-4.readthedocs.io/))
 
 The key directories are:
