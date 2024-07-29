@@ -58,42 +58,87 @@ By design, the app builds to a single .JS file using webpack. The JS file is the
 
 ## Installation
 
-1. Navigate to the desired directory:
+Follow these steps to set up your development environment for the Braid Engine project:
 
 1. **Clone the repository:**
 
-   - On GitHub.com, navigate to the main page of the repository.
-
-   - Above the list of files, click Code.
-
-   - Copy the URL for the repository.
-
-     -To clone the repository using HTTPS, under "HTTPS", click .
-
-   - Open Git Bash.
-
-   - Change the current working directory to the location where you want the cloned directory.
-
-   - Type git clone, and then paste the URL you copied earlier.
-
    ```bash
    git clone https://github.com/jonverrier/BraidEng.git
+   cd BraidEng
    ```
 
-   -Press Enter to create your local clone.
+2. **Set up the upstream remote:**
 
-1. **Set up virtual enviornment:**
+   ```bash
+   git remote add upstream https://github.com/jonverrier/BraidEng.git
+   ```
+
+3. **Install Visual Studio Code:**
+
+   - Download and install VS Code from [https://code.visualstudio.com/](https://code.visualstudio.com/)
+   - Open VS Code and install the following extensions:
+     - Python
+     - TypeScript and JavaScript Language Features
+     - ESLint
+     - Prettier
+
+4. **Set up the Python virtual environment:**
 
    ```bash
    python -m venv venv
-   `venv\Scripts\activate` # On Windows use
-   source venv/bin/activate #On MacOS/Linuix
    ```
 
-1. **Install dependecies:**
+   Activate the virtual environment:
+
+   - On Windows:
+     ```bash
+     venv\Scripts\activate
+     ```
+   - On macOS/Linux:
+     ```bash
+     source venv/bin/activate
+     ```
+
+5. **Install Python dependencies:**
+
    ```bash
    pip install -r scripts/requirements.txt
    ```
+
+6. **Install Node.js and npm:**
+
+   - Download and install Node.js from [https://nodejs.org/](https://nodejs.org/)
+   - npm comes bundled with Node.js
+
+7. **Install JavaScript dependencies:**
+
+   ```bash
+   npm install
+   ```
+
+8. **Set up environment variables:**
+
+   - Create a `.env` file in the root directory
+   - Add necessary environment variables (e.g., API keys, database connection strings)
+
+9. **Open the project in VS Code:**
+
+   ```bash
+   code .
+   ```
+
+10. **Configure VS Code settings:**
+    - Open the Command Palette (Ctrl+Shift+P or Cmd+Shift+P)
+    - Type "Python: Select Interpreter" and choose the interpreter from your virtual environment
+
+Now your development environment is set up and ready for the Braid Engine project. Remember to keep your fork updated with the upstream repository:
+
+```bash
+git fetch upstream
+git merge upstream/main
+```
+
+For more detailed information on using Git with GitHub, refer to the [GitHub documentation](https://docs.github.com/en/get-started/quickstart/set-up-git).
 
 ## Licence
 
