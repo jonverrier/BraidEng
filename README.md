@@ -151,7 +151,7 @@ Follow these steps to set up your development environment for the Braid Engine p
     - Open the Command Palette (Ctrl+Shift+P or Cmd+Shift+P)
     - Type "Python: Select Interpreter" and choose the interpreter from your virtual environment
 
-Now your development environment is set up and ready for the Braid Engine project. Remember to keep your fork updated with the upstream repository:
+Now your development environment is set up and ready. Remember to keep your fork updated with the upstream repository:
 
 ```bash
 git fetch upstream
