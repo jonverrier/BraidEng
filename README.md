@@ -5,9 +5,6 @@
 - [General Information](#general-information)
 - [Technologies](#technologies)
 - [Installation](#installation)
-- [Usage](#usage)
-- [Project Structure](#project-structure)
-- [Running Tests](#running-tests)
 - [License](#license)
 
 ## General Information
