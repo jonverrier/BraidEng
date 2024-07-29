@@ -73,7 +73,22 @@ Follow these steps to set up your development environment for the Braid Engine p
    git remote add upstream https://github.com/jonverrier/BraidEng.git
    ```
 
-3. **Install Visual Studio Code:**
+3. **Verify the upstream remote:**
+
+   ```bash
+   git remote -v
+   ```
+
+   You should see both your origin (your fork) and the upstream repository listed:
+
+   ```
+   origin    https://github.com/YOUR_USERNAME/BraidEng.git (fetch)
+   origin    https://github.com/YOUR_USERNAME/BraidEng.git (push)
+   upstream  https://github.com/jonverrier/BraidEng.git (fetch)
+   upstream  https://github.com/jonverrier/BraidEng.git (push)
+   ```
+
+4. **Install Visual Studio Code:**
 
    - Download and install VS Code from [https://code.visualstudio.com/](https://code.visualstudio.com/)
    - Open VS Code and install the following extensions:
@@ -82,7 +97,7 @@ Follow these steps to set up your development environment for the Braid Engine p
      - ESLint
      - Prettier
 
-4. **Set up the Python virtual environment:**
+5. **Set up the Python virtual environment:**
 
    ```bash
    python -m venv venv
@@ -99,35 +114,35 @@ Follow these steps to set up your development environment for the Braid Engine p
      source venv/bin/activate
      ```
 
-5. **Install Python dependencies:**
+6. **Install Python dependencies:**
 
    ```bash
    pip install -r scripts/requirements.txt
    ```
 
-6. **Install Node.js and npm:**
+7. **Install Node.js and npm:**
 
    - Download and install Node.js from [https://nodejs.org/](https://nodejs.org/)
    - npm comes bundled with Node.js
 
-7. **Install JavaScript dependencies:**
+8. **Install JavaScript dependencies:**
 
    ```bash
    npm install
    ```
 
-8. **Set up environment variables:**
+9. **Set up environment variables:**
 
    - Create a `.env` file in the root directory
    - Add necessary environment variables (e.g., API keys, database connection strings)
 
-9. **Open the project in VS Code:**
+10. **Open the project in VS Code:**
 
-   ```bash
-   code .
-   ```
+    ```bash
+    code .
+    ```
 
-10. **Configure VS Code settings:**
+11. **Configure VS Code settings:**
     - Open the Command Palette (Ctrl+Shift+P or Cmd+Shift+P)
     - Type "Python: Select Interpreter" and choose the interpreter from your virtual environment
 
