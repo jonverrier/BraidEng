@@ -12,7 +12,6 @@ import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
 import { throwIfUndefined } from '../core/Asserts';
-import { truncateSync } from 'fs';
 
 const keyGenerator = getDefaultKeyGenerator();
 
