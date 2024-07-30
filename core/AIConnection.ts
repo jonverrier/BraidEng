@@ -17,6 +17,7 @@ import { IEmbeddingRepository, kDefaultSearchChunkCount, kDefaultMinimumCosineSi
 import { getEmbeddingRepository } from "./IEmbeddingRepositoryFactory";
 import { getDefaultKeyGenerator } from "./IKeyGeneratorFactory";
 import { parse } from "path";
+import { EUIStrings } from "../ui/UIStrings";
 
 // We allow for the equivalent of 10 minutes of chat. 10 mins * 60 words = 600 words = 2400 tokens. 
 const kMaxTokens : number= 4096;
@@ -297,14 +298,14 @@ export class AIConnection {
       return this._activeCallCount !== 0;
    }
 
-   buildDirectQuery (messages: Array<Message>, authors: Map<string, Persona>): Array<AIMessageElement> {
+   static buildDirectQuery (messages: Array<Message>, authors: Map<string, Persona>): Array<AIMessageElement> {
 
       let builtQuery = new Array<AIMessageElement> ();
 
       let prompt = { role: 'system', content: EConfigStrings.kOpenAiPersonaPrompt };
       builtQuery.push (prompt);      
 
-      var start = this.findEarliestMessageIndexWithinTokenLimit(messages, authors);
+      var start = AIConnection.findEarliestMessageIndexWithinTokenLimit(messages, authors);
 
       for (let i = start; i < messages.length; i++) {
 
@@ -358,14 +359,14 @@ export class AIConnection {
       return builtQuery; 
    }   
 
-   buildQueryForQuestionPrompt (messages: Array<Message>, authors: Map<string, Persona>): Array<AIMessageElement> {
+   static buildQueryForQuestionPrompt (messages: Array<Message>, authors: Map<string, Persona>): Array<AIMessageElement> {
 
       let builtQuery = new Array<AIMessageElement> ();
 
       let prompt = { role: 'system', content: EConfigStrings.kOpenAiPersonaPrompt };
       builtQuery.push (prompt);      
 
-      var start = this.findEarliestMessageIndexWithinTokenLimit(messages, authors);
+      var start = AIConnection.findEarliestMessageIndexWithinTokenLimit(messages, authors);
 
       for (let i = start; i < messages.length; i++) {
 
@@ -395,6 +396,33 @@ export class AIConnection {
       return builtQuery; 
    }   
 
+
+   static buildTranscript (messages: Array<Message>, authors: Map<string, Persona>): string {
+
+      let builtQuery : string = "";
+   
+
+      var start = AIConnection.findEarliestMessageIndexWithinTokenLimit(messages, authors);
+
+      for (let i = start; i < messages.length; i++) {
+
+         let message = messages[i];
+
+         if (AIConnection.isFromLLM(message, authors)) {
+            
+            builtQuery = builtQuery + EConfigStrings.kLLMName + ":" + message.text + "\n";
+         }            
+         else {
+            let author = authors.get (message.authorId);
+            if (!author)
+               author = Persona.unknown();
+
+            builtQuery = builtQuery + author.name + ":" + message.text + "\n";
+         }      
+      }
+
+      return builtQuery; 
+   }  
 
    buildEnrichmentQuery (messages: Array<AIMessageElement>): Array<AIMessageElement> {
 
@@ -467,7 +495,7 @@ export class AIConnection {
       return done;
    }      
 
-   private findEarliestMessageIndexWithinTokenLimit (messages: Array<Message>, authors: Map<string, Persona>) : number {
+   private static findEarliestMessageIndexWithinTokenLimit (messages: Array<Message>, authors: Map<string, Persona>) : number {
 
       if (messages.length == 0)      
          throw new AssertionFailedError ("Message array is zero length.");

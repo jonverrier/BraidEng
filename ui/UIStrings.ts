@@ -47,7 +47,10 @@ export enum EUIStrings {
    kLLMNameReminder = "Just checking...  if you want your request to be sent to @Boxer, include the phrase '@Boxer' in your message. With an '@' sign.",
 
    kLikeSignular = "like.",
-   kLikePlural = "likes."
+   kLikePlural = "likes.",
+
+   kWelcomeWouldYouLikeRecap = "Welcome, would you like a recap?",
+   kSummarising = "Summarising ..."
 };
 
 export var initialQuestions: Array<string> = [

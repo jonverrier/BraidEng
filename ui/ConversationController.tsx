@@ -27,6 +27,7 @@ import { MessageActivityRecord } from '../core/ActivityRecordMessage';
 import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 import { LikeUnlikeActivityRecord } from '../core/ActivityRecordLikeUnlike';
 import { getDetaultAdminRepository} from '../core/IAdminRepository';
+import { makeSummaryCall } from '../core/ApiCalls';
 
 export interface IConversationControllerProps {
 
@@ -101,12 +102,24 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       return false;
    }
 
-   function makeBraidSuggestion (fluidMessagesConnection_: BraidFluidConnection, isInitial: boolean) : void {
+   function makeInitialSuggestion (fluidMessagesConnection_: BraidFluidConnection, isInitial: boolean) : void {
 
       setIsBusy (true);
 
       setTimeout(() => {
 
+         let messageArray = fluidMessagesConnection_.messageCaucus().currentAsArray(); 
+
+         if (messageArray.length > EConfigNumbers.kMinMessagesforRecap) {
+            let message = new Message();
+
+            message.authorId = EConfigStrings.kLLMGuid;            
+            message.text = EUIStrings.kWelcomeWouldYouLikeRecap;
+            message.sentAt = new Date();   
+            
+            setSuggested(message);
+         }
+         else
          if (! hasRecentHepfulStart (fluidMessagesConnection_)) {
             let message = new Message();
 
@@ -170,7 +183,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       
       setConversationKey (conversationKey_);  
 
-      makeBraidSuggestion (fluidMessagesConnection_, true);    
+      makeInitialSuggestion (fluidMessagesConnection_, true);    
       
       /* Volume testing - works fine as of May 30 204 - few seconds to load 1,000 messages, view renders at interactive speed. 
       if (firstLoad && Environment.environment() === EEnvironment.kLocal) {
@@ -409,7 +422,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
             let audienceMap = fluidMessagesConnection.participantCaucus().current();
             setAudience (audienceMap);
 
-            let query = connection.buildQueryForQuestionPrompt (messageArray, audienceMap);
+            let query = AIConnection.buildQueryForQuestionPrompt (messageArray, audienceMap);
             let keyGenerator = getDefaultKeyGenerator();             
             let responseShell = new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, undefined, 
                                              "", new Date()); 
@@ -427,17 +440,42 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    function onAddSuggestedContent () {
 
       throwIfUndefined (fluidConnection);
-      let fluidMessagesConnection : BraidFluidConnection = fluidConnection;
 
       throwIfUndefined (suggested);      
       suggested.sentAt = new Date(); // Need to reset date so it goes at the end. 
 
       if (suggested.chunks && suggested.chunks.length > 0) {
-         // If we have attached chuncks, its a full message that we just replay
-         addMessage (fluidMessagesConnection, suggested); 
+         // If we have attached chunks, its a full message that we just replay
+         addMessage (fluidConnection, suggested); 
+      }
+      else
+      if (suggested.text === EUIStrings.kWelcomeWouldYouLikeRecap) {
+
+         suggested.text = EUIStrings.kSummarising;
+         addMessage (fluidConnection, suggested); 
+         suggested.hookLiveAppend (onStreamedUpdate);         
+         setIsBusy(true);    
+         
+         // If it is an offer of a summary, make a transcript then post it for summarisation
+         let transcript = AIConnection.buildTranscript (fluidConnection.messageCaucus().currentAsArray(), 
+                                                        fluidConnection.participantCaucus().current());  
+
+         makeSummaryCall (props.sessionKey, transcript).then ((summary: string | undefined) => {
+
+            if (summary) {
+               suggested.text = summary;
+               fluidConnection.messageCaucus().amend (suggested.id, suggested);                                 
+            }
+            suggested.unhookLiveAppend();    
+            setIsBusy(false);                        
+
+         }).catch ((e: any) => {
+            suggested.unhookLiveAppend();  
+            setIsBusy(false);                
+         });
       }
       else {
-         // Else its is text, so we play it as a message that makes a request to the LLM, which sends all the context with it to the LLM
+         // else it is a suggested question, so we play it as a message that makes a request to the LLM, which sends all the context with it to the LLM
          let fullMessage = EConfigStrings.kLLMRequestSignature + " " + suggested.text;
          onSend (fullMessage);
       }
@@ -511,7 +549,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
          connectionPromise.then ( (connection : AIConnection) => {           
 
-            let query = connection.buildDirectQuery (messageArray, audienceMap);
+            let query = AIConnection.buildDirectQuery (messageArray, audienceMap);
             let responseShell = new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, message.id, 
                                              "", new Date()); 
 
@@ -554,7 +592,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
             addMessage (fluidMessagesConnection, response);                         
          }
          else {
-            // else we quasi-randomly see of we should add something
+            // else we quasi-randomly see if we should add something
             suggestContent ();
          }
       forceUpdate ();    

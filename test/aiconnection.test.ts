@@ -9,6 +9,7 @@ import { SessionKey } from '../core/Keys';
 import { KStubEnvironmentVariables} from '../core/ConfigStrings'; 
 import { EEnvironment, Environment } from '../core/Environment';
 import { AIConnection, AIConnector } from '../core/AIConnection';
+import { makeSummaryCall } from '../core/ApiCalls';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -98,7 +99,7 @@ describe("AIConnection", async function () {
       throwIfUndefined(process.env.SessionKey);        
       let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey)); 
 
-      let query = caller.buildDirectQuery (messages, authors);
+      let query = AIConnection.buildDirectQuery (messages, authors);
 
       expect(query.length).toEqual(3);         
    });    
@@ -115,7 +116,7 @@ describe("AIConnection", async function () {
       throwIfUndefined(process.env.SessionKey);        
 
       let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey));             
-      let fullQuery = caller.buildDirectQuery (messages, authors);
+      let fullQuery = AIConnection.buildDirectQuery (messages, authors);
       let message = new Message();      
       let result = await caller.makeEnrichedCall (message, fullQuery);
 
@@ -134,7 +135,7 @@ describe("AIConnection", async function () {
       throwIfUndefined(process.env.SessionKey);        
 
       let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey));             
-      let fullQuery = caller.buildDirectQuery (messages, authors);
+      let fullQuery = AIConnection.buildDirectQuery (messages, authors);
       let message = new Message();
 
       let called = false;
@@ -165,7 +166,7 @@ describe("AIConnection", async function () {
       throwIfUndefined(process.env.SessionKey); 
 
       let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey));             
-      let fullQuery = caller.buildQueryForQuestionPrompt (messages, authors);
+      let fullQuery = AIConnection.buildQueryForQuestionPrompt (messages, authors);
       let message = new Message();
 
       let result = await caller.makeSingleCall (fullQuery, message);
@@ -209,7 +210,7 @@ describe("AIConnection", async function () {
       throwIfUndefined(process.env.SessionKey);        
       let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey)); 
 
-      let query = caller.buildDirectQuery (messages, authors);
+      let query = AIConnection.buildDirectQuery (messages, authors);
 
       expect(query.length).toEqual(5);         
    });    
@@ -229,7 +230,7 @@ describe("AIConnection", async function () {
       throwIfUndefined(process.env.SessionKey);        
       let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey)); 
 
-      let query = caller.buildDirectQuery (messages, authors);
+      let query = AIConnection.buildDirectQuery (messages, authors);
 
       expect(query.length).toEqual(2);         
    });      
@@ -237,11 +238,6 @@ describe("AIConnection", async function () {
 
 
 describe("AIConnector", function () {
-
-   beforeEach(async () => {
-
-      this.timeout(20000);   
-   });
 
    it("Needs to connect to valid stub API", async function () {
 
@@ -253,7 +249,7 @@ describe("AIConnector", function () {
          caught = true;
       }
       expect(caught).toEqual(false);         
-   });    
+   }).timeout(10000);    
    
    it("Needs to return a connection on successful communication with real back end", async function () {
 
@@ -272,7 +268,7 @@ describe("AIConnector", function () {
 
       expect(caught).toEqual(false);      
 
-   }).timeout (10000);    
+   }).timeout (20000);    
 
    it("Needs to detect error on failure to connect to back end", async function () {
 
@@ -293,4 +289,25 @@ describe("AIConnector", function () {
 
    }).timeout (10000);   
 
+});
+
+describe("APIs", function () {
+
+   it("Needs to call summariser", async function () {
+
+      let caught = false;
+      let session = new SessionKey(KStubEnvironmentVariables.SessionKey);
+      let text = "OpenAI have released a new model called OpenAI-O, where the O stands for omno channel. They have also released a small version of this."
+      let summary : string | undefined = "";
+
+      try {
+         summary = await makeSummaryCall (session, text);
+      }
+      catch (e) {
+         caught = true;
+      }
+      expect(caught).toEqual(false);      
+      expect(summary && summary.length > 0).toEqual(true);              
+   }).timeout(20000);       
+   
 });

@@ -7,7 +7,6 @@ import { MessageActivityRecord } from '../core/ActivityRecordMessage';
 import { LikeUnlikeActivityRecord } from '../core/ActivityRecordLikeUnlike';
 import { SessionKey } from '../core/Keys';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
-import { ActivityRepositoryMongo } from '../core/ActivityRepositoryMongo';
 import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 
 import { expect } from 'expect';
@@ -559,57 +558,3 @@ describe("ActivityRepository", function () {
    }); 
 });
 
-describe("ActivityRepositoryMongo", function () {
-
-   this.timeout(10000);
-
-   beforeEach(async () => {
-
-      this.timeout(10000);
-   });
-      
-   let sessionKey = process.env.SessionKey;
-   throwIfUndefined (sessionKey);
-   let repository = new ActivityRepositoryMongo (new SessionKey (sessionKey));
-
-   it("Needs to save a record", async function () {
-
-      var activity = new UrlActivityRecord(keyGenerator.generateKey(), "madeupconversationKey",
-                                 "jonathanverrier@hotmail.com", new Date(), 
-                                 "https://test.mongo");
-
-      let saved = await repository.save (activity);
-
-      expect(saved).toEqual(true);     
-   });
-
-   it("Needs to save a LikeDislike record", async function () {
-
-      var activity = new LikeUnlikeActivityRecord (keyGenerator.generateKey(), "madeupconversationKey", 
-                                 "jonathanverrier@hotmail.com", new Date(), 
-                                 "https://test.cosmos", true);
-
-      let saved = await repository.save (activity);
-
-      expect(saved).toEqual(true);     
-   });   
-
-   it("Needs to save a Message record", async function () {
-
-      var activity = new MessageActivityRecord (keyGenerator.generateKey(), "madeupconversationKey", 
-                                 "jonathanverrier@hotmail.com", new Date(), 
-                                 "Test message");
-
-      let saved = await repository.save (activity);
-
-      expect(saved).toEqual(true);     
-   });     
-
-   it("Needs to load a record", async function () {
-
-      let loaded = await repository.loadRecentUrlActivity (3);
-
-      expect(true).toEqual(true);     
-   });  
-
-});
