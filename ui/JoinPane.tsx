@@ -196,9 +196,20 @@ export const JoinPane = (props: IJoinPageProps) => {
                conversationKey = conversationKeyFromName (conversationName);
             }
 
+            let joinValidator = new JoinPageValidator ();
+
+            let secret = "";
+
             let keyGenerator = getDefaultKeyGenerator();
-            let secret = keyGenerator.generateSecret();
-            keyGenerator.saveSecret (secret);
+
+            if (! joinValidator.haveSavedSecret ()) {       
+               secret = keyGenerator.generateSecret();
+               keyGenerator.saveSecret (secret);
+            }
+            else {
+               secret = keyGenerator.savedSecret();
+            }
+
             props.onConnect(sessionKey, conversationKey, secret);
           },
           (e: any) => {

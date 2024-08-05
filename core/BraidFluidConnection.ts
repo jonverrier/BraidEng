@@ -120,14 +120,6 @@ export class BraidFluidConnection extends FluidConnection {
    } 
 }
 
-// Glare is when two drivers point their headlights at each other. 
-// The Glare check is a way to resolve priority - in this case we let the id that is lexically lowe 'win'
-function localWinsGlareCheck (idMe: string, idOther: string) {
-   if (idMe < idOther) 
-      return true;
-   return false;
-}  
-
 function checkAddAddSelfToAudience (participantCaucus: CaucusOf<Persona>, 
    messageCaucus: CaucusOf<Message>,
    localUser: Persona): void {
@@ -144,24 +136,9 @@ function checkAddAddSelfToAudience (participantCaucus: CaucusOf<Persona>,
 
       for (let i = 0; i < currentParticipants.length && !found; i++) {        
          if ((localUser.email === currentParticipants[i].email ) && 
-            (!localWinsGlareCheck (localUser.id, currentParticipants[i].id))) { 
+             (localUser.name === currentParticipants[i].name )) { 
             
-            // last case is a backwards compatibility hack - we added participants with no name but low UUIDs that keep winning the glare test                     
-            if ((currentParticipants[i].name === undefined) || (currentParticipants[i].name.length === 0)) {
-               currentParticipants[i].name = localUser.name;
-               participantCaucus.amend (currentParticipants[i].id, currentParticipants[i]);
-            }
             found = true;
-
-            // Any messages which had us as the auther - need to reset Author ID
-            let currentMessages = messageCaucus.currentAsArray();
-   
-            for (let j = 0; j < currentMessages.length; j++) {    
-               if (currentMessages[j].authorId === localUser.id) {
-                  currentMessages[i].authorId = currentParticipants[i].id;
-                  messageCaucus.amend (currentMessages[i].id, currentMessages[j]);                     
-               }
-            }
             localUser.id = currentParticipants[i].id; // Need to push the new ID back into our local copy
          }
       }

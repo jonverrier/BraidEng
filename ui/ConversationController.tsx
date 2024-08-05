@@ -604,6 +604,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
    // Only display conversation when we have all required details and we also have a secret that matches the last one
    if (!joinValidator.canAttemptJoin(props.localPersona.email, props.localPersona.name, props.sessionKey, props.conversationKey) 
     || !joinValidator.matchesSavedSecret (props.secret)) {
+    
       return (<div></div>);
    }
    else {  

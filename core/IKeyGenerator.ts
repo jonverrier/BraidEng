@@ -10,4 +10,6 @@ export interface IKeyGenerator {
    couldBeAKey(key: string): boolean;
    saveSecret(secret: string): void;
    matchesSavedSecret (secret: string): boolean;
+   haveSavedSecret  () : boolean;
+   savedSecret  () : string;
 }
