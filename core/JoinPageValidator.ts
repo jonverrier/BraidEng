@@ -26,4 +26,18 @@ export class JoinPageValidator {
 
       return keyGenerator.matchesSavedSecret (secret_);
    }   
+
+   haveSavedSecret  () : boolean {
+
+      let keyGenerator = getDefaultKeyGenerator();
+
+      return keyGenerator.haveSavedSecret ();
+   }     
+
+   savedSecret  () : string {
+
+      let keyGenerator = getDefaultKeyGenerator();
+
+      return keyGenerator.savedSecret ();
+   }     
 }

@@ -1,4 +1,5 @@
 // Copyright (c) 2024 Braid Technologies Ltd
+import { throwIfNull } from './Asserts';
 import { EnvironmentError } from './Errors';
 import { IKeyGenerator } from './IKeyGenerator';
 
@@ -86,6 +87,34 @@ export class UuidKeyGenerator implements IKeyGenerator {
 
       return (stored === secret);
    }
+
+   haveSavedSecret  () : boolean {
+      var stored;
+
+      if (typeof localStorage === 'undefined') {
+         stored = mockStoredSecret;
+      }
+      else {      
+         stored = localStorage.getItem('secret');
+      }
+
+      return stored !== null;
+   }
+
+   savedSecret  () : string {
+      var stored : string;
+
+      if (typeof localStorage === 'undefined') {
+         stored = mockStoredSecret;
+      }
+      else {      
+         let fromStorage = localStorage.getItem('secret');
+         throwIfNull (fromStorage);
+         stored = fromStorage;
+      }
+
+      return stored;
+   } 
 
 }
 
