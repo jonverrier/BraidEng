@@ -92,6 +92,3 @@ If you encounter any issues while running the tests:
 2. Check that your `.env` file contains the necessary API keys.
 3. Verify that you're running the tests from the correct directory.
 4. If a specific test is failing, review the error message and stack trace for more information.
-5. For persistent issues, consult the project documentation or reach out to the development team.
-
-Remember to keep your test environment isolated and up-to-date with the latest changes from the main project repository.
