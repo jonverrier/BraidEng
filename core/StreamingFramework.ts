@@ -25,11 +25,11 @@ export abstract class MDynamicStreamable extends MStreamable {
       super();
    }
 
-   abstract className(): string;
+   abstract dynamicClassName(): string;
 
    flatten (): string {
 
-      return JSON.stringify({ className: this.className(), data: this.streamOut() });
+      return JSON.stringify({ className: this.dynamicClassName(), data: this.streamOut() });
    }
 
    static resurrect(stream: string): MDynamicStreamable | undefined {

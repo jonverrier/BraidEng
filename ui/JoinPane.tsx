@@ -178,9 +178,9 @@ export const JoinPane = (props: IJoinPageProps) => {
       var url: string;
 
       if (runningInLocalEnv)
-         url = EConfigStrings.kRequestLocalSessionKeyUrl;
+         url = EConfigStrings.kRequestLocalFluidKeyUrl;
       else
-         url = EConfigStrings.kRequestSessionKeyUrl;
+         url = EConfigStrings.kRequestFluidKeyUrl;
 
       retriever.requestKey (url, 
          EConfigStrings.kSessionParamName, 

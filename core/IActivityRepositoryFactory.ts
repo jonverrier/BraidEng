@@ -3,7 +3,7 @@
 // Internal imports
 import { SessionKey } from "./Keys";
 import { IActivityRepository } from "./IActivityRepository";
-import { ActivityRepositoryCosmos } from "./ActivityRepositoryCosmos";
+import { ActivityRepositoryCosmos } from "./ActivityRepository";
 
 export function getRecordRepository (sessionKey_: SessionKey) : IActivityRepository {
    return new ActivityRepositoryCosmos(sessionKey_);   
