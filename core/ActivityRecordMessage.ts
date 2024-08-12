@@ -61,7 +61,7 @@ export class MessageActivityRecord extends ActivityRecord {
    /**
     * Dynamic creation for Streaming framework
     */
-   className(): string {
+   dynamicClassName(): string {
 
       return messageRecordClassName;
    }

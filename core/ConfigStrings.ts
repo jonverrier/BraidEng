@@ -8,16 +8,17 @@ export enum EConfigStrings {
 
    kFontNameForTextWrapCalculation = "12pt Segoe UI",
 
-   kRequestSessionKeyUrl = "https://braidapps.io/api/joinkey",
-   kRequestAiKeyUrl = "https://braidapps.io/api/aikey",   
-   kRequestCosmosDbKeyUrl = "https://braidapps.io/api/cdbkey",   
-   kSummariseUrl = "https://braidapi.azurewebsites.net/api/Summarize",    
-   kRequestLocalSessionKeyUrl = "http://localhost:1337/api/joinkey",
-   kRequestLocalAiKeyUrl = "http://localhost:1337/api/aikey",    
-   kRequestLocalCosmosDbKeyUrl = "http://localhost:1337/api/cdbkey",    
-   kSummariseLocalUrl = "http://localhost:7071/api/summarize",        
+   kRequestAiKeyUrl = "https://braidapps.io/api/aikey",    
+   kRequestFluidKeyUrl = "https://braidapps.io/api/fluidkey",      
+   kRequestLocalAiKeyUrl = "http://localhost:1337/api/aikey",  
+   kRequestLocalFluidKeyUrl = "http://localhost:1337/api/fluidkey", 
    kLoginRelativeUrl= "/api/login",
    kHomeRelativeUrl= "/aibot.html",   
+
+   kCheckSessionUrl = "https://braidapi.azurewebsites.net/api/CheckSession",       
+   kSummariseUrl = "https://braidapi.azurewebsites.net/api/Summarize",     
+   kCheckSessionLocalUrl = "http://localhost:7071/api/CheckSession",        
+   kSummariseLocalUrl = "http://localhost:7071/api/Summarize",        
    
    kAzureTenantId = "45155576-770f-47cc-92dc-9d3328dbf837",
    kAzureProductionFluidHost = "https://eu.fluidrelay.azure.com",

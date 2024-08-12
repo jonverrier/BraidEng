@@ -133,7 +133,7 @@ export class Message extends MDynamicStreamable {
    /**
     * Dynamic creation for Streaming framework
     */
-   className(): string {
+   dynamicClassName(): string {
 
       return className;
    }

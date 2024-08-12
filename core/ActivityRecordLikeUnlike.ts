@@ -58,7 +58,7 @@ export class LikeUnlikeActivityRecord extends UrlActivityRecord {
    /**
     * Dynamic creation for Streaming framework
     */
-   className(): string {
+   dynamicClassName(): string {
 
       return likeUnlikeActivityRecordClassName;
    }

@@ -1,5 +1,6 @@
 // Copyright (c) 2024 Braid Technologies Ltd
 
+import { IStorable } from '../../Braid/BraidCommon/src/IStorable';
 import { InvalidParameterError } from './Errors';
 import { MDynamicStreamable, DynamicStreamableFactory } from "./StreamingFramework";
 import { getDefaultKeyGenerator } from './IKeyGeneratorFactory'; 
@@ -8,11 +9,19 @@ const activityRecordClassName = "ActivityRecord";
 const keyGenerator = getDefaultKeyGenerator();
 
 // ActivityRecord - conversation ID, email of a person and a datestamp. Will have many derived classes according to different activity types. 
-export class ActivityRecord extends MDynamicStreamable {
+export class ActivityRecord extends MDynamicStreamable implements IStorable {
    private _id: string | undefined;
    private _conversationId: string | undefined;
    private _email: string;
    private _happenedAt: Date;
+
+   // Variables we need to implement IStoreable
+   storeId: string = "";
+   storeClassName: string = "";
+   storeTimestamp: Date = new Date();
+   storeContextId: string = "";
+   storeUserId: string = "";
+
 
    /**
     * Create an empty ActivityRecord object - required for particiation in serialisation framework
@@ -44,6 +53,8 @@ export class ActivityRecord extends MDynamicStreamable {
          this._conversationId = undefined;
          this._email = "";     // But not a name 
          this._happenedAt = ActivityRecord.makeDateUTC (new Date());
+
+         this.copyStorableAttributes();       
          return;
       }
 
@@ -78,13 +89,24 @@ export class ActivityRecord extends MDynamicStreamable {
       this._id = localId;
       this._conversationId = localConversationId;
       this._email = localEmail;
-      this._happenedAt = ActivityRecord.makeDateUTC (localHappenedAt);     
+      this._happenedAt = ActivityRecord.makeDateUTC (localHappenedAt);    
+
+      this.copyStorableAttributes();      
+   }
+
+   copyStorableAttributes (): void {
+
+      this.storeId = this._id as string;
+      this.storeClassName = this.dynamicClassName();
+      this.storeTimestamp = this._happenedAt;
+      this.storeContextId = this._conversationId as string;
+      this.storeUserId = this._email;
    }
 
    /**
     * Dynamic creation for Streaming framework
     */
-   className(): string {
+   dynamicClassName(): string {
 
       return activityRecordClassName;
    }
@@ -132,6 +154,7 @@ export class ActivityRecord extends MDynamicStreamable {
          throw new InvalidParameterError("Id:" + id_ + '.');
       }         
       this._id = id_;
+      this.storeId = id_;
    }
 
    set conversationId(conversationId_: string) {
@@ -140,6 +163,7 @@ export class ActivityRecord extends MDynamicStreamable {
          throw new InvalidParameterError("conversationId:" + conversationId_ + '.');
       }        
       this._conversationId = conversationId_;
+      this.storeContextId = conversationId_;
    }
 
    set email (email_: string) {
@@ -148,11 +172,13 @@ export class ActivityRecord extends MDynamicStreamable {
       }
 
       this._email = email_;
+      this.storeUserId = email_;
    }
 
    set happenedAt(happenedAt_: Date) {
 
       this._happenedAt = ActivityRecord.makeDateUTC (happenedAt_);
+      this.storeTimestamp = this._happenedAt;
    }
 
    /**
@@ -183,10 +209,13 @@ export class ActivityRecord extends MDynamicStreamable {
     * @param rhs - the object to assign this one from.  
     */
    assign(rhs: ActivityRecord): ActivityRecord {
+      
       this._id = rhs._id;
       this._conversationId = rhs._conversationId;
       this._email = rhs._email;
       this._happenedAt = new Date (rhs._happenedAt);
+
+      this.copyStorableAttributes ();
 
       return this;
    }
