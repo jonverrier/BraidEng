@@ -5,9 +5,6 @@
 - [General Information](#general-information)
 - [Technologies](#technologies)
 - [Installation](#installation)
-- [Usage](#usage)
-- [Project Structure](#project-structure)
-- [Running Tests](#running-tests)
 - [License](#license)
 
 ## General Information
@@ -43,7 +40,9 @@ Scripts to build the RAG database are written in Python, using Beautiful Soup fo
 - **Backend APIs:** Node.js APIs on Azure stack
 - **AI Model:** GPT-3.5
 - **Document Database:** Python with custom scripts
-- **Testing:** Mocha ([Mocha Documentation](https://mochajs.org/))
+- **Testing:**
+  -Mocha ([Mocha Documentation](https://mochajs.org/))
+  -Python: pytest and unittest frameworks ([pytest Documentation](https://docs.pytest.org/), [unittest Documentation](https://docs.python.org/3/library/unittest.html))
 - **Web Scraping:** Python, Beautiful Soup ([Python](https://www.python.org/), [Beautiful Soup Documentation](https://beautiful-soup-4.readthedocs.io/))
 
 The key directories are:
@@ -58,42 +57,111 @@ By design, the app builds to a single .JS file using webpack. The JS file is the
 
 ## Installation
 
-1. Navigate to the desired directory:
+Follow these steps to set up your development environment for the project:
 
-1. **Clone the repository:**
+1. **Install Python 3.12.4:**
 
-   - On GitHub.com, navigate to the main page of the repository.
+   - Download and install Python 3.12.4 from [https://www.python.org/downloads/release/python-3124/](https://www.python.org/downloads/release/python-3124/)
+   - Make sure to add Python to your PATH during installation
 
-   - Above the list of files, click Code.
-
-   - Copy the URL for the repository.
-
-     -To clone the repository using HTTPS, under "HTTPS", click .
-
-   - Open Git Bash.
-
-   - Change the current working directory to the location where you want the cloned directory.
-
-   - Type git clone, and then paste the URL you copied earlier.
+2. **Clone the repository:**
 
    ```bash
    git clone https://github.com/jonverrier/BraidEng.git
+   cd BraidEng
    ```
 
-   -Press Enter to create your local clone.
+3. **Set up the upstream remote:**
 
-1. **Set up virtual enviornment:**
+   ```bash
+   git remote add upstream https://github.com/jonverrier/BraidEng.git
+   ```
+
+4. **Verify the upstream remote:**
+
+   ```bash
+   git remote -v
+   ```
+
+   You should see both your origin (your fork) and the upstream repository listed:
+
+   ```
+   origin    https://github.com/YOUR_USERNAME/BraidEng.git (fetch)
+   origin    https://github.com/YOUR_USERNAME/BraidEng.git (push)
+   upstream  https://github.com/jonverrier/BraidEng.git (fetch)
+   upstream  https://github.com/jonverrier/BraidEng.git (push)
+   ```
+
+5. **Install Visual Studio Code:**
+
+   - Download and install VS Code from [https://code.visualstudio.com/](https://code.visualstudio.com/)
+   - Open VS Code and install the following extensions:
+     - Python
+     - TypeScript and JavaScript Language Features
+     - ESLint
+     - Prettier
+
+6. **Set up the Python virtual environment:**
 
    ```bash
    python -m venv venv
-   `venv\Scripts\activate` # On Windows use
-   source venv/bin/activate #On MacOS/Linuix
    ```
 
-1. **Install dependecies:**
+   Activate the virtual environment:
+
+   - On Windows:
+     ```bash
+     venv\Scripts\activate
+     ```
+   - On macOS/Linux:
+     ```bash
+     source venv/bin/activate
+     ```
+
+7. **Install Python dependencies:**
+
    ```bash
    pip install -r scripts/requirements.txt
    ```
+
+8. **Install Node.js and npm:**
+
+   - Download and install Node.js from [https://nodejs.org/](https://nodejs.org/)
+   - npm comes bundled with Node.js
+
+9. **Install JavaScript dependencies:**
+
+   ```bash
+   npm install
+   ```
+
+10. **Set up environment variables:**
+
+    - Create a `.env` file in the root directory
+    - Add the following environment variables:
+      ```
+      GOOGLE_DEVELOPER_API_KEY=your_google_api_key_here
+      AZURE_OPENAI_API_KEY=your_azure_openai_api_key_here
+      ```
+
+11. **Open the project in VS Code:**
+
+    ```bash
+    code .
+    ```
+
+12. **Configure VS Code settings:**
+    - Open the Command Palette (Ctrl+Shift+P or Cmd+Shift+P)
+    - Type "Python: Select Interpreter" and choose the interpreter from your virtual environment
+
+Now your development environment is set up and ready. Remember to keep your fork updated with the upstream repository:
+
+```bash
+git fetch upstream
+git merge upstream/main
+```
+
+For more detailed information on using Git with GitHub, refer to the [GitHub documentation](https://docs.github.com/en/get-started/quickstart/set-up-git).
 
 ## Licence
 
