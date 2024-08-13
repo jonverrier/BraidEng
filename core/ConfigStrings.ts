@@ -12,7 +12,6 @@ export enum EConfigStrings {
    kRequestFluidKeyUrl = "https://braidapps.io/api/fluidkey",      
    kRequestLocalAiKeyUrl = "http://localhost:1337/api/aikey",  
    kRequestLocalFluidKeyUrl = "http://localhost:1337/api/fluidkey", 
-   kLoginRelativeUrl= "/api/login",
    kHomeRelativeUrl= "/aibot.html",   
 
    kCheckSessionUrl = "https://braidapi.azurewebsites.net/api/CheckSession",       
