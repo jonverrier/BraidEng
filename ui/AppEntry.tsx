@@ -9,6 +9,9 @@ import {
    FluentProvider, teamsDarkTheme, makeStyles
 } from '@fluentui/react-components';
 
+import { getEnvironment, getDefaultEnvironment } from '../../Braid/BraidCommon/src/IEnvironmentFactory';
+import { EEnvironment, IEnvironment } from '../../Braid/BraidCommon/src/IEnvironment';
+
 // Local
 import { Persona } from '../core/Persona';
 import { EIcon } from '../core/Icons';
@@ -107,7 +110,11 @@ export const App = (props: IAppProps) => {
       // Start the login process by redirecting to the login API
       // with no email address and no name bcs thats what we get from login
       let query = JoinDetails.toString ("", "", sessionKey_, conversationKey_, secret_);
-      location.replace (EConfigStrings.kLoginRelativeUrl + '?' + query);
+
+      let environment = getDefaultEnvironment ();
+      let loginUrl = environment.loginWithLinkedInApi();
+
+      location.replace (loginUrl + '?' + query);
    }
 
    function onConnectError (hint_: string) : void  {
