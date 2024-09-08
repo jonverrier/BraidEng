@@ -297,7 +297,7 @@ describe("APIs", function () {
 
       let caught = false;
       let session = new SessionKey(KStubEnvironmentVariables.SessionKey);
-      let text = "OpenAI have released a new model called OpenAI-O, where the O stands for omno channel. They have also released a small version of this."
+      let text = "OpenAI have released a new model called OpenAI-O, where the O stands for omni channel. They have also released a small version of this."
       let summary : string | undefined = "";
 
       try {
