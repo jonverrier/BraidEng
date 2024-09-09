@@ -40,7 +40,6 @@ import { EIcon } from '../core/Icons';
 import { EConfigNumbers, EConfigStrings }  from '../core/ConfigStrings';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
-import { Embedding } from '../core/Embedding';
 import { EUIStrings } from './UIStrings';
 import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
 import { SessionKey, ConversationKey } from '../core/Keys';
@@ -49,6 +48,8 @@ import { AnimatedIconButton, EAnimatedIconButtonTypes } from './AnimatedIconButt
 import { MessagePrompt } from './ConversationMessagePrompt';
 import { Media } from '../core/Media';
 import { SharedEmbedding, findInMap } from '../core/SharedEmbedding';
+
+import { IRelevantEnrichedChunk } from '../../Braid/BraidCommon/src/EnrichedChunk';
 
 export interface IConversationHeaderProps {
 
@@ -397,7 +398,7 @@ export interface ISingleMessageViewProps {
 export interface IKnowledgeSegmentProps {
 
    sessionKey: SessionKey;
-   segment: Embedding;  
+   segment: IRelevantEnrichedChunk;  
    key: string;
    localPersonaName: string;
    sharedEmbeddings: Map<string, SharedEmbedding>;   
@@ -526,16 +527,16 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
    const greenClasses = greenStyles();
    const amberClasses = amberStyles();
 
-   let segment = props.segment;
-   let relevanceText = segment.relevance ? (segment.relevance * 100).toPrecision(2) + '%': "";
+   let relevantChunk = props.segment;
+   let relevanceText = relevantChunk.relevance ? (relevantChunk.relevance * 100).toPrecision(2) + '%': "";
    
    const onClickLink = (event: React.MouseEvent<HTMLAnchorElement>): void => {
       // NB we call 'prevent default' as we want to control the action i.e. open a  new tab. 
       event.stopPropagation();
       event.preventDefault();
 
-      props.onClickUrl (segment.url);  
-      (window as any).open(segment.url, '_blank');
+      props.onClickUrl (relevantChunk.chunk.url);  
+      (window as any).open(relevantChunk.chunk.url, '_blank');
    };
 
    const onClickLike = (event: React.MouseEvent<HTMLButtonElement>): void => {
@@ -543,7 +544,7 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
       event.stopPropagation();
       event.preventDefault();
 
-      props.onLikeUrl (segment.url);        
+      props.onLikeUrl (relevantChunk.chunk.url);        
    }   
 
    const onClickUnlike = (event: React.MouseEvent<HTMLButtonElement>): void => {
@@ -551,15 +552,15 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
       event.stopPropagation();
       event.preventDefault();
 
-      props.onUnlikeUrl (segment.url);       
+      props.onUnlikeUrl (relevantChunk.chunk.url);       
    }   
 
-   let relevanceClasses = segment.relevance ? segment.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
+   let relevanceClasses = relevantChunk.relevance ? relevantChunk.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
    let linkClasses = linkStyles();
    let toolbarRowClasses = toolbarRowStyles();  
    let toolbarButtonClasses = toolbarButtonStyles();   
    
-   let linkText = segment.url;
+   let linkText = relevantChunk.chunk.url;
    
    let media = new Media();
    let maxLength = EConfigNumbers.kMaximumLinkTextlength;
@@ -573,7 +574,7 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
    let likedByMe = false;
    let likedByAnyone = false;
    let likeText = "";
-   let shared = findInMap (segment.url, props.sharedEmbeddings);
+   let shared = findInMap (relevantChunk.chunk.url, props.sharedEmbeddings);
    if (shared) {
       likedByMe = shared.isLikedBy (props.localPersonaName); 
       likedByAnyone = shared.netLikeCount > 0;  
@@ -588,10 +589,10 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
    }
 
 
-   return (<div className={sourcesClasses.root} key={segment.url}>
+   return (<div className={sourcesClasses.root} key={relevantChunk.chunk.url}>
               <div className={toolbarRowClasses.root}>
                  <Link className={linkClasses.root} 
-                    href={segment.url} onClick={onClickLink} inline>{linkText}                
+                    href={relevantChunk.chunk.url} onClick={onClickLink} inline>{linkText}                
                   </Link>
                   <Body1 className={relevanceClasses.root}> {relevanceText} </Body1>
                   <Toolbar aria-label="Like/dislike control toolbar" >                        
@@ -605,7 +606,7 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
                      <Text size={100}>{likeText}</Text>    
                   </Toolbar>                                              
                </div>
-               <Body1 className={toolbarRowClasses.root}> {segment.summary} </Body1>
+               <Body1 className={toolbarRowClasses.root}> {relevantChunk.chunk.summary} </Body1>
             </div>      
          );
 }
@@ -646,10 +647,10 @@ export const SingleMessageView = (props: ISingleMessageViewProps) => {
       
       if (props.message.chunks.length > 0) { 
 
-         aiSources = props.message.chunks.map ((segment : Embedding) => {
+         aiSources = props.message.chunks.map ((releventChunk : IRelevantEnrichedChunk) => {
             return <KowledgeSegmentsView sessionKey={props.sessionKey} 
                     localPersonaName={props.localPersonaName}
-                    segment={segment} key={segment.url} 
+                    segment={releventChunk} key={releventChunk.chunk.url} 
                     sharedEmbeddings={props.sharedEmbeddings}
                     onClickUrl={props.onClickUrl}
                     onLikeUrl={props.onLikeUrl}

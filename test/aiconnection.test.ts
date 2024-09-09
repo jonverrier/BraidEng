@@ -1,8 +1,7 @@
 'use strict';
 // Copyright Braid Technologies ltd, 2024
 import { throwIfUndefined } from '../core/Asserts';
-import { Message, MessageStreamingHandler} from '../core/Message';
-import { Embedding } from '../core/Embedding';
+import { Message} from '../core/Message';
 import { Persona} from '../core/Persona';
 import { EIcon } from '../core/Icons';
 import { SessionKey } from '../core/Keys';
@@ -10,6 +9,8 @@ import { KStubEnvironmentVariables} from '../core/ConfigStrings';
 import { EEnvironment, Environment } from '../core/Environment';
 import { AIConnection, AIConnector } from '../core/AIConnection';
 import { makeSummaryCall } from '../core/ApiCalls';
+
+import { IRelevantEnrichedChunk } from '../../Braid/BraidCommon/src/EnrichedChunk';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -177,17 +178,24 @@ describe("AIConnection", async function () {
 
    function makeLongMessage (startingMessage: Message, segmentCount: number) : Message {
 
-      let segments = new Array<Embedding>();      
+      let segments = new Array<IRelevantEnrichedChunk>();      
 
-      // Make a list of knowledge sources, each with 500 tokens
+      // Make a list of knowledge sources, each with > 1000 tokens
       for (var i = 0; i < segmentCount; i++) {
          
          let accumulatedText = "Hi";
 
-         for (var j = 0; j < 4000; j++) {
+         for (var j = 0; j < 1000; j++) {
             accumulatedText = accumulatedText.concat (" token");
          }
-         let ks1 = new Embedding("makeUpUrl", accumulatedText, new Array<number>(), undefined, undefined);
+         let ks1 = {
+            chunk: {
+               url: "https://test", 
+               summary: accumulatedText,
+               text: accumulatedText
+            },
+            relevance: 0.8
+         };
          segments.push (ks1);
       }
       
@@ -222,7 +230,7 @@ describe("AIConnection", async function () {
       messages.length = 4;
       messages[0] = personMessage;
       messages[1] = botRequest;
-      messages[2] = makeLongMessage (botMessage, 4);
+      messages[2] = makeLongMessage (botMessage, 20);
       messages[3] = botRequest;      
 
       throwIfUndefined(process);

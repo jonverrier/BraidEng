@@ -5,19 +5,19 @@ import axios from "axios";
 import { SessionKey } from "./Keys";
 import { logApiError, logApiInfo } from "./Logging";
 import { Message } from './Message';
-import { Embedding } from "./Embedding";
 import { Persona } from './Persona';
 import { EIcon } from './Icons';
 import { EConfigNumbers, EConfigStrings } from './ConfigStrings';
 import { throwIfUndefined } from './Asserts';
 import { AssertionFailedError } from "./Errors";
 import { KeyRetriever } from "./KeyRetriever";
-import { Environment, EEnvironment } from "./Environment";
-import { IEmbeddingRepository, kDefaultSearchChunkCount, kDefaultMinimumCosineSimilarity} from "./IEmbeddingRepository";
-import { getEmbeddingRepository } from "./IEmbeddingRepositoryFactory";
 import { getDefaultKeyGenerator } from "./IKeyGeneratorFactory";
-import { parse } from "path";
-import { EUIStrings } from "../ui/UIStrings";
+import { Environment, EEnvironment } from "./Environment";
+
+import { getEnvironment } from '../../Braid/BraidCommon/src/IEnvironmentFactory';
+import { EEnvironment as EApiEnvirionment} from '../../Braid/BraidCommon/src/IEnvironment';
+import { FindEnrichedChunkApi } from '../../Braid/BraidCommon/src/FindEnrichedChunkApi';
+import { EChunkRepository, IRelevantEnrichedChunk} from '../../Braid/BraidCommon/src/EnrichedChunk';
 
 // We allow for the equivalent of 10 minutes of chat. 10 mins * 60 words = 600 words = 2400 tokens. 
 const kMaxTokens : number= 4096;
@@ -36,7 +36,7 @@ export class AIConnection {
 
    private _activeCallCount: number;
    private _aiKey: string;  
-   private _embeddings: IEmbeddingRepository;
+   private _enrichedChunkApi: FindEnrichedChunkApi;
 
    /**
     * Create an AIConnection object 
@@ -44,8 +44,8 @@ export class AIConnection {
    constructor(aiKey_: string, sessionKey_: SessionKey) {
 
       this._activeCallCount = 0;
-      this._aiKey = aiKey_;
-      this._embeddings = getEmbeddingRepository (sessionKey_);
+      this._aiKey = aiKey_;     
+      this._enrichedChunkApi = new FindEnrichedChunkApi(getEnvironment (EApiEnvirionment.kLocal), sessionKey_.toString());
    }  
 
    // Makes an Axios call to call web endpoint
@@ -61,14 +61,18 @@ export class AIConnection {
       
       if (!enrichedResponse.includes (EConfigStrings.kResponseNotRelevantMarker)
       &&  !enrichedResponse.includes (EConfigStrings.kResponseDontKnowMarker)) {
+                            
+         let query = {
+            repositoryId: EChunkRepository.kBoxer,
+            summary: enrichedResponse,
+            maxCount: 2,
+            similarityThreshold : 0.85 
+         }
+         let enriched = await this._enrichedChunkApi.findRelevantChunksFromSummary (query);
 
-         let embedding = await this.createEmbedding (enrichedResponse);
-
-         let enriched = await this._embeddings.lookupMostSimilar (embedding, undefined, kDefaultMinimumCosineSimilarity, kDefaultSearchChunkCount);
-                              
          responseShell.text = directResponse;
 
-         await this.streamEnrichment (responseShell, enriched.chunks);
+         await this.streamEnrichment (responseShell, enriched);
           
          return responseShell;          
       }  
@@ -199,47 +203,52 @@ export class AIConnection {
       return done;
    } 
 
-   async streamEnrichment  (responseShell: Message, embeddings: Array<Embedding>) : Promise<Message> {
+   async streamEnrichment  (responseShell: Message, chunks: Array<IRelevantEnrichedChunk>) : Promise<Message> {
 
       let done = new Promise<Message>(async function(resolve, reject) {
 
-         let shellEmbeddings = new Array<Embedding>();
-         shellEmbeddings.length = embeddings.length;
+         let shellChunks = new Array<IRelevantEnrichedChunk>();
+         shellChunks.length = chunks.length;
 
-         for (let i = 0; i < embeddings.length; i++) {
-            let shellEmbed = new Embedding (embeddings[i].url, "", embeddings[i].ada_v2, embeddings[i].timeStamp, embeddings[i].relevance);
-            shellEmbeddings[i] = shellEmbed;
+         for (let i = 0; i < chunks.length; i++) {
+            let shellEmbed = {chunk: {
+                  url: chunks[i].chunk.url,
+                  summary: chunks[i].chunk.summary,
+                  text: chunks[i].chunk.text
+               }, 
+               relevance: chunks[i].relevance};
+            shellChunks[i] = shellEmbed;
          }
 
-         responseShell.chunks = shellEmbeddings;
+         responseShell.chunks = shellChunks;
          let index = 0;
          let maxIndex = 4; 
 
-         if (shellEmbeddings.length > 0) {
+         if (shellChunks.length > 0) {
             let interval = setInterval ( () => {
 
                switch (index) {
                   case 0:
-                     if (embeddings.length > 0)
-                        shellEmbeddings[0].summary = embeddings[0].summary.slice (0, embeddings[0].summary.length / 2);
+                     if (chunks.length > 0)
+                        shellChunks[0].chunk.summary = chunks[0].chunk.summary.slice (0, chunks[0].chunk.summary.length / 2);
                      break;
                   case 1:
-                     if (embeddings.length > 1)                  
-                        shellEmbeddings[1].summary = embeddings[1].summary.slice (0, embeddings[0].summary.length / 2);                  
+                     if (chunks.length > 1)                  
+                        shellChunks[1].chunk.summary = chunks[1].chunk.summary.slice (0, chunks[0].chunk.summary.length / 2);                  
                      break;  
                   case 2:
-                     if (embeddings.length > 0)                  
-                        shellEmbeddings[0].summary = embeddings[0].summary;                  
+                     if (chunks.length > 0)                  
+                        shellChunks[0].chunk.summary = chunks[0].chunk.summary;                  
                      break;   
                   case 3:
-                     if (embeddings.length > 1)                  
-                        shellEmbeddings[1].summary = embeddings[1].summary;                       
+                     if (chunks.length > 1)                  
+                        shellChunks[1].chunk.summary = chunks[1].chunk.summary;                       
                      break;         
                   default:
                      break;                                                 
                }
 
-               responseShell.liveAppendChunks (shellEmbeddings, index == 3? false: true);
+               responseShell.liveAppendChunks (shellChunks, index == 3? false: true);
 
                index++;
                if (index === maxIndex) {
@@ -350,7 +359,7 @@ export class AIConnection {
             builtQuery.push (entry);     
 
             for (let j = 0; j < message.chunks.length; j++) {
-               let entry = { role: 'assistant', content: message.chunks[j].summary };
+               let entry = { role: 'assistant', content: message.chunks[j].chunk.summary };
                builtQuery.push (entry);
             }                   
          }         
@@ -378,7 +387,7 @@ export class AIConnection {
             builtQuery.push (entry);     
 
             for (let j = 0; j < message.chunks.length; j++) {
-               let entry = { role: 'assistant', content: message.chunks[j].summary };
+               let entry = { role: 'assistant', content: message.chunks[j].chunk.summary };
                builtQuery.push (entry);
             }                   
          }            

@@ -20,7 +20,6 @@ import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } fr
 import { AIConnection, AIConnector } from '../core/AIConnection';
 import { EUIStrings, initialQuestions } from './UIStrings';
 import { EConfigNumbers, EConfigStrings } from '../core/ConfigStrings';
-import { getEmbeddingRepository } from '../core/IEmbeddingRepositoryFactory';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 import { UrlActivityRecord } from '../core/ActivityRecordUrl';
 import { MessageActivityRecord } from '../core/ActivityRecordMessage';
@@ -28,6 +27,10 @@ import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 import { LikeUnlikeActivityRecord } from '../core/ActivityRecordLikeUnlike';
 import { getDetaultAdminRepository} from '../core/IAdminRepository';
 import { makeSummaryCall } from '../core/ApiCalls';
+
+import { FindEnrichedChunkApi } from '../../Braid/BraidCommon/src/FindEnrichedChunkApi';
+import { getDefaultEnvironment } from '../../Braid/BraidCommon/src/IEnvironmentFactory';
+import { IEnrichedChunkSummary, EChunkRepository, kDefaultSimilarityThreshold } from '../../Braid/BraidCommon/src/EnrichedChunk';
 
 export interface IConversationControllerProps {
 
@@ -363,19 +366,26 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
          forceUpdate();                   
       }
 
-      let embeddingRespository = getEmbeddingRepository (props.sessionKey);
+      // Get the summary of the URL the user clicked on      
+      let api = new FindEnrichedChunkApi (getDefaultEnvironment(), props.sessionKey.toString());
+      let query = {
+         repositoryId: EChunkRepository.kBoxer,
+         url: url_,
+         maxCount: 1,
+         similarityThreshold : kDefaultSimilarityThreshold
+      }
+      let summary = api.findChunkFromUrl (query);
+      
+      summary.then ((enriched: Array<IEnrichedChunkSummary>) => {
 
-      // Get the summary of the URL the user clicked on
-      let summary = embeddingRespository.lookupUrlSummary (url_);
-      summary.then ((summaryText: string | undefined) => {
-
+         let summaryText = enriched[0].summary;
+         
          let connectionPromise = AIConnector.connect (props.sessionKey);
       
          // Connect to the LLM
          connectionPromise.then ( (connection : AIConnection) => { 
 
             // Ask the LLM for a question based on the summary 
-            throwIfUndefined(summaryText);
             connection.makeFollowUpCall (summaryText).then ((result_: Message) => {                                                                               
                if (result_) {
                   result_.authorId = props.localPersona.id;

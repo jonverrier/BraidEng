@@ -11,23 +11,25 @@ import htmlEmbeddingsFile from '../data/web/output/master_enriched.json';
 import { FullEmbedding, MakeEmbeddingUrlFnFull, 
    makeYouTubeUrlFromFullEmbedding, makeGithubUrlFromFullEmbedding, makeHtmlUrlfromFullEmbedding} from '../core/EmbeddingFormats';
 
-import { Chunk } from '../../Braid/BraidCommon/src/Chunk';   
+import { IEnrichedChunk } from '../../Braid/BraidCommon/src/EnrichedChunk';   
 
 describe("API Embeddings", function () {
  
-   async function makeLite (chunks: Array<Chunk>, embeddingsFull : Array<FullEmbedding>, fn: MakeEmbeddingUrlFnFull) {
+   async function makeLite (chunks: Array<IEnrichedChunk>, embeddingsFull : Array<FullEmbedding>, fn: MakeEmbeddingUrlFnFull) {
 
       for (let i = 0; i < embeddingsFull.length; i++) {
 
-         chunks.push ({id: "", text: "", url: fn (embeddingsFull[i]), 
-                      summary: embeddingsFull[i].summary, embedding: embeddingsFull[i].ada_v2})
+         chunks.push ({id: "", embedding: embeddingsFull[i].ada_v2, 
+            url: fn (embeddingsFull[i]), 
+                      text: "",  
+                      summary: embeddingsFull[i].summary})
       }
    }
 
    it("Needs to build consolidated embeddings file", async function () {
       
       let embeddings = new Array<FullEmbedding>();
-      let chunks = new Array<Chunk> (); 
+      let chunks = new Array<IEnrichedChunk> (); 
 
       embeddings = htmlEmbeddingsFile as Array<FullEmbedding>; 
       let result = await makeLite (chunks, embeddings, makeHtmlUrlfromFullEmbedding);
