@@ -376,23 +376,25 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       }
       let summary = api.findChunkFromUrl (query);
       
-      summary.then ((enriched: Array<IEnrichedChunkSummary>) => {
+      summary.then ((enriched: IEnrichedChunkSummary | undefined) => {
 
-         let summaryText = enriched[0].summary;
+         if (enriched) {
+            let summaryText = enriched.summary;
          
-         let connectionPromise = AIConnector.connect (props.sessionKey);
+            let connectionPromise = AIConnector.connect (props.sessionKey);
       
-         // Connect to the LLM
-         connectionPromise.then ( (connection : AIConnection) => { 
+            // Connect to the LLM
+            connectionPromise.then ( (connection : AIConnection) => { 
 
-            // Ask the LLM for a question based on the summary 
-            connection.makeFollowUpCall (summaryText).then ((result_: Message) => {                                                                               
-               if (result_) {
-                  result_.authorId = props.localPersona.id;
-                  setSuggested (result_);
-               }
-            });
-         });  
+               // Ask the LLM for a question based on the summary 
+               connection.makeFollowUpCall (summaryText).then ((result_: Message) => {                                                                               
+                  if (result_) {
+                     result_.authorId = props.localPersona.id;
+                     setSuggested (result_);
+                  }
+               });
+            });  
+         }
       });                                                                
    }
 
