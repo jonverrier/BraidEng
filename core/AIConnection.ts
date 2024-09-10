@@ -45,7 +45,7 @@ export class AIConnection {
 
       this._activeCallCount = 0;
       this._aiKey = aiKey_;     
-      this._enrichedChunkApi = new FindEnrichedChunkApi(getEnvironment (EApiEnvirionment.kLocal), sessionKey_.toString());
+      this._enrichedChunkApi = new FindEnrichedChunkApi(getEnvironment (EApiEnvirionment.kProduction), sessionKey_.toString());
    }  
 
    // Makes an Axios call to call web endpoint

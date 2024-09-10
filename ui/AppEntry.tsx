@@ -9,8 +9,7 @@ import {
    FluentProvider, teamsDarkTheme, makeStyles
 } from '@fluentui/react-components';
 
-import { getEnvironment } from '../../Braid/BraidCommon/src/IEnvironmentFactory';
-import { EEnvironment as EApiEnvironment, IEnvironment } from '../../Braid/BraidCommon/src/IEnvironment';
+import { getDefaultEnvironment } from '../../Braid/BraidCommon/src/IEnvironmentFactory';
 
 // Local
 import { Persona } from '../core/Persona';
@@ -23,7 +22,6 @@ import { JoinPane } from './JoinPane';
 import { ConversationControllerRow } from './ConversationController';
 import { SessionKey, ConversationKey } from '../core/Keys';
 import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
-import { Environment, EEnvironment } from '../core/Environment';
 
 export interface IAppProps {
 
@@ -111,7 +109,7 @@ export const App = (props: IAppProps) => {
       // with no email address and no name bcs thats what we get from login
       let query = JoinDetails.toString ("", "", sessionKey_, conversationKey_, secret_);
 
-      let environment = getEnvironment (Environment.environment() === EEnvironment.kLocal ? EApiEnvironment.kLocal : EApiEnvironment.kProduction);
+      let environment = getDefaultEnvironment ();
       let loginUrl = environment.loginWithLinkedInApi();
 
       location.replace (loginUrl + '?' + query);
