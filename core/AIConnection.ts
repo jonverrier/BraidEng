@@ -3,255 +3,142 @@ import axios from "axios";
 
 // Local
 import { SessionKey } from "./Keys";
-import { logApiError, logApiInfo } from "./Logging";
 import { Message } from './Message';
 import { Persona } from './Persona';
 import { EIcon } from './Icons';
 import { EConfigNumbers, EConfigStrings } from './ConfigStrings';
 import { throwIfUndefined } from './Asserts';
 import { AssertionFailedError } from "./Errors";
-import { KeyRetriever } from "./KeyRetriever";
 import { getDefaultKeyGenerator } from "./IKeyGeneratorFactory";
-import { Environment, EEnvironment } from "./Environment";
 
-import { getEnvironment } from '../../Braid/BraidCommon/src/IEnvironmentFactory';
-import { EEnvironment as EApiEnvirionment} from '../../Braid/BraidCommon/src/IEnvironment';
-import { FindEnrichedChunkApi } from '../../Braid/BraidCommon/src/FindEnrichedChunkApi';
+import { getDefaultEnvironment } from '../../Braid/BraidCommon/src/IEnvironmentFactory';
 import { EChunkRepository, IRelevantEnrichedChunk} from '../../Braid/BraidCommon/src/EnrichedChunk';
+
+import { EConversationRole, IConversationElement, IEnrichedQuery, IEnrichedResponse, IGenerateQuestionQuery, IQuestionGenerationResponse } from '../../Braid/BraidCommon/src/EnrichedQuery';
+import { QueryModelApi } from '../../Braid/BraidCommon/src/QueryModelApi';
 
 // We allow for the equivalent of 10 minutes of chat. 10 mins * 60 words = 600 words = 2400 tokens. 
 const kMaxTokens : number= 4096;
 
-export class AIMessageElement {
-   role: string;
-   content: string;
-
-   constructor () {
-      this.role = "";
-      this.content = "";
-   }
-}
-
 export class AIConnection {
 
-   private _activeCallCount: number;
-   private _aiKey: string;  
-   private _enrichedChunkApi: FindEnrichedChunkApi;
+   private _activeCallCount: number; 
+   private _queryModelApi : QueryModelApi;
 
    /**
     * Create an AIConnection object 
     */
-   constructor(aiKey_: string, sessionKey_: SessionKey) {
+   constructor(sessionKey_: SessionKey) {
 
-      this._activeCallCount = 0;
-      this._aiKey = aiKey_;     
-      this._enrichedChunkApi = new FindEnrichedChunkApi(getEnvironment (EApiEnvirionment.kProduction), sessionKey_.toString());
+      this._activeCallCount = 0;  
+      this._queryModelApi = new QueryModelApi (getDefaultEnvironment (), sessionKey_.toString())
    }  
 
    // Makes an Axios call to call web endpoint
-   // Make two queries - one to get the anser to the direct question, another to ask for a reference summary. 
+   // Make two queries - one to get the answer to the direct question, another to ask for a reference summary. 
    // The reference summary is then used to look up good articles to add to the response.  
-   async makeEnrichedCall  (responseShell: Message, allMessages: Array<AIMessageElement>) : Promise<Message> {
+   async makeEnrichedCall  (responseShell: Message, query: IEnrichedQuery) : Promise<Message | undefined> {
+
+      let response = await this._queryModelApi.queryModelWithEnrichment (query);
+
+      if (response) {
+         this.streamResponse (responseShell, response);
+      }
           
-      let enrichedQuery = this.buildEnrichmentQuery (allMessages);      
-
-      const [directResponse, enrichedResponse] = await Promise.all ([this.makeSingleStreamedCall (allMessages, responseShell), 
-                                                                     this.makeSingleCallInternal (enrichedQuery)]);
-      logApiInfo ("Enriched question for lookup:", enrichedResponse);    
-      
-      if (!enrichedResponse.includes (EConfigStrings.kResponseNotRelevantMarker)
-      &&  !enrichedResponse.includes (EConfigStrings.kResponseDontKnowMarker)) {
-                            
-         let query = {
-            repositoryId: EChunkRepository.kBoxer,
-            summary: enrichedResponse,
-            maxCount: 2,
-            similarityThreshold : 0.85 
-         }
-         let enriched = await this._enrichedChunkApi.findRelevantChunksFromSummary (query);
-
-         responseShell.text = directResponse;
-
-         await this.streamEnrichment (responseShell, enriched);
-          
-         return responseShell;          
-      }  
-      else {
-         responseShell.text = directResponse;   
-         return responseShell;     
-      }                                                                  
+      return responseShell;                                                                            
    }    
 
    // Asks the LLM for a question that relates to the context  
-   async makeFollowUpCall  (context: string) : Promise<Message> {
+   async makeFollowUpCall  (summary: string) : Promise<Message | undefined> {
       
-      let followUpQuery = this.buildFollowUpQuery (context);      
+      let followUpQuery = AIConnection.buildQueryForQuestionPrompt (summary);
 
-      const [enrichedResponse] = await Promise.all ([this.makeSingleCallInternal (followUpQuery)]);
-                              
-      let keyGenerator = getDefaultKeyGenerator();
-      return new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, undefined, 
-                          enrichedResponse, new Date());                                                                        
+      let response = await this._queryModelApi.generateQuestion (followUpQuery);
+
+      if (response) {
+         let keyGenerator = getDefaultKeyGenerator();
+         return new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, undefined, 
+                             response.question, new Date()); 
+      }
+      return undefined;                                                                       
    } 
 
-   // Asks the LLM for a question that relates to the context  
-   async makeSingleCall  (input: Array<AIMessageElement>, output: Message) : Promise<Message> {            
    
-      const [response] = await Promise.all ([this.makeSingleCallInternal (input)]);
-                                 
-      let keyGenerator = getDefaultKeyGenerator();
-      output.text = response;  
-                          
-      return output;
-   } 
-
-   // Makes an Axios call to call web endpoint using the streaming API
-   async makeSingleStreamedCall  (input: Array<AIMessageElement>, output: Message) : Promise<string> {
-      
-      let self = this;
-      self._activeCallCount++;
-
-      output.isStreaming = true;
-
-      let inBrowser = (typeof Blob !== "undefined");
-      inBrowser = true; // Force use of Fetch as it works on Browser and in Node. 
-            
-      let done = new Promise<string>(async function(resolve, reject) {
-   
-         function parseData (data: any ) : void {
-
-            const lines = data
-               ?.toString()
-               ?.split("\n")
-               .filter((line: string) => line.trim() !== "");
-   
-               for (const line of lines) {
-                  const text = line.replace(/^data: /, "");
-                  if (text === "[DONE]") {
-                     output.liveAppendText ("", false);  
-                     self._activeCallCount--;                                             
-                     resolve (output.text);
-                  } else {
-                     let token = undefined;
-                     try {
-                        let parsed = JSON.parse(text);
-                        let choice = parsed && parsed.choices ? parsed.choices[0] : undefined
-                        token = choice && choice.delta && choice.delta.content ? choice.delta.content : undefined;
-                     } catch {
-                        console.error (text);
-                     }
-                     if (token) {                       
-                        output.liveAppendText (token, true);
-                    }
-                 }
-              }
-         }           
-   
-         if (true) {           
-
-            const response = await fetch('https://braidlms.openai.azure.com/openai/deployments/braidlms/chat/completions?api-version=2024-02-01', {
-               method: 'POST',
-               headers: {
-                  'Content-Type': 'application/json',
-                  'api-key': self._aiKey
-               },
-               body: JSON.stringify({
-                  messages: input,
-                  stream: true
-               }),
-             });
-
-             const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
-             throwIfUndefined(reader);
-
-             while (true) {
-               const { value, done } = await reader.read();
-               if (done) {
-                  self._activeCallCount--;                     
-                  break;
-               }
-
-               parseData (value);
-            }
-         }
-         else {
-
-            const completion = await axios.post('https://braidlms.openai.azure.com/openai/deployments/braidlms/chat/completions?api-version=2024-02-01', {
-               messages: input,
-               stream: true
-            },
-            {   
-               responseType: "stream",
-               headers: {
-                  'Content-Type': 'application/json',
-                  'api-key': self._aiKey
-               }
-            });
-   
-            completion.data.on("data", (data: string) => {
-   
-               parseData (data);
-            })
-            .on ("error", (data: string) => {
-               self._activeCallCount--;            
-               output.liveAppendText ("", false);              
-               reject();               
-            });
-         }
-      });
-
-      return done;
-   } 
-
-   async streamEnrichment  (responseShell: Message, chunks: Array<IRelevantEnrichedChunk>) : Promise<Message> {
+   /**
+    * Asynchronously streams the enriched response to update the message shell with chunks and live updates.
+    * This is a confidence trick - e give the appearance of streaming, not the actuality. 
+    * Only reason is that we are going to shutt off dedicated client & move to an API model - so real streaming wont be processsed here. 
+    * 
+    * @param responseShell - The message shell to be updated with the enriched response.
+    * @param response - The enriched response containing answer and relevant enriched chunks.
+    * @returns A promise that resolves with the updated message shell after streaming the response.
+    */
+   private async streamResponse  (responseShell: Message, response: IEnrichedResponse) : Promise<Message> {
 
       let done = new Promise<Message>(async function(resolve, reject) {
 
-         let shellChunks = new Array<IRelevantEnrichedChunk>();
-         shellChunks.length = chunks.length;
+         let responseChunks = response.chunks;
 
-         for (let i = 0; i < chunks.length; i++) {
+         let shellChunks = new Array<IRelevantEnrichedChunk>();
+         shellChunks.length = responseChunks.length;
+
+         for (let i = 0; i < responseChunks.length; i++) {
             let shellEmbed = {chunk: {
-                  url: chunks[i].chunk.url,
-                  summary: chunks[i].chunk.summary,
-                  text: chunks[i].chunk.text
+                  url: responseChunks[i].chunk.url,
+                  summary: responseChunks[i].chunk.summary,
+                  text: responseChunks[i].chunk.text
                }, 
-               relevance: chunks[i].relevance};
+               relevance: responseChunks[i].relevance};
             shellChunks[i] = shellEmbed;
          }
 
          responseShell.chunks = shellChunks;
          let index = 0;
-         let maxIndex = 4; 
+         let maxIndex = 6; 
 
          if (shellChunks.length > 0) {
             let interval = setInterval ( () => {
 
                switch (index) {
                   case 0:
-                     if (chunks.length > 0)
-                        shellChunks[0].chunk.summary = chunks[0].chunk.summary.slice (0, chunks[0].chunk.summary.length / 2);
-                     break;
-                  case 1:
-                     if (chunks.length > 1)                  
-                        shellChunks[1].chunk.summary = chunks[1].chunk.summary.slice (0, chunks[0].chunk.summary.length / 2);                  
+                     let text1 = response.answer.slice (0, response.answer.length / 2);
+                     responseShell.liveUpdateText (text1, true);
                      break;  
+                  case 1:
+                     let text2 = response.answer;
+                     responseShell.liveUpdateText (text2, true);                     
+                     break;                                      
                   case 2:
-                     if (chunks.length > 0)                  
-                        shellChunks[0].chunk.summary = chunks[0].chunk.summary;                  
-                     break;   
+                     if (responseChunks.length > 0) {
+                        shellChunks[0].chunk.summary = responseChunks[0].chunk.summary.slice (0, responseChunks[0].chunk.summary.length / 2);
+                        responseShell.liveUpdateChunks (shellChunks, true);               
+                     }       
+                     break;
                   case 3:
-                     if (chunks.length > 1)                  
-                        shellChunks[1].chunk.summary = chunks[1].chunk.summary;                       
+                     if (responseChunks.length > 1)                  {
+                        shellChunks[1].chunk.summary = responseChunks[1].chunk.summary.slice (0, responseChunks[0].chunk.summary.length / 2);  
+                        responseShell.liveUpdateChunks (shellChunks, true);                              
+                     }             
+                     break;  
+                  case 4:
+                     if (responseChunks.length > 0)              { 
+                        shellChunks[0].chunk.summary = responseChunks[0].chunk.summary;     
+                        responseShell.liveUpdateChunks (shellChunks, true);                              
+                     }                                     
+                     break;   
+                  case 5:
+                     if (responseChunks.length > 1)          {        
+                        shellChunks[1].chunk.summary = responseChunks[1].chunk.summary;    
+                        responseShell.liveUpdateChunks (shellChunks, true);            
+                     }       
                      break;         
                   default:
                      break;                                                 
                }
 
-               responseShell.liveAppendChunks (shellChunks, index == 3? false: true);
-
                index++;
                if (index === maxIndex) {
+                  responseShell.liveUpdateChunks (shellChunks, false); 
                   resolve (responseShell);
                   clearInterval(interval);
                }
@@ -265,54 +152,14 @@ export class AIConnection {
       return done;
    }
 
-      // Makes an Axios call to call web endpoint
-   async createEmbedding  (input: string) : Promise<Array<number>> {
-      
-      let self = this;
-      self._activeCallCount++;
-   
-      let done = new Promise<Array<number>>(function(resolve, reject) {
-
-         // AZURE POST https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/embeddings?api-version={api-version}
-         // OPENAI POST 'https://api.openai.com/v1/embeddings'
-
-         axios.post('https://braidlms.openai.azure.com/openai/deployments/braidlmse/embeddings?api-version=2024-02-01', {
-            input: input,
-            // OPENAI model: "text-embedding-ada-002",       
-         },
-         {
-            headers: {
-               'Content-Type': 'application/json',
-               // OpenAI - 'Authorization': `Bearer ${this._key}`
-               'api-key': self._aiKey           
-            }
-         })
-         .then((resp : any) => {
-   
-            self._activeCallCount--;               
-            resolve (resp.data.data[0].embedding as Array<number>);      
-         })
-         .catch((error: any) => {
-   
-            self._activeCallCount--;     
-            logApiError (EConfigStrings.kErrorConnectingToAiAPI, error);
-            reject();
-         });
-      });
-
-      return done;
-   } 
-
    isBusy () {
       return this._activeCallCount !== 0;
    }
 
-   static buildDirectQuery (messages: Array<Message>, authors: Map<string, Persona>): Array<AIMessageElement> {
+   static buildEnrichmentQuery (messages: Array<Message>, authors: Map<string, Persona>): IEnrichedQuery {
 
-      let builtQuery = new Array<AIMessageElement> ();
-
-      let prompt = { role: 'system', content: EConfigStrings.kOpenAiPersonaPrompt };
-      builtQuery.push (prompt);      
+      let history = new Array<IConversationElement> ();
+      let question = "";    
 
       var start = AIConnection.findEarliestMessageIndexWithinTokenLimit(messages, authors);
 
@@ -322,6 +169,7 @@ export class AIConnection {
 
          if (AIConnection.isRequestForLLM(message, authors)) {
 
+            // The last message contains the question. 
             if (i === messages.length -1) {
                // Remove the name of our LLM
                let edited = message.text.replace (EConfigStrings.kLLMRequestSignature, "");   
@@ -329,82 +177,64 @@ export class AIConnection {
                // Expand 'LLM' to Large Language Model (LLM) as that seems to make a big difference to document hits 
                // This includes some common typos
                let lookFor = [EConfigStrings.kPromptLookFor1, EConfigStrings.kPromptLookFor2, ,
-                  EConfigStrings.kPromptLookFor4, EConfigStrings.kPromptLookFor5, EConfigStrings.kPromptLookFor6
-               ] as Array<string>;
-
+                              EConfigStrings.kPromptLookFor4, EConfigStrings.kPromptLookFor5, EConfigStrings.kPromptLookFor6
+                             ] as Array<string>;
+               
                let replaceWith = [EConfigStrings.kPromptReplaceWith1, EConfigStrings.kPromptReplaceWith2, EConfigStrings.kPromptReplaceWith3,
-                  EConfigStrings.kPromptReplaceWith4, EConfigStrings.kPromptReplaceWith5, EConfigStrings.kPromptReplaceWith6
-               ] as Array<string>;
-
+                                 EConfigStrings.kPromptReplaceWith4, EConfigStrings.kPromptReplaceWith5, EConfigStrings.kPromptReplaceWith6
+                                ] as Array<string>;
+               
                for (let i = 0; i < lookFor.length; i++) {
                   if (edited.includes (lookFor[i])) 
                      edited = edited.replace (lookFor[i], replaceWith[i]);
                }             
-
-               let engineeredQuestion = EConfigStrings.kInitialQuestionPrompt + EConfigStrings.kEnrichmentQuestionPrefix + edited;      
-               let entry = { role: 'user', content: engineeredQuestion };
-               builtQuery.push (entry);
+               
+               question = edited;      
             } 
             else {
-
+               // else we just remove the name of our LLM
                let edited = message.text.replace (EConfigStrings.kLLMRequestSignature, "");
-               let entry = { role: 'user', content: edited };
-               builtQuery.push (entry);
+               let entry = { role: EConversationRole.kUser, content: edited };
+               history.push (entry);
             }
          }
 
          if (AIConnection.isFromLLM(message, authors)) {
             
-            let entry = { role: 'assistant', content: message.text };
-            builtQuery.push (entry);     
+            let entry = { role: EConversationRole.kAssistant, content: message.text };
+            history.push (entry);     
 
             for (let j = 0; j < message.chunks.length; j++) {
-               let entry = { role: 'assistant', content: message.chunks[j].chunk.summary };
-               builtQuery.push (entry);
+               let entry = { role: EConversationRole.kAssistant, content: message.chunks[j].chunk.summary };
+               history.push (entry);
             }                   
          }         
 
       }
-      return builtQuery; 
+
+      let query = {
+         repositoryId: EChunkRepository.kBoxer,
+         personaPrompt: EConfigStrings.kOpenAiPersonaPrompt,
+         enrichmentDocumentPrompt: EConfigStrings.kEnrichmentPrompt,
+         question : question,
+         history: history,
+         maxCount: 2,
+         similarityThreshold : 0.85 
+      } 
+
+      return query; 
    }   
 
-   static buildQueryForQuestionPrompt (messages: Array<Message>, authors: Map<string, Persona>): Array<AIMessageElement> {
+   static buildQueryForQuestionPrompt (summary: string): IGenerateQuestionQuery {
 
-      let builtQuery = new Array<AIMessageElement> ();
+      let query = {
+         personaPrompt: EConfigStrings.kOpenAiPersonaPrompt,
+         questionGenerationPrompt: EConfigStrings.kGenerateAQuestionPrompt,
+         summary: summary
+      } 
 
-      let prompt = { role: 'system', content: EConfigStrings.kOpenAiPersonaPrompt };
-      builtQuery.push (prompt);      
-
-      var start = AIConnection.findEarliestMessageIndexWithinTokenLimit(messages, authors);
-
-      for (let i = start; i < messages.length; i++) {
-
-         let message = messages[i];
-
-         if (AIConnection.isFromLLM(message, authors)) {
-            
-            let entry = { role: 'assistant', content: message.text };
-            builtQuery.push (entry);     
-
-            for (let j = 0; j < message.chunks.length; j++) {
-               let entry = { role: 'assistant', content: message.chunks[j].chunk.summary };
-               builtQuery.push (entry);
-            }                   
-         }            
-         else {
-               let edited = message.text.replace (EConfigStrings.kLLMRequestSignature, "");
-               let entry = { role: 'user', content: edited };
-               builtQuery.push (entry);
-         }      
-      }
-
-      let engineeredQuestion = EConfigStrings.kGenerateAQuestionPrompt;      
-      let entry = { role: 'user', content: engineeredQuestion };
-      builtQuery.push (entry);
-
-      return builtQuery; 
+      return query; 
    }   
-
 
    static buildTranscript (messages: Array<Message>, authors: Map<string, Persona>): string {
 
@@ -432,77 +262,7 @@ export class AIConnection {
 
       return builtQuery; 
    }  
-
-   buildEnrichmentQuery (messages: Array<AIMessageElement>): Array<AIMessageElement> {
-
-      let builtQuery = new Array<AIMessageElement> ();
-      
-      let engineeredPrompt = EConfigStrings.kEnrichmentPrompt;
-      let prompt = { role: 'system', content: engineeredPrompt };
-      builtQuery.push (prompt);        
-
-      let lastMessage = messages[messages.length -1].content;
-      let engineeredQuestion = EConfigStrings.kEnrichmentQuestionPrefix + lastMessage;      
-      let entry = { role: 'user', content: engineeredQuestion };
-      builtQuery.push (entry);
-
-      return builtQuery; 
-   } 
-
-   buildFollowUpQuery (context: string): Array<AIMessageElement> {
-
-      let builtQuery = new Array<AIMessageElement> ();
-      
-      let engineeredPrompt = EConfigStrings.kFollowUpPrompt;
-      let prompt = { role: 'system', content: engineeredPrompt };
-      builtQuery.push (prompt);        
-
-      let engineeredQuestion = EConfigStrings.kFollowUpPrefix + context;      
-      let entry = { role: 'user', content: engineeredQuestion };
-      builtQuery.push (entry);
-
-      return builtQuery; 
-   } 
-
-   // Makes an Axios call to call web endpoint
-   private async makeSingleCallInternal  (input: Array<AIMessageElement>) : Promise<string> {
-      
-      let self = this;
-      self._activeCallCount++;
-
-      let done = new Promise<string>(function(resolve, reject) {
-
-         // OPENAI POST ('https://api.openai.com/v1/chat/completions', {
-         // AZURE POST https://{your-resource-name}.openai.azure.com/openai/deployments/{deployment-id}/chat/completions?api-version={api-version}
-
-         axios.post('https://braidlms.openai.azure.com/openai/deployments/braidlms/chat/completions?api-version=2024-02-01', {
-            messages: input,
-            // OPENAI model: "gpt-3.5-turbo"
-            // OPENAI prompt: allMessages
-         },
-         {
-            headers: {
-               'Content-Type': 'application/json',
-               // OpenAI - 'Authorization': `Bearer ${this._key}`
-               'api-key': self._aiKey
-            }
-         })
-         .then((resp : any) => {
-            
-            self._activeCallCount--;   
-            resolve (resp.data.choices[0].message.content);   
-         })
-         .catch((error: any) => {
-
-            self._activeCallCount--;     
-
-            logApiError (EConfigStrings.kErrorConnectingToAiAPI, error);
-            reject();
-         });
-      });
-   
-      return done;
-   }      
+    
 
    private static findEarliestMessageIndexWithinTokenLimit (messages: Array<Message>, authors: Map<string, Persona>) : number {
 
@@ -563,24 +323,4 @@ export class AIConnection {
       return (author.icon === EIcon.kPersonPersona) && 
          (message.text.includes (EConfigStrings.kLLMNearRequestSignature) || message.text.includes (EConfigStrings.kLLMNearRequestSignatureLowerCase));
    }   
-}
-
-export class AIConnector {
-   
-   static async connect (sessionKey_: SessionKey) : Promise<AIConnection> {
-
-      let retriever = new KeyRetriever ();
-      var url: string;
-
-      if (Environment.environment() === EEnvironment.kLocal)
-         url = EConfigStrings.kRequestLocalAiKeyUrl;
-      else
-         url = EConfigStrings.kRequestAiKeyUrl;
-
-      let aiKey = await retriever.requestKey (url, 
-                                       EConfigStrings.kSessionParamName, 
-                                       sessionKey_);
-
-      return new AIConnection (aiKey, sessionKey_);
-   }
 }

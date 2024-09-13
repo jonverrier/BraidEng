@@ -308,9 +308,9 @@ export class Message extends MDynamicStreamable {
    /**
     * Use this when live streaming text from server into a message
     */
-   liveAppendText(append: string, more: boolean): string {
+   liveUpdateText(text: string, more: boolean): string {
 
-      this.text = this.text.concat(append);
+      this.text = text;
 
       if (this._streamHandler) {
          this._streamHandler(this, more);
@@ -322,7 +322,7 @@ export class Message extends MDynamicStreamable {
    /**
      * Use this when live streaming chunks from server into a message
      */
-   liveAppendChunks(chunks: Array<IRelevantEnrichedChunk>, more: boolean): string {
+   liveUpdateChunks(chunks: Array<IRelevantEnrichedChunk>, more: boolean): string {
 
       this._chunks = chunks;
 
