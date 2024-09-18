@@ -51,11 +51,11 @@ class test_result:
     followUp: str
     followUpOnTopic: str  # Corrected typo here
 
-#@retry(
-#    wait=wait_random_exponential(min=5, max=15),
-#    stop=stop_after_attempt(15),
-#    retry=retry_if_not_exception_type(openai.BadRequestError),
-#)
+@retry(
+    wait=wait_random_exponential(min=5, max=15),
+    stop=stop_after_attempt(5),
+    retry=retry_if_not_exception_type(openai.BadRequestError),
+)
 def get_enriched_question(client: AzureOpenAI, config: ApiConfiguration, text: str, logger):
     """Generate a summary using chatgpt"""
 
@@ -96,7 +96,7 @@ def get_enriched_question(client: AzureOpenAI, config: ApiConfiguration, text: s
 
 @retry(
     wait=wait_random_exponential(min=5, max=15),
-    stop=stop_after_attempt(15),
+    stop=stop_after_attempt(5),
     retry=retry_if_not_exception_type(openai.BadRequestError),
 )
 def get_text_embedding(client: AzureOpenAI, config: ApiConfiguration, text: str, logger: Logger) : 
@@ -108,7 +108,7 @@ def get_text_embedding(client: AzureOpenAI, config: ApiConfiguration, text: str,
 
 @retry(
     wait=wait_random_exponential(min=5, max=15),
-    stop=stop_after_attempt(15),
+    stop=stop_after_attempt(5),
     retry=retry_if_not_exception_type(openai.BadRequestError),
 )
 def get_followup_question(client: AzureOpenAI, config: ApiConfiguration, text: str, logger):
@@ -150,7 +150,7 @@ def get_followup_question(client: AzureOpenAI, config: ApiConfiguration, text: s
 
 @retry(
     wait=wait_random_exponential(min=5, max=15),
-    stop=stop_after_attempt(15),
+    stop=stop_after_attempt(5),
     retry=retry_if_not_exception_type(openai.BadRequestError),
 )
 def assess_followup_question(client: AzureOpenAI, config: ApiConfiguration, text: str, logger):
