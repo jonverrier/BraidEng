@@ -2,7 +2,7 @@
 import { EConfigStrings } from "./ConfigStrings";
 import { SessionKey, ConversationKey } from "./Keys";
 
-import { getDefaultEnvironment } from "../../Braid/BraidCommon/src/IEnvironmentFactory";
+import { getDefaultFluidEnvironment } from "../../Braid/BraidCommon/src/IEnvironmentFactory";
 import { EEnvironment } from "../../Braid/BraidCommon/src/IEnvironment";
 
 var qs = require('qs');
@@ -68,7 +68,7 @@ export class JoinDetails {
    }
 
    canAttemptJoin(): boolean {
-      let environment = getDefaultEnvironment();
+      let environment = getDefaultFluidEnvironment();
 
       // If we are running locally, allow empty conversation key -> this creates a new conversation
       if ((environment.name === EEnvironment.kLocal) && this._conversation.toString().length === 0)

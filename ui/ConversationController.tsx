@@ -468,6 +468,8 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
          setKey (Math.random());
       }
+      if (!more)
+         message.unhookLiveAppend(); 
    }     
 
    function onSend (messageText_: string) : void {
@@ -529,8 +531,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
          connection.makeEnrichedCall (responseShell, query).then ((result_: Message | undefined) => {            
 
-            setIsBusy(false);    
-            responseShell.unhookLiveAppend();     
+            setIsBusy(false);        
             if (result_)
                fluidConnection.messageCaucus().amend (result_.id, result_);                                               
 

@@ -216,7 +216,7 @@ export class AIConnection {
          question : question,
          history: history,
          maxCount: 2,
-         similarityThreshold : 0.85 
+         similarityThreshold : 0.4
       } 
 
       return query; 

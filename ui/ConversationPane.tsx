@@ -555,7 +555,7 @@ export const KowledgeSegmentsView = (props: IKnowledgeSegmentProps) => {
       props.onUnlikeUrl (relevantChunk.chunk.url);       
    }   
 
-   let relevanceClasses = relevantChunk.relevance ? relevantChunk.relevance >= 0.8 ? greenClasses : amberClasses : amberClasses; 
+   let relevanceClasses = relevantChunk.relevance ? relevantChunk.relevance >= 0.5 ? greenClasses : amberClasses : amberClasses; 
    let linkClasses = linkStyles();
    let toolbarRowClasses = toolbarRowStyles();  
    let toolbarButtonClasses = toolbarButtonStyles();   

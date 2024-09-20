@@ -9,7 +9,7 @@ import { KeyRetriever } from "./KeyRetriever";
 import { EConfigStrings } from "./ConfigStrings";
 import { SessionKey } from "./Keys";
 
-import { getDefaultEnvironment } from "../../Braid/BraidCommon/src/IEnvironmentFactory";
+import { getDefaultFluidEnvironment } from "../../Braid/BraidCommon/src/IEnvironmentFactory";
 import { EEnvironment } from "../../Braid/BraidCommon/src/IEnvironment";
 
 let documentUuid = "b03724b3-4be0-4491-b0fa-43b01ab80d50";
@@ -35,12 +35,13 @@ export class ConnectionConfig implements AzureRemoteConnectionConfig {
 
    async makeTokenProvider(sessionKey: SessionKey): Promise<ITokenProvider> {
 
-      let environment = getDefaultEnvironment();
+      let environment = getDefaultFluidEnvironment();
+
+      this.tenantId = EConfigStrings.kAzureTenantId;
+      this.endpoint = environment.fluidApi();
 
       if (environment.name == EEnvironment.kLocal) {
 
-         this.tenantId = EConfigStrings.kAzureTenantId;
-         this.endpoint = EConfigStrings.kAzureLocalFluidHost;
          this.type = "local";
          this.tokenProvider = new InsecureTokenProvider('testKey', user);
 
@@ -48,10 +49,7 @@ export class ConnectionConfig implements AzureRemoteConnectionConfig {
       }
       else {
 
-         this.tenantId = EConfigStrings.kAzureTenantId;
-         this.endpoint = EConfigStrings.kAzureProductionFluidHost;
          this.type = "remote";
-
          let retriever = new KeyRetriever ()
          var key = await retriever.requestKey (EConfigStrings.kRequestFluidKeyUrl, 
                                                EConfigStrings.kSessionParamName, 

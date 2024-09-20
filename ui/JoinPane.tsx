@@ -17,7 +17,7 @@ import {
    Key24Regular
 } from '@fluentui/react-icons';
 
-import { getDefaultEnvironment } from '../../Braid/BraidCommon/src/IEnvironmentFactory';
+import { getDefaultFluidEnvironment } from '../../Braid/BraidCommon/src/IEnvironmentFactory';
 import { EEnvironment } from '../../Braid/BraidCommon/src/IEnvironment';
 
 import { Persona } from '../core/Persona';
@@ -124,7 +124,7 @@ export const JoinPane = (props: IJoinPageProps) => {
     * we have to let the code create a new container then share it manually in the URL#string
     * In production, we have well known container IDs which were created beforehand.
    */
-   let runningInLocalEnv: boolean = (getDefaultEnvironment().name === EEnvironment.kLocal);
+   let runningInLocalEnv: boolean = (getDefaultFluidEnvironment().name === EEnvironment.kLocal);
 
    let defaultConversationName = EUIStrings.kCohort1ConversationName;
    var conversations: Array<string>;
