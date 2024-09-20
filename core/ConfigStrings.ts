@@ -19,7 +19,7 @@ export enum EConfigStrings {
    kCheckSessionLocalUrl = "http://localhost:7071/api/CheckSession",        
    kSummariseLocalUrl = "http://localhost:7071/api/Summarize",        
    
-   kAzureTenantId = "45155576-770f-47cc-92dc-9d3328dbf837",
+   kAzureTenantId = "b9576484-5c2e-4613-bfdf-039948cdd521",
    kAzureProductionFluidHost = "https://eu.fluidrelay.azure.com",
    kAzureLocalFluidHost = "http://localhost:7070",
 

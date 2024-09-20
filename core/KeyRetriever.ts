@@ -6,7 +6,6 @@ import axios from "axios";
 import { logApiError } from "./Logging";
 import { EConfigStrings } from './ConfigStrings';
 import { ConnectionError } from "./Errors";
-import { Environment } from "./Environment";
 import { SessionKey } from "./Keys";
 
 export class KeyRetriever {

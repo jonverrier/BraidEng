@@ -1,7 +1,9 @@
 // Copyright (c) 2024 Braid Technologies Ltd
 import { EConfigStrings } from "./ConfigStrings";
 import { SessionKey, ConversationKey } from "./Keys";
-import { Environment, EEnvironment } from './Environment';
+
+import { getDefaultEnvironment } from "../../Braid/BraidCommon/src/IEnvironmentFactory";
+import { EEnvironment } from "../../Braid/BraidCommon/src/IEnvironment";
 
 var qs = require('qs');
 
@@ -66,10 +68,10 @@ export class JoinDetails {
    }
 
    canAttemptJoin(): boolean {
-      let environment = Environment.environment();
+      let environment = getDefaultEnvironment();
 
       // If we are running locally, allow empty conversation key -> this creates a new conversation
-      if ((environment === EEnvironment.kLocal) && this._conversation.toString().length === 0)
+      if ((environment.name === EEnvironment.kLocal) && this._conversation.toString().length === 0)
          return this._session.looksValidSessionKey() && validateEmail (this._email);
 
       return (this._session.looksValidSessionKey() 

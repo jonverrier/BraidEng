@@ -72,7 +72,7 @@ describe("Chunk URLs", function () {
          let query = {
             repositoryId: EChunkRepository.kBoxer,
             maxCount: 1,
-            similarityThreshold : 0.75,
+            similarityThreshold : 0.4,
             summary: "This article exploure user interface considerations for interacting with LLM based applications."
 
          }

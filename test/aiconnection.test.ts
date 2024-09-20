@@ -131,7 +131,7 @@ describe("AIConnection", async function () {
 
       let result = await caller.makeEnrichedCall (message, fullQuery);
 
-      await sleep (5000);
+      await sleep (10000);
 
       message.unhookLiveAppend ();
 

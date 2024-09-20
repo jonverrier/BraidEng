@@ -83,6 +83,7 @@ export class AIConnection {
          shellChunks.length = responseChunks.length;
 
          for (let i = 0; i < responseChunks.length; i++) {
+
             let shellEmbed = {chunk: {
                   url: responseChunks[i].chunk.url,
                   summary: responseChunks[i].chunk.summary,
@@ -96,57 +97,53 @@ export class AIConnection {
          let index = 0;
          let maxIndex = 6; 
 
-         if (shellChunks.length > 0) {
-            let interval = setInterval ( () => {
+         let interval = setInterval ( () => {
 
-               switch (index) {
-                  case 0:
-                     let text1 = response.answer.slice (0, response.answer.length / 2);
-                     responseShell.liveUpdateText (text1, true);
-                     break;  
-                  case 1:
-                     let text2 = response.answer;
-                     responseShell.liveUpdateText (text2, true);                     
-                     break;                                      
-                  case 2:
-                     if (responseChunks.length > 0) {
-                        shellChunks[0].chunk.summary = responseChunks[0].chunk.summary.slice (0, responseChunks[0].chunk.summary.length / 2);
-                        responseShell.liveUpdateChunks (shellChunks, true);               
-                     }       
-                     break;
-                  case 3:
-                     if (responseChunks.length > 1)                  {
-                        shellChunks[1].chunk.summary = responseChunks[1].chunk.summary.slice (0, responseChunks[0].chunk.summary.length / 2);  
-                        responseShell.liveUpdateChunks (shellChunks, true);                              
-                     }             
-                     break;  
-                  case 4:
-                     if (responseChunks.length > 0)              { 
-                        shellChunks[0].chunk.summary = responseChunks[0].chunk.summary;     
-                        responseShell.liveUpdateChunks (shellChunks, true);                              
-                     }                                     
-                     break;   
-                  case 5:
-                     if (responseChunks.length > 1)          {        
-                        shellChunks[1].chunk.summary = responseChunks[1].chunk.summary;    
-                        responseShell.liveUpdateChunks (shellChunks, true);            
-                     }       
-                     break;         
-                  default:
-                     break;                                                 
-               }
+            switch (index) {
+               case 0:
+                  let text1 = response.answer.slice (0, response.answer.length / 2);
+                  responseShell.liveUpdateText (text1, true);
+                  break;  
+               case 1:
+                  let text2 = response.answer;
+                  responseShell.liveUpdateText (text2, true);                     
+                  break;                                      
+               case 2:
+                  if (responseChunks.length > 0) {
+                     shellChunks[0].chunk.summary = responseChunks[0].chunk.summary.slice (0, responseChunks[0].chunk.summary.length / 2);
+                     responseShell.liveUpdateChunks (shellChunks, true);               
+                  }       
+                  break;
+               case 3:
+                  if (responseChunks.length > 1)                  {
+                     shellChunks[1].chunk.summary = responseChunks[1].chunk.summary.slice (0, responseChunks[0].chunk.summary.length / 2);  
+                     responseShell.liveUpdateChunks (shellChunks, true);                              
+                  }             
+                  break;  
+               case 4:
+                  if (responseChunks.length > 0)              { 
+                     shellChunks[0].chunk.summary = responseChunks[0].chunk.summary;     
+                     responseShell.liveUpdateChunks (shellChunks, true);                              
+                  }                                     
+                  break;   
+               case 5:
+                  if (responseChunks.length > 1)          {        
+                     shellChunks[1].chunk.summary = responseChunks[1].chunk.summary;    
+                     responseShell.liveUpdateChunks (shellChunks, true);            
+                  }       
+                  break;         
+               default:
+                  break;                                                 
+            }
 
-               index++;
-               if (index === maxIndex) {
-                  responseShell.liveUpdateChunks (shellChunks, false); 
-                  resolve (responseShell);
-                  clearInterval(interval);
-               }
-            }, 100);
-         } 
-         else {
-            resolve (responseShell);            
-         }
+            index++;
+            if (index === maxIndex) {
+               responseShell.liveUpdateChunks (shellChunks, false); 
+               resolve (responseShell);
+               clearInterval(interval);
+            }
+
+         }, 100); 
       });
 
       return done;
