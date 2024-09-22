@@ -20,8 +20,7 @@ ensure_directory_exists(HTML_DESTINATION_DIR)
 
 config = ApiConfiguration()
 
-# For debugging purposes, you might want to comment/uncomment the following block
-# Uncomment to download all URLs
+# For debugging purposes, you might want to comment out the following block
 for item in webUrls:
     download_html(item[1], item[2], HTML_DESTINATION_DIR, config.discardIfBelow)
 

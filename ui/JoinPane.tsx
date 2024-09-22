@@ -17,13 +17,15 @@ import {
    Key24Regular
 } from '@fluentui/react-icons';
 
+import { getDefaultFluidEnvironment } from '../../Braid/BraidCommon/src/IEnvironmentFactory';
+import { EEnvironment } from '../../Braid/BraidCommon/src/IEnvironment';
+
 import { Persona } from '../core/Persona';
 import { SessionKey, ConversationKey } from '../core/Keys';
 import { JoinPageValidator } from '../core/JoinPageValidator';
 import { KeyRetriever } from '../core/KeyRetriever';
 import { EUIStrings } from './UIStrings';
 import { EConfigStrings } from '../core/ConfigStrings';
-import { Environment, EEnvironment } from '../core/Environment';
 import { innerColumnFooterStyles, textFieldStyles } from './ColumnStyles';
 import { throwIfUndefined } from '../core/Asserts';
 import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
@@ -93,10 +95,6 @@ const dropdownStyles = makeStyles({
          return new ConversationKey (EConfigStrings.kCohort1Team2ConversationKey);              
       case EUIStrings.kCohort1Team3ConversationName:
          return new ConversationKey (EConfigStrings.kCohort1Team3ConversationKey);    
-      case EUIStrings.kCohort1Team4ConversationName:
-         return new ConversationKey (EConfigStrings.kCohort1Team4ConversationKey);   
-      case EUIStrings.kBoxerPlatformConversationName:
-         return new ConversationKey (EConfigStrings.kBoxerPlatformConversationKey);
       case EUIStrings.kCohort1ConversationName:
       default:
          return new ConversationKey (EConfigStrings.kCohort1ConversationKey);                   
@@ -122,7 +120,7 @@ export const JoinPane = (props: IJoinPageProps) => {
     * we have to let the code create a new container then share it manually in the URL#string
     * In production, we have well known container IDs which were created beforehand.
    */
-   let runningInLocalEnv: boolean = (Environment.environment() === EEnvironment.kLocal);
+   let runningInLocalEnv: boolean = (getDefaultFluidEnvironment().name === EEnvironment.kLocal);
 
    let defaultConversationName = EUIStrings.kCohort1ConversationName;
    var conversations: Array<string>;
@@ -137,9 +135,7 @@ export const JoinPane = (props: IJoinPageProps) => {
          EUIStrings.kCohort1Team1ConversationName,
          EUIStrings.kCohort1Team2ConversationName,
          EUIStrings.kCohort1Team3ConversationName,
-         EUIStrings.kCohort1Team4ConversationName,
-         EUIStrings.kDemoConversationName,
-         EUIStrings.kBoxerPlatformConversationName
+         EUIStrings.kDemoConversationName
       ];
       defaultConversationName = EUIStrings.kCohort1ConversationName;    
    }

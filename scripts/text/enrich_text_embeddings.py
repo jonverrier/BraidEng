@@ -39,7 +39,7 @@ def normalize_text(s, sep_token=" \n "):
 
 @retry(
     wait=wait_random_exponential(min=10, max=45),
-    stop=stop_after_attempt(15),
+    stop=stop_after_attempt(5),
     retry=retry_if_not_exception_type(BadRequestError),
 )
 def get_text_embedding(client : AzureOpenAI, config : ApiConfiguration, text: str):
@@ -90,6 +90,8 @@ def enrich_text_embeddings(config : ApiConfiguration, destinationDir : str):
 
     logging.basicConfig(level=logging.WARNING)
     logger = logging.getLogger(__name__)
+    for key in logging.Logger.manager.loggerDict:
+       logging.getLogger(key).setLevel(logging.WARNING)
 
     client = AzureOpenAI(
        azure_endpoint = config.resourceEndpoint, 

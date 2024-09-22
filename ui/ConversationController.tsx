@@ -17,10 +17,9 @@ import { JoinPageValidator } from '../core/JoinPageValidator';
 import { ConversationView } from './ConversationPane';
 import { BraidFluidConnection } from '../core/BraidFluidConnection';
 import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } from '../core/NotificationFramework';
-import { AIConnection, AIConnector } from '../core/AIConnection';
+import { AIConnection } from '../core/AIConnection';
 import { EUIStrings, initialQuestions } from './UIStrings';
 import { EConfigNumbers, EConfigStrings } from '../core/ConfigStrings';
-import { getEmbeddingRepository } from '../core/IEmbeddingRepositoryFactory';
 import { getRecordRepository } from '../core/IActivityRepositoryFactory';
 import { UrlActivityRecord } from '../core/ActivityRecordUrl';
 import { MessageActivityRecord } from '../core/ActivityRecordMessage';
@@ -28,6 +27,10 @@ import { getDefaultKeyGenerator } from '../core/IKeyGeneratorFactory';
 import { LikeUnlikeActivityRecord } from '../core/ActivityRecordLikeUnlike';
 import { getDetaultAdminRepository} from '../core/IAdminRepository';
 import { makeSummaryCall } from '../core/ApiCalls';
+
+import { FindEnrichedChunkApi } from '../../Braid/BraidCommon/src/FindEnrichedChunkApi';
+import { getDefaultEnvironment } from '../../Braid/BraidCommon/src/IEnvironmentFactory';
+import { IEnrichedChunkSummary, EChunkRepository, kDefaultSimilarityThreshold } from '../../Braid/BraidCommon/src/EnrichedChunk';
 
 export interface IConversationControllerProps {
 
@@ -363,26 +366,31 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
          forceUpdate();                   
       }
 
-      let embeddingRespository = getEmbeddingRepository (props.sessionKey);
-
-      // Get the summary of the URL the user clicked on
-      let summary = embeddingRespository.lookupUrlSummary (url_);
-      summary.then ((summaryText: string | undefined) => {
-
-         let connectionPromise = AIConnector.connect (props.sessionKey);
+      // Get the summary of the URL the user clicked on      
+      let api = new FindEnrichedChunkApi (getDefaultEnvironment(), props.sessionKey.toString());
+      let query = {
+         repositoryId: EChunkRepository.kBoxer,
+         url: url_,
+         maxCount: 1,
+         similarityThreshold : kDefaultSimilarityThreshold
+      }
+      let summary = api.findChunkFromUrl (query);
       
-         // Connect to the LLM
-         connectionPromise.then ( (connection : AIConnection) => { 
+      summary.then ((enriched: IEnrichedChunkSummary | undefined) => {
+
+         if (enriched) {
+            let summaryText = enriched.summary;
+         
+            let connection = new AIConnection (props.sessionKey);
 
             // Ask the LLM for a question based on the summary 
-            throwIfUndefined(summaryText);
-            connection.makeFollowUpCall (summaryText).then ((result_: Message) => {                                                                               
+            connection.makeFollowUpCall (summaryText).then ((result_: Message | undefined) => {                                                                               
                if (result_) {
                   result_.authorId = props.localPersona.id;
                   setSuggested (result_);
-               }
-            });
-         });  
+               }         
+            });  
+         }
       });                                                                
    }
 
@@ -398,44 +406,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       setSuppressScroll(true);        
 
       refreshAndForceUpdate ();   
-   }
-
-   function suggestContent () : void {   
-
-      // Use a random number generator, between 0 & the max number of messages. If it is zero,
-      // make a suggestion 
-      let upper = Math.floor (EConfigNumbers.kBoxerChattinessMessageCount / (chatLevel + 1));
-      const index = Math.floor(Math.random() * upper);
-
-      if (chatLevel > 0 && index === 0) {
-
-         let connectionPromise = AIConnector.connect (props.sessionKey);
-      
-         // Connect to the LLM
-         connectionPromise.then ( (connection : AIConnection) => { 
-
-            throwIfUndefined (fluidConnection);
-            let fluidMessagesConnection : BraidFluidConnection = fluidConnection;   
-
-            let messageArray = fluidMessagesConnection.messageCaucus().currentAsArray();      
-            setConversation (messageArray);      
-            let audienceMap = fluidMessagesConnection.participantCaucus().current();
-            setAudience (audienceMap);
-
-            let query = AIConnection.buildQueryForQuestionPrompt (messageArray, audienceMap);
-            let keyGenerator = getDefaultKeyGenerator();             
-            let responseShell = new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, undefined, 
-                                             "", new Date()); 
-
-            // Ask the LLM for a question based on the summary            
-            connection.makeSingleCall (query, responseShell).then ((result_: Message) => {                                                                               
-               if (result_) {
-                  setSuggested (result_);
-               }
-            });
-         });   
-      }                                                             
-   }
+   }   
 
    function onAddSuggestedContent () {
 
@@ -497,6 +468,8 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
 
          setKey (Math.random());
       }
+      if (!more)
+         message.unhookLiveAppend(); 
    }     
 
    function onSend (messageText_: string) : void {
@@ -543,38 +516,31 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       // ======================================================
       if (AIConnection.isRequestForLLM (message, audienceMap)) {
 
-         setIsBusy(true);
+         setIsBusy(true);         
 
-         let connectionPromise = AIConnector.connect (props.sessionKey);
+         let query = AIConnection.buildEnrichmentQuery (messageArray, audienceMap);
+         let responseShell = new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, message.id, 
+                                          "", new Date()); 
 
-         connectionPromise.then ( (connection : AIConnection) => {           
-
-            let query = AIConnection.buildDirectQuery (messageArray, audienceMap);
-            let responseShell = new Message (keyGenerator.generateKey(), EConfigStrings.kLLMGuid, message.id, 
-                                             "", new Date()); 
-
-            // Push the shell to shared data
-            addMessage (fluidMessagesConnection, responseShell);                                             
+         // Push the shell to shared data
+         addMessage (fluidMessagesConnection, responseShell);                                             
             
-            responseShell.hookLiveAppend (onStreamedUpdate);
+         responseShell.hookLiveAppend (onStreamedUpdate);
 
-            connection.makeEnrichedCall (responseShell, query).then ((result_: Message) => {            
+         let connection = new AIConnection (props.sessionKey);
 
-               setIsBusy(false);    
-               responseShell.unhookLiveAppend();     
+         connection.makeEnrichedCall (responseShell, query).then ((result_: Message | undefined) => {            
+
+            setIsBusy(false);        
+            if (result_)
                fluidConnection.messageCaucus().amend (result_.id, result_);                                               
 
-            }).catch ( (e: any) => {
-               
-               props.onAiError (EUIStrings.kAiApiError);
-               setIsBusy(false);      
-               responseShell.unhookLiveAppend();                                          
-            });            
-
          }).catch ( (e: any) => {
-            props.onAiError (EUIStrings.kJoinApiError + " :" + props.sessionKey.toString() + ".");
-            setIsBusy(false);             
-         });
+               
+            props.onAiError (EUIStrings.kAiApiError);
+              setIsBusy(false);      
+             responseShell.unhookLiveAppend();                                          
+         });            
       }
       else {
          // If the user looks they have miss-typed, we send a reminder.  
@@ -591,11 +557,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
             // Push it to shared data
             addMessage (fluidMessagesConnection, response);                         
          }
-         else {
-            // else we quasi-randomly see if we should add something
-            suggestContent ();
-         }
-      forceUpdate ();    
+         forceUpdate ();    
       }  
    } 
 

@@ -9,8 +9,8 @@ if azure:
    API_TYPE = "Azure" #AZURE VERSION WAS "Azure"
    # API_KEY = os.environ["AZURE_OPENAI_API_KEY"] #AZURE VERSION WAS os.environ["AZURE_OPENAI_API_KEY"]           #uncomment if code breaks - changes for script to exectable on both Windows and Unix machines.  
    API_KEY = os.getenv("AZURE_OPENAI_API_KEY")  # Use os.getenv() to safely retrieve environment variables       #comment if code breaks  - changes for script to exectable on both Windows and Unix machines. 
-   API_VERSION = "2024-02-01" #AZURE VERSION WAS "2023-07-01-preview"
-   RESOURCE_ENDPOINT = "https://braidlms.openai.azure.com/" #AZURE VERSION WAS os.environ["AZURE_OPENAI_ENDPOINT"] 
+   API_VERSION = "2024-06-01" #AZURE VERSION WAS "2023-07-01-preview"
+   RESOURCE_ENDPOINT = "https://studiomodels.openai.azure.com:443" #AZURE VERSION WAS os.environ["AZURE_OPENAI_ENDPOINT"] 
 else:
    API_TYPE = "open_ai" #AZURE VERSION WAS "Azure"
    API_KEY = os.environ["OPENAI_API_KEY"] #AZURE VERSION WAS os.environ["AZURE_OPENAI_API_KEY"] 
@@ -24,11 +24,11 @@ class ApiConfiguration:
         self.apiKey = API_KEY
         self.apiVersion = API_VERSION
         self.resourceEndpoint = RESOURCE_ENDPOINT
-        self.azureDeploymentName = "braidlms"
-        self.azureEmbedDeploymentName="braidlmse"
+        self.azureDeploymentName = "StudioLarge"
+        self.azureEmbedDeploymentName="StudioEmbeddingLarge"
         self.modelName="gpt-35-turbo-16k"
         self.embedModelName="text-embedding-ada-002"
-        self.processingThreads = 4
+        self.processingThreads = 1
         self.openAiRequestTimeout = 60
         self.summaryWordCount = 50      # 50 word summary
         self.chunkDurationMins = 10     # 10 minute long video clips

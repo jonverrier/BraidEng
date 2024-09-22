@@ -38,7 +38,7 @@ class Counter:
 
 @retry(
     wait=wait_random_exponential(min=10, max=45),
-    stop=stop_after_attempt(15),
+    stop=stop_after_attempt(5),
     retry=retry_if_not_exception_type(BadRequestError),
 )
 def chatgpt_summary(client : AzureOpenAI, config : ApiConfiguration, text : str, logger : Logger):
@@ -134,6 +134,8 @@ def enrich_transcript_summaries(config : ApiConfiguration, transcriptDestination
 
    logging.basicConfig(level=logging.WARNING)
    logger = logging.getLogger(__name__)
+   for key in logging.Logger.manager.loggerDict:
+      logging.getLogger(key).setLevel(logging.WARNING)
 
    if not transcriptDestinationDir:
       logger.error("Transcript folder not provided")

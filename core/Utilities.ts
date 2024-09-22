@@ -35,19 +35,14 @@ export function areSameShallowArray<T> (lhs: Array<T>, rhs : Array<T>) : boolean
    return true;
 }
 
-
-export interface Comparable<T> {
-   equals (rhs: T) : boolean;
-}
-
-export function areSameDeepArray<T extends Comparable<T>> (lhs: Array<T>, rhs : Array<T>) : boolean {
+export function areSameDeepArray<T> (lhs: Array<T>, rhs : Array<T>) : boolean {
 
    if (lhs.length !== rhs.length) {
       return false;
    }        
 
    for (let i = 0; i < lhs.length; i++) {
-      if (! (lhs[i].equals (rhs[i])))
+      if (! (JSON.stringify (lhs[i]) === JSON.stringify (rhs[i])))
          return false;
    }
 

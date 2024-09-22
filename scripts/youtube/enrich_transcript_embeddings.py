@@ -38,7 +38,7 @@ def normalize_text(s, sep_token=" \n "):
 
 @retry(
     wait=wait_random_exponential(min=10, max=45),
-    stop=stop_after_attempt(15),
+    stop=stop_after_attempt(5),
     retry=retry_if_not_exception_type(BadRequestError),
 )
 def get_text_embedding(client : AzureOpenAI, config : ApiConfiguration, text: str):
@@ -97,7 +97,9 @@ def enrich_transcript_embeddings(config, transcriptDestinationDir):
 
    logger = logging.getLogger(__name__)
    logging.basicConfig(level=logging.WARNING)
-
+   for key in logging.Logger.manager.loggerDict:
+      logging.getLogger(key).setLevel(logging.WARNING)
+   
    if not transcriptDestinationDir:
       logger.error("Transcript folder not provided")
       exit(1)

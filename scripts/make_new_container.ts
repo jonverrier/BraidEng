@@ -8,8 +8,6 @@ import { SessionKey } from '../core/Keys';
 import { Persona } from '../core/Persona';
 import { BraidFluidConnection } from '../core/BraidFluidConnection';
 import { throwIfUndefined } from '../core/Asserts';
-import { Environment, EEnvironment } from '../core/Environment';
-
 
 describe("Make new container", function () {
  
@@ -19,8 +17,6 @@ describe("Make new container", function () {
       let local = Persona.unknown();
 
       let fluidMessagesConnection = new BraidFluidConnection({}, local);
-
-      Environment.override (EEnvironment.kProduction);
 
       throwIfUndefined(process.env.SessionKey);
       fluidMessagesConnection.createNew (new SessionKey (process.env.SessionKey)).then (conversationKey_ => {

@@ -4,7 +4,6 @@ import axios from "axios";
 // Local
 import { SessionKey } from "./Keys";
 import { logApiError } from "./Logging";
-import { EEnvironment, Environment } from "./Environment";
 import { EConfigStrings } from "./ConfigStrings";
 
 

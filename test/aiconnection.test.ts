@@ -1,15 +1,15 @@
 'use strict';
 // Copyright Braid Technologies ltd, 2024
 import { throwIfUndefined } from '../core/Asserts';
-import { Message, MessageStreamingHandler} from '../core/Message';
-import { Embedding } from '../core/Embedding';
+import { Message} from '../core/Message';
 import { Persona} from '../core/Persona';
 import { EIcon } from '../core/Icons';
 import { SessionKey } from '../core/Keys';
 import { KStubEnvironmentVariables} from '../core/ConfigStrings'; 
-import { EEnvironment, Environment } from '../core/Environment';
-import { AIConnection, AIConnector } from '../core/AIConnection';
+import { AIConnection } from '../core/AIConnection';
 import { makeSummaryCall } from '../core/ApiCalls';
+
+import { IRelevantEnrichedChunk } from '../../Braid/BraidCommon/src/EnrichedChunk';
 
 import { expect } from 'expect';
 import { describe, it } from 'mocha';
@@ -26,6 +26,10 @@ var botSentAt = new Date(0);
 
 let myBotRequestId: string = "12345";
 let myBotRequestText = "Hello @Boxer What is back propagation?";
+
+async function sleep(msec: number) {
+   return new Promise(resolve => setTimeout(resolve, msec));
+}
 
 describe("AIConnection", async function () {
 
@@ -97,31 +101,11 @@ describe("AIConnection", async function () {
       throwIfUndefined(process);
       throwIfUndefined(process.env);
       throwIfUndefined(process.env.SessionKey);        
-      let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey)); 
 
-      let query = AIConnection.buildDirectQuery (messages, authors);
+      let query = AIConnection.buildEnrichmentQuery (messages, authors);
 
-      expect(query.length).toEqual(3);         
-   });    
-   
-   it("Needs to generate valid response from Open AI web endpoint", async function () {
-
-      let messages = new Array<Message>();
-      messages.length = 2;
-      messages[0] = personMessage;
-      messages[1] = botRequest;
-
-      throwIfUndefined(process);
-      throwIfUndefined(process.env);
-      throwIfUndefined(process.env.SessionKey);        
-
-      let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey));             
-      let fullQuery = AIConnection.buildDirectQuery (messages, authors);
-      let message = new Message();      
-      let result = await caller.makeEnrichedCall (message, fullQuery);
-
-      expect (result.text.length > 0).toBe(true);
-   }).timeout(20000);   
+      expect(query.history.length).toEqual(2);         
+   });       
 
    it("Needs to generate valid response from Open AI web endpoint using streaming API", async function () {
 
@@ -134,8 +118,8 @@ describe("AIConnection", async function () {
       throwIfUndefined(process.env);
       throwIfUndefined(process.env.SessionKey);        
 
-      let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey));             
-      let fullQuery = AIConnection.buildDirectQuery (messages, authors);
+      let caller = new AIConnection (new SessionKey (process.env.SessionKey));                
+      let fullQuery = AIConnection.buildEnrichmentQuery (messages, authors);
       let message = new Message();
 
       let called = false;
@@ -145,13 +129,16 @@ describe("AIConnection", async function () {
 
       message.hookLiveAppend (handler);
 
-      let result = await caller.makeSingleStreamedCall (fullQuery, message);
+      let result = await caller.makeEnrichedCall (message, fullQuery);
+
+      await sleep (10000);
+
       message.unhookLiveAppend ();
 
-      expect (result.length > 0).toBe(true);
       expect (message.text.length > 0).toBe(true);    
       expect (message.isStreaming).toBe(false);    
-      expect (called).toBe(true);                
+      expect (called).toBe(true);    
+
    }).timeout(20000); 
 
    it("Needs to generate valid response from Open AI web endpoint using basic API", async function () {
@@ -165,29 +152,35 @@ describe("AIConnection", async function () {
       throwIfUndefined(process.env);
       throwIfUndefined(process.env.SessionKey); 
 
-      let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey));             
-      let fullQuery = AIConnection.buildQueryForQuestionPrompt (messages, authors);
+      let caller = new AIConnection (new SessionKey (process.env.SessionKey));             
       let message = new Message();
 
-      let result = await caller.makeSingleCall (fullQuery, message);
+      let result = await caller.makeFollowUpCall ("This article explains how Transformers work.");
 
-      expect (message.text.length > 0).toBe(true);    
-      expect (message.isStreaming).toBe(false);              
+      expect (result && result.text.length > 0).toBe(true);    
+      expect (result && result.isStreaming).toBe(false);              
    }).timeout(20000); 
 
    function makeLongMessage (startingMessage: Message, segmentCount: number) : Message {
 
-      let segments = new Array<Embedding>();      
+      let segments = new Array<IRelevantEnrichedChunk>();      
 
-      // Make a list of knowledge sources, each with 500 tokens
+      // Make a list of knowledge sources, each with > 1000 tokens
       for (var i = 0; i < segmentCount; i++) {
          
          let accumulatedText = "Hi";
 
-         for (var j = 0; j < 4000; j++) {
+         for (var j = 0; j < 500; j++) {
             accumulatedText = accumulatedText.concat (" token");
          }
-         let ks1 = new Embedding("makeUpUrl", accumulatedText, new Array<number>(), undefined, undefined);
+         let ks1 = {
+            chunk: {
+               url: "https://test", 
+               summary: accumulatedText,
+               text: accumulatedText
+            },
+            relevance: 0.8
+         };
          segments.push (ks1);
       }
       
@@ -200,19 +193,19 @@ describe("AIConnection", async function () {
 
       let messages = new Array<Message>();
 
-      messages.length = 3;
+      messages.length = 4;
       messages[0] = personMessage;
       messages[1] = botRequest;
-      messages[2] = makeLongMessage (botMessage, 2);
+      messages[2] = makeLongMessage (botMessage, 2); // This ends up as two mesages as we have a long message and a long chunk. 
+      messages[3] = botRequest;
 
       throwIfUndefined(process);
       throwIfUndefined(process.env);
       throwIfUndefined(process.env.SessionKey);        
-      let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey)); 
 
-      let query = AIConnection.buildDirectQuery (messages, authors);
+      let query = AIConnection.buildEnrichmentQuery (messages, authors);
 
-      expect(query.length).toEqual(5);         
+      expect(query.history.length).toEqual(4);         
    });    
 
    it("Needs to detect when token limit overflows", async function () {
@@ -222,74 +215,19 @@ describe("AIConnection", async function () {
       messages.length = 4;
       messages[0] = personMessage;
       messages[1] = botRequest;
-      messages[2] = makeLongMessage (botMessage, 4);
+      messages[2] = makeLongMessage (botMessage, 20);
       messages[3] = botRequest;      
 
       throwIfUndefined(process);
       throwIfUndefined(process.env);
       throwIfUndefined(process.env.SessionKey);        
-      let caller = await AIConnector.connect (new SessionKey (process.env.SessionKey)); 
 
-      let query = AIConnection.buildDirectQuery (messages, authors);
+      let query = AIConnection.buildEnrichmentQuery (messages, authors);
 
-      expect(query.length).toEqual(2);         
+      expect(query.history.length).toEqual(0);         
    });      
 });
 
-
-describe("AIConnector", function () {
-
-   it("Needs to connect to valid stub API", async function () {
-
-      let caught = false;
-      try {
-         let connection = await AIConnector.connect (new SessionKey(KStubEnvironmentVariables.SessionKey));
-      }
-      catch (e) {
-         caught = true;
-      }
-      expect(caught).toEqual(false);         
-   }).timeout(10000);    
-   
-   it("Needs to return a connection on successful communication with real back end", async function () {
-
-      let caught = false;
-      
-      // Force use of actual API calls rather than local stubs
-      let oldEnv = Environment.override (EEnvironment.kProduction);
-
-      try {
-         let connection = await AIConnector.connect (new SessionKey(KStubEnvironmentVariables.SessionKey));
-      }
-      catch (err) {
-         caught = true;
-      }
-      Environment.override (oldEnv);          
-
-      expect(caught).toEqual(false);      
-
-   }).timeout (20000);    
-
-   it("Needs to detect error on failure to connect to back end", async function () {
-
-      let caught = false;
-      
-      // Force use of actual API calls rather than local stubs
-      let oldEnv = Environment.override (EEnvironment.kProduction);
-
-      try {
-         let connection = await AIConnector.connect (new SessionKey ("thiswillfail"));
-      }
-      catch (err) {
-         caught = true;
-      }
-      Environment.override (oldEnv);          
-
-      expect(caught).toEqual(true);    
-
-   }).timeout (10000);   
-
-});
 
 describe("APIs", function () {
 
@@ -297,7 +235,7 @@ describe("APIs", function () {
 
       let caught = false;
       let session = new SessionKey(KStubEnvironmentVariables.SessionKey);
-      let text = "OpenAI have released a new model called OpenAI-O, where the O stands for omno channel. They have also released a small version of this."
+      let text = "OpenAI have released a new model called OpenAI-O, where the O stands for omni channel. They have also released a small version of this."
       let summary : string | undefined = "";
 
       try {
