@@ -69,7 +69,7 @@ describe("Caucus", function () {
 
       let checked = process.env.SessionKey;
       throwIfUndefined(checked);
-      id = await newConnection.createNew(new SessionKey (checked));
+      id = await newConnection.createNew(new SessionKey (checked), false);
 
       await wait();
    });

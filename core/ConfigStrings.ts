@@ -65,11 +65,11 @@ export enum EConfigStrings {
    kNameParamName = "name",
    kSecretParamName = "secret",
 
-   kCohort1ConversationKey = "ad6a038d-3245-4dbb-87ce-656c7c4e4a48",
-   kCohort1Team1ConversationKey = "716588fb-c78e-4ebc-bc4c-1a87e5fb0667",   
-   kCohort1Team2ConversationKey = "6892663b-b9a2-43b6-8ca0-d66ca3970daa",
-   kCohort1Team3ConversationKey = "9ef30378-90c6-4213-8c59-f6c93ca6aa59",   
-   kDemoConversationKey = "9193299f-58c5-4895-abe7-5a2f81c13fdc",
+   kCohort1ConversationKey = "eb948951-1b53-460e-a023-26e39895dec6",
+   kCohort1Team1ConversationKey = "c43edc61-cedc-43f6-9224-db847d1ed0eb",   
+   kCohort1Team2ConversationKey = "1eadf3a2-148d-4afd-b69f-c9f72e824486",
+   kCohort1Team3ConversationKey = "121ffdef-ced6-45dd-84be-f16171b8b406",   
+   kDemoConversationKey = "c70f4a2d-8a56-42d5-b9ce-88bdc50029c8",
 
    kEmbeddingFileUrlLocal = 'http://localhost:1337/embeddings_lite.json',
    kEmbeddingFileUrlProduction = 'https://braidapps.io/embeddings_lite.json',

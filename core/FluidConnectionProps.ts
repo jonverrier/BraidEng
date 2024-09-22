@@ -9,11 +9,11 @@ import { KeyRetriever } from "./KeyRetriever";
 import { EConfigStrings } from "./ConfigStrings";
 import { SessionKey } from "./Keys";
 
-import { getDefaultFluidEnvironment } from "../../Braid/BraidCommon/src/IEnvironmentFactory";
+import { getDefaultFluidEnvironment, getEnvironment } from "../../Braid/BraidCommon/src/IEnvironmentFactory";
 import { EEnvironment } from "../../Braid/BraidCommon/src/IEnvironment";
 
 let documentUuid = "b03724b3-4be0-4491-b0fa-43b01ab80d50";
-let user = { id: documentUuid, name: "@Braid Chat" };
+let user = { id: documentUuid, name: "@Boxer" };
 
 export class ConnectionConfig implements AzureRemoteConnectionConfig {
 
@@ -33,9 +33,11 @@ export class ConnectionConfig implements AzureRemoteConnectionConfig {
 
    }
 
-   async makeTokenProvider(sessionKey: SessionKey): Promise<ITokenProvider> {
+   async makeTokenProvider(sessionKey: SessionKey, forceProduction: boolean): Promise<ITokenProvider> {
 
       let environment = getDefaultFluidEnvironment();
+      if (forceProduction)
+         environment = getEnvironment (EEnvironment.kProduction);
 
       this.tenantId = EConfigStrings.kAzureTenantId;
       this.endpoint = environment.fluidApi();
@@ -43,6 +45,7 @@ export class ConnectionConfig implements AzureRemoteConnectionConfig {
       if (environment.name == EEnvironment.kLocal) {
 
          this.type = "local";
+         //console.log (JSON.stringify (this));  Only do this when debugging locally         
          this.tokenProvider = new InsecureTokenProvider('testKey', user);
 
          return (this.tokenProvider);
@@ -55,7 +58,8 @@ export class ConnectionConfig implements AzureRemoteConnectionConfig {
                                                EConfigStrings.kSessionParamName, 
                                                sessionKey);
 
-         this.tokenProvider = new InsecureTokenProvider(key, user);
+         //console.log (JSON.stringify (this));  Only do this when debugging locally                                            
+         this.tokenProvider = new InsecureTokenProvider(key, user);       
          
          return (this.tokenProvider);
       }

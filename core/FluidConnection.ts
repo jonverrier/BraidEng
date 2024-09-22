@@ -28,10 +28,10 @@ export abstract class FluidConnection {
       this._container = undefined;
    }
 
-   async createNew(sessionKey_: SessionKey): Promise<ConversationKey> {
+   async createNew(sessionKey_: SessionKey, forceProduction: boolean): Promise<ConversationKey> {
 
       try {
-         await this.setupBeforeConnection (sessionKey_);
+         await this.setupBeforeConnection (sessionKey_, forceProduction);
 
          throwIfUndefined (this._client);
          const { container, services } = await this._client.createContainer(this.schema());
@@ -64,10 +64,10 @@ export abstract class FluidConnection {
       }
    }
 
-   async attachToExisting(sessionKey_: SessionKey, conversationKey_: ConversationKey): Promise<ConversationKey> {
+   async attachToExisting(sessionKey_: SessionKey, conversationKey_: ConversationKey, forceProduction: boolean): Promise<ConversationKey> {
 
       try {
-         await this.setupBeforeConnection (sessionKey_);
+         await this.setupBeforeConnection (sessionKey_, forceProduction);
 
          throwIfUndefined (this._client);
          const { container, services } = await this._client.getContainer(conversationKey_.toString(), this.schema());
@@ -115,10 +115,10 @@ export abstract class FluidConnection {
    }
 
    // local function to cut down duplication between createNew() and AttachToExisting())
-   private async setupBeforeConnection(sessionKey_: SessionKey): Promise<void> {
+   private async setupBeforeConnection(sessionKey_: SessionKey, forceProduction: boolean): Promise<void> {
 
       var clientProps: ClientProps = new ClientProps();
-      await clientProps.connection.makeTokenProvider(sessionKey_);
+      await clientProps.connection.makeTokenProvider(sessionKey_, forceProduction);
       this._client = new AzureClient(clientProps);
    }
 

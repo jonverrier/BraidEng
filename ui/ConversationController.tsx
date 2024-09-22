@@ -217,7 +217,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       
       if (! (props.conversationKey.looksValidConversationKey())) {
 
-         fluidMessagesConnection.createNew (props.sessionKey).then (conversationKey_ => {
+         fluidMessagesConnection.createNew (props.sessionKey, false).then (conversationKey_ => {
         
             initialiseConnectionState (fluidMessagesConnection, conversationKey_);
             setJoining (false);
@@ -230,7 +230,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       }
       else {
 
-         fluidMessagesConnection.attachToExisting (props.sessionKey, conversationKey).then (conversationKey_ => {
+         fluidMessagesConnection.attachToExisting (props.sessionKey, conversationKey, false).then (conversationKey_ => {
 
             initialiseConnectionState (fluidMessagesConnection, conversationKey_);
          
