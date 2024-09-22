@@ -65,13 +65,11 @@ export enum EConfigStrings {
    kNameParamName = "name",
    kSecretParamName = "secret",
 
-   kCohort1ConversationKey = "0665752f-45f1-4c00-820d-63abfdfe47c3",
-   kCohort1Team1ConversationKey = "2da0520e-0d7d-42e3-98ec-119379078565",   
-   kCohort1Team2ConversationKey = "a7be59c6-82b0-4f35-884f-0a29b0832407",
-   kCohort1Team3ConversationKey = "f1464b64-e487-4929-a51a-fcacdb0256bf",   
-   kCohort1Team4ConversationKey = "21f34669-134d-44fb-a0ad-5f7ef6e2f185",     
-   kDemoConversationKey = "8cf7e424-fea8-45d7-b8f6-1e7dd694f939",
-   kBoxerPlatformConversationKey = "63c88ddc-956c-49a4-be38-bbc62aa562f5",
+   kCohort1ConversationKey = "ad6a038d-3245-4dbb-87ce-656c7c4e4a48",
+   kCohort1Team1ConversationKey = "716588fb-c78e-4ebc-bc4c-1a87e5fb0667",   
+   kCohort1Team2ConversationKey = "6892663b-b9a2-43b6-8ca0-d66ca3970daa",
+   kCohort1Team3ConversationKey = "9ef30378-90c6-4213-8c59-f6c93ca6aa59",   
+   kDemoConversationKey = "9193299f-58c5-4895-abe7-5a2f81c13fdc",
 
    kEmbeddingFileUrlLocal = 'http://localhost:1337/embeddings_lite.json',
    kEmbeddingFileUrlProduction = 'https://braidapps.io/embeddings_lite.json',
