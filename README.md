@@ -34,7 +34,7 @@ There is a simple set of Node.js APIs, written to run on the Azure stack. The en
 - **Frontend:** TypeScript, Microsoft Fluent UI framework ([React Fluent UI](https://react.fluentui.dev/))
 - **Messaging:** Microsoft Fluent Framework ([Fluid Framework Documentation](https://fluidframework.com/docs/))
 - **Backend APIs:** Node.js APIs on Azure stack
-- **AI Model:** GPT-3.5
+- **AI Model:** GPT-4 on Azure. 
 - **Document Database:** Python with custom scripts
 - **Testing:**
   -Mocha ([Mocha Documentation](https://mochajs.org/))
