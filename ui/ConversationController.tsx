@@ -15,7 +15,7 @@ import { SessionKey, ConversationKey } from '../core/Keys';
 import { JoinDetails } from '../core/JoinDetails';
 import { JoinPageValidator } from '../core/JoinPageValidator';
 import { ConversationView } from './ConversationPane';
-import { BraidFluidConnection } from '../core/BraidFluidConnection';
+import { BraidFluidConnection } from '../core/BoxerFluidConnection';
 import { Interest, NotificationFor, NotificationRouterFor, ObserverInterest } from '../core/NotificationFramework';
 import { AIConnection } from '../core/AIConnection';
 import { EUIStrings, initialQuestions } from './UIStrings';
@@ -31,6 +31,8 @@ import { makeSummaryCall } from '../core/ApiCalls';
 import { FindEnrichedChunkApi } from '../../Braid/BraidCommon/src/FindEnrichedChunkApi';
 import { getDefaultEnvironment } from '../../Braid/BraidCommon/src/IEnvironmentFactory';
 import { IEnrichedChunkSummary, EChunkRepository, kDefaultSimilarityThreshold } from '../../Braid/BraidCommon/src/EnrichedChunk';
+import { FluidClientProps } from '../../Braid/BraidCommon/src/FluidTokenProvider';
+import { IFluidTokenRequest } from '../../Braid/BraidCommon/src/Fluid';
 
 export interface IConversationControllerProps {
 
@@ -212,8 +214,7 @@ export const ConversationControllerRow = (props: IConversationControllerProps) =
       && !joining) {
 
       setJoining(true);
-
-      let fluidMessagesConnection = new BraidFluidConnection ( {}, props.localPersona);
+      let fluidMessagesConnection = new BraidFluidConnection ( props.localPersona);
       
       if (! (props.conversationKey.looksValidConversationKey())) {
 

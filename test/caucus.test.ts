@@ -6,7 +6,7 @@ import { throwIfUndefined } from '../core/Asserts';
 import { Persona } from '../core/Persona';
 import { Message } from '../core/Message';
 import { Interest, NotificationFor } from '../core/NotificationFramework';
-import { BraidFluidConnection } from '../core/BraidFluidConnection';
+import { BraidFluidConnection } from '../core/BoxerFluidConnection';
 import { EIcon } from '../core/Icons';
 import { SessionKey, ConversationKey } from '../core/Keys';
 
@@ -65,7 +65,7 @@ describe("Caucus", function () {
       this.timeout(10000);
       persona = new Persona(myId, myName, myEmail, EIcon.kPersonPersona, myThumbnail, myLastSeenAt);
 
-      newConnection = new BraidFluidConnection({}, persona);
+      newConnection = new BraidFluidConnection(persona);
 
       let checked = process.env.SessionKey;
       throwIfUndefined(checked);
