@@ -1,4 +1,4 @@
-# Braid Engine
+# Boxer
 
 ## Table of Contents
 
@@ -9,7 +9,7 @@
 
 ## General Information
 
-The Braid Engine is an AI-enabled Learning Management System (LMS). The objective is to be able to build a curriculum of content by processing open-source documents from the web (YouTube videos, GitHub repositories, and plan HTML text) and loading AI generated summaries into a document store. A simple front end then enables students to ask questions which the model can answer based on the embedded content. The model can also make suggestions based on content the students have interacted with.
+Boxer is an AI-enabled Learning Management System (LMS). The objective is to be able to build a curriculum of content by processing open-source documents from the web (YouTube videos, GitHub repositories, and plan HTML text) and loading AI generated summaries into a document store. A simple front end then enables students to ask questions which the model can answer based on the embedded content. The model can also make suggestions based on content the students have interacted with.
 
 The specific domain is to teach students how to build AI applications using modern Large Language Model (LLM) technology, and the current approaches to this - Retrieval Assisted Generation (RAG), and multi-step workflows using the LLM to generate summaries and process questions.
 
@@ -29,11 +29,7 @@ The front end is written in Typescript, using the Microsoft Fluent UI framework:
 
 The messaging code uses the Microsoft Fluent Framework: [Fluid Framework Documentation](https://fluidframework.com/docs/).
 
-There is a simple set of Node.js APIs, written to run on the Azure stack. The engine currently uses GPT-3.5, and the document database is created by hand-cranked Python code.
-
-Tests are written in Mocha: [Mocha - the fun, simple, flexible JavaScript test framework (mochajs.org)](https://mochajs.org/).
-
-Scripts to build the RAG database are written in Python, using Beautiful Soup for web scraping. https://www.python.org/, https://beautiful-soup-4.readthedocs.io/.
+There is a simple set of Node.js APIs, written to run on the Azure stack. The engine currently uses GPT-4, and the document database is created by hand-cranked Python code, using Beautiful Soup for web scraping & Google APIs for video transcripts. 
 
 - **Frontend:** TypeScript, Microsoft Fluent UI framework ([React Fluent UI](https://react.fluentui.dev/))
 - **Messaging:** Microsoft Fluent Framework ([Fluid Framework Documentation](https://fluidframework.com/docs/))
@@ -42,7 +38,7 @@ Scripts to build the RAG database are written in Python, using Beautiful Soup fo
 - **Document Database:** Python with custom scripts
 - **Testing:**
   -Mocha ([Mocha Documentation](https://mochajs.org/))
-  -Python: pytest and unittest frameworks ([pytest Documentation](https://docs.pytest.org/), [unittest Documentation](https://docs.python.org/3/library/unittest.html))
+  -Python: pytest framework ([pytest Documentation](https://docs.pytest.org/)
 - **Web Scraping:** Python, Beautiful Soup ([Python](https://www.python.org/), [Beautiful Soup Documentation](https://beautiful-soup-4.readthedocs.io/))
 
 The key directories are:
