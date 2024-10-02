@@ -8,10 +8,6 @@ export enum EConfigStrings {
 
    kFontNameForTextWrapCalculation = "12pt Segoe UI",
 
-   kRequestAiKeyUrl = "https://braidapps.io/api/aikey",    
-   kRequestFluidKeyUrl = "https://braidapps.io/api/fluidkey",      
-   kRequestLocalAiKeyUrl = "http://localhost:1337/api/aikey",  
-   kRequestLocalFluidKeyUrl = "http://localhost:1337/api/fluidkey", 
    kHomeRelativeUrl= "/aibot.html",   
 
    kCheckSessionUrl = "https://braidapi.azurewebsites.net/api/CheckSession",       
@@ -70,9 +66,6 @@ export enum EConfigStrings {
    kCohort1Team2ConversationKey = "1eadf3a2-148d-4afd-b69f-c9f72e824486",
    kCohort1Team3ConversationKey = "121ffdef-ced6-45dd-84be-f16171b8b406",   
    kDemoConversationKey = "c70f4a2d-8a56-42d5-b9ce-88bdc50029c8",
-
-   kEmbeddingFileUrlLocal = 'http://localhost:1337/embeddings_lite.json',
-   kEmbeddingFileUrlProduction = 'https://braidapps.io/embeddings_lite.json',
 
    kAdminUserNames = "Jon Verrier" // Comma seperated list of names, at run time we just check if the user name is included in this list. 
 };

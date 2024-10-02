@@ -115,8 +115,8 @@ export const JoinPane = (props: IJoinPageProps) => {
    const retriever = new KeyRetriever();
 
    /*
-    * @param amLocal
-    * This logic with amLocal is bcs when running against a local fluid framework, we dont know the container ID
+    * @param runningInLocalEnv
+    * This logic with runningInLocalEnv is bcs when running against a local fluid framework, we dont know the container ID
     * we have to let the code create a new container then share it manually in the URL#string
     * In production, we have well known container IDs which were created beforehand.
    */
@@ -171,47 +171,30 @@ export const JoinPane = (props: IJoinPageProps) => {
 
    function tryToJoin () : void {
       
-      var url: string;
+      let conversationKey : ConversationKey;
 
-      if (runningInLocalEnv)
-         url = EConfigStrings.kRequestLocalFluidKeyUrl;
-      else
-         url = EConfigStrings.kRequestFluidKeyUrl;
+      if (runningInLocalEnv) {
+         conversationKey = props.conversationKey;
+      }
+      else {
+         conversationKey = conversationKeyFromName (conversationName);
+      }
 
-      retriever.requestKey (url, 
-         EConfigStrings.kSessionParamName, 
-         sessionKey)
-      .then (
-         (returnedKey: string):void => {
-            let conversationKey : ConversationKey;
+      let joinValidator = new JoinPageValidator ();
 
-            if (runningInLocalEnv) {
-               conversationKey = props.conversationKey;
-            }
-            else {
-               conversationKey = conversationKeyFromName (conversationName);
-            }
+      let secret = "";
 
-            let joinValidator = new JoinPageValidator ();
+      let keyGenerator = getDefaultKeyGenerator();
 
-            let secret = "";
+      if (! joinValidator.haveSavedSecret ()) {       
+         secret = keyGenerator.generateSecret();
+         keyGenerator.saveSecret (secret);
+      }
+      else {
+         secret = keyGenerator.savedSecret();
+      }
 
-            let keyGenerator = getDefaultKeyGenerator();
-
-            if (! joinValidator.haveSavedSecret ()) {       
-               secret = keyGenerator.generateSecret();
-               keyGenerator.saveSecret (secret);
-            }
-            else {
-               secret = keyGenerator.savedSecret();
-            }
-
-            props.onConnect(sessionKey, conversationKey, secret);
-          },
-          (e: any) => {
-            props.onConnectError(e.toString());
-          }
-      );
+      props.onConnect (sessionKey, conversationKey, secret);
    }
 
    let joinValidator = new JoinPageValidator ();
