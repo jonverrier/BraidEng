@@ -90,7 +90,8 @@ export enum EConfigNumbers {
    kMaxDownloadWaitSeconds = 30,
    kMaxMessagesBack = 20,          // Go up to 20 messages back for context to send to the LLM
    kMaxChatLevel = 4, // 0-4 to set how chatty the AI is
-   kMinMessagesforRecap = 5 // 5 mesages and we offer a recap at the start
+   kMinMessagesforRecap = 5 ,// 5 mesages and we offer a recap at the start,
+   kSummaryLengthWords = 50
 }
 
 // This is used for local running only, as in browser we cannot access environment variables

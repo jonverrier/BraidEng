@@ -5,6 +5,8 @@ import axios from "axios";
 import { SessionKey } from "./Keys";
 import { logApiError } from "./Logging";
 import { EConfigStrings } from "./ConfigStrings";
+import { EConfigNumbers } from "./ConfigStrings";
+import { ISummariseRequest, ISummariseResponse} from "../../Braid/BraidCommon/src/SummariseApi.Types"
 
 
 export async function makeSummaryCall (session: SessionKey, text: string) : Promise<string | undefined> {
@@ -13,22 +15,24 @@ export async function makeSummaryCall (session: SessionKey, text: string) : Prom
    let apiUrl: string = EConfigStrings.kSummariseUrl;
    
    apiUrl = apiUrl + '?session=' + session.toString();
+   let request: ISummariseRequest = {
+      text: text,
+      lengthInWords: EConfigNumbers.kSummaryLengthWords
+   };
 
    try {
       let response = await axios.post(apiUrl, {
-        data: {
-           text: text
-        },
+        request: request,
         headers: {
            'Content-Type': 'application/json'
         }
       });
 
-      summary = (response.data as string);
+      summary = (response.data as ISummariseResponse).summary;
 
    } catch (e: any) {       
 
-      logApiError ("Error calling Summazize API:", e);           
+      logApiError ("Error calling Summarize API:", e);           
    }   
    
    return summary;
