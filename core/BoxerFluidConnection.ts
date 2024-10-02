@@ -1,9 +1,12 @@
 // Copyright (c) 2024 Braid Technologies Ltd
 
 import { SharedMap } from "fluid-framework";import { Persona } from './Persona';
+
+import { FluidClientProps } from "../../Braid/BraidCommon/src/FluidTokenProvider";
+
 import { Message } from './Message';
 import { SharedEmbedding } from "./SharedEmbedding";
-import { IConnectionProps, FluidConnection } from './FluidConnection';
+import { FluidConnection } from './FluidConnection';
 import { CaucusOf } from './CaucusFramework';
 import { throwIfUndefined } from './Asserts'; 
 import { EConfigStrings } from "./ConfigStrings";
@@ -29,9 +32,9 @@ export class BraidFluidConnection extends FluidConnection {
    _sharedEmbeddingCaucus: CaucusOf<SharedEmbedding> | undefined;
    _interval: NodeJS.Timeout | undefined;
 
-   constructor(props: IConnectionProps, localUser_: Persona) {
+   constructor(localUser_: Persona) {
 
-      super(props);
+      super();
 
       this._initialObjects = undefined;
       this._participantCaucus = undefined;

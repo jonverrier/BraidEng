@@ -6,7 +6,7 @@ import { describe, it } from 'mocha';
 
 import { SessionKey } from '../core/Keys';
 import { Persona } from '../core/Persona';
-import { BraidFluidConnection } from '../core/BraidFluidConnection';
+import { BraidFluidConnection } from '../core/BoxerFluidConnection';
 import { throwIfUndefined } from '../core/Asserts';
 
 describe("Make new container", function () {
@@ -16,7 +16,7 @@ describe("Make new container", function () {
      
       let local = Persona.unknown();
 
-      let fluidMessagesConnection = new BraidFluidConnection({}, local);
+      let fluidMessagesConnection = new BraidFluidConnection(local);
 
       throwIfUndefined(process.env.SessionKey);
       fluidMessagesConnection.createNew (new SessionKey (process.env.SessionKey), true).then (conversationKey_ => {

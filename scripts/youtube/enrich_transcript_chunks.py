@@ -7,7 +7,6 @@
 from datetime import datetime, timedelta
 import os
 import json
-import argparse
 import glob
 import logging
 from typing import List, Dict

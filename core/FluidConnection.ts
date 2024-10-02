@@ -2,36 +2,37 @@
 import { IFluidContainer, ConnectionState } from "fluid-framework";
 import { AzureClient } from "@fluidframework/azure-client";
 
+import { FluidClientProps } from "../../Braid/BraidCommon/src/FluidTokenProvider";
+import { IFluidTokenRequest } from "../../Braid/BraidCommon/src/Fluid";
 import { throwIfUndefined } from "./Asserts";
 import { logApiError } from "./Logging";
 import { ConnectionError, InvalidOperationError, InvalidStateError} from './Errors';
-import { Interest, NotificationFor, Notifier } from './NotificationFramework';
+import { Interest } from './NotificationFramework';
 import { SessionKey, ConversationKey } from "./Keys";
-import { ClientProps } from './FluidConnectionProps';
+import { EConfigStrings } from "./ConfigStrings";
+import { getDefaultFluidEnvironment } from "../../Braid/BraidCommon/src/IEnvironmentFactory";
+import { EEnvironment } from "../../Braid/BraidCommon/src/IEnvironment";
 
-export interface IConnectionProps {
-}
+let documentUuid = "b03724b3-4be0-4491-b0fa-43b01ab80d50";
 
 export abstract class FluidConnection {
 
    public static connectedNotificationId = "connected";
    public static connectedInterest = new Interest(FluidConnection.connectedNotificationId);
 
-   _props: IConnectionProps;
    _client: AzureClient | undefined;
    _container: IFluidContainer | undefined;
 
-   constructor(props: IConnectionProps) {
+   constructor() {
 
       this._client = undefined;
-      this._props = props;
       this._container = undefined;
    }
 
    async createNew(sessionKey_: SessionKey, forceProduction: boolean): Promise<ConversationKey> {
 
       try {
-         await this.setupBeforeConnection (sessionKey_, forceProduction);
+         this.setupBeforeConnection (sessionKey_, forceProduction);
 
          throwIfUndefined (this._client);
          const { container, services } = await this._client.createContainer(this.schema());
@@ -40,7 +41,7 @@ export abstract class FluidConnection {
          let self = this;
 
          return new Promise<ConversationKey>((resolve, reject) => {
-            // Attach _container to service and return assigned ID
+            // Attach container to service and return assigned ID
             const containerIdPromise = container.attach();
 
             containerIdPromise.then((containerId) => {
@@ -67,7 +68,7 @@ export abstract class FluidConnection {
    async attachToExisting(sessionKey_: SessionKey, conversationKey_: ConversationKey, forceProduction: boolean): Promise<ConversationKey> {
 
       try {
-         await this.setupBeforeConnection (sessionKey_, forceProduction);
+         this.setupBeforeConnection (sessionKey_, forceProduction);
 
          throwIfUndefined (this._client);
          const { container, services } = await this._client.getContainer(conversationKey_.toString(), this.schema());
@@ -115,10 +116,18 @@ export abstract class FluidConnection {
    }
 
    // local function to cut down duplication between createNew() and AttachToExisting())
-   private async setupBeforeConnection(sessionKey_: SessionKey, forceProduction: boolean): Promise<void> {
+   private setupBeforeConnection(sessionKey_: SessionKey, forceProduction: boolean): void {
 
-      var clientProps: ClientProps = new ClientProps();
-      await clientProps.connection.makeTokenProvider(sessionKey_, forceProduction);
+      let local = getDefaultFluidEnvironment().name === EEnvironment.kLocal;
+
+      let request: IFluidTokenRequest = {
+         local: local,         
+         userId: EConfigStrings.kLLMGuid,
+         userName: EConfigStrings.kLLMName,
+         documentId: documentUuid         
+      }
+
+      var clientProps: FluidClientProps = new FluidClientProps(sessionKey_.toString(), request, forceProduction);
       this._client = new AzureClient(clientProps);
    }
 
