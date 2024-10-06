@@ -20,7 +20,7 @@ describe("API Embeddings", function () {
       for (let i = 0; i < embeddingsFull.length; i++) {
 
          chunks.push ({id: "", embedding: embeddingsFull[i].ada_v2, 
-            url: fn (embeddingsFull[i]), 
+                      url: fn (embeddingsFull[i]), 
                       text: "",  
                       summary: embeddingsFull[i].summary})
       }
